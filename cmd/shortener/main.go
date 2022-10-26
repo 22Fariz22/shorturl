@@ -1,15 +1,19 @@
 package main
 
 import (
+	"22Fariz22/shorturl/handler"
 	"github.com/gorilla/mux"
-	"log"
+	"net/http"
 )
 
 func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", CreateShortUrlHandler)
+	r.HandleFunc("/", handler.CreateShortUrlHandler)
+	r.HandleFunc("/{id:[0-9]+}", handler.GetShortUrlByIdHandler)
+	//http.Handle("/", r)
 
-	log.Fatal(":8080", nil)
+	http.ListenAndServe("localhost:8080", r)
+
 }
