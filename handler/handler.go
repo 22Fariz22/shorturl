@@ -23,7 +23,7 @@ func NewHandler() *Handler {
 
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 //и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
-func (h *Handler) CreateShortUrlHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	/*
 		забираем url адресс из тела
 		генерим число и добавляем в мапу id[url]
@@ -51,7 +51,7 @@ func (h *Handler) CreateShortUrlHandler(w http.ResponseWriter, r *http.Request) 
 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 //и возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.
-func (h *Handler) GetShortUrlByIdHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
 	/*
 		принимаем id из url-параметра
 		ищем по ключу id значение url в мапе Handler
@@ -61,7 +61,7 @@ func (h *Handler) GetShortUrlByIdHandler(w http.ResponseWriter, r *http.Request)
 
 	i, ok := h.urls[vars["id"]]
 	if ok {
-		r.Header.Add("Location", i)
-		http.Redirect(w, r, i, 307)
+		r.Header.Set("Location", i)
+		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
 	}
 }

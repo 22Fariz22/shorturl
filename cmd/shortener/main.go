@@ -7,13 +7,11 @@ import (
 )
 
 func main() {
-	//m := map[string]string{}
 	h := handler.NewHandler()
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", h.CreateShortUrlHandler)
-	r.HandleFunc("/{id:[0-9]+}", h.GetShortUrlByIdHandler)
-	//http.Handle("/", r)
+	r.HandleFunc("/", h.CreateShortURLHandler)
+	r.HandleFunc("/{id:[0-9]+}", h.GetShortURLByIDHandler)
 
 	http.ListenAndServe("localhost:8080", r)
 
