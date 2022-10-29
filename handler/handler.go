@@ -5,19 +5,20 @@ import (
 	"github.com/gorilla/mux"
 	"io"
 	"log"
-	"math/rand"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type Handler struct {
-	urls map[string]string
+	urls  map[string]string
+	count int
 }
 
 func NewHandler() *Handler {
+	c := 0
 	return &Handler{
-		urls: make(map[string]string),
+		urls:  make(map[string]string),
+		count: c,
 	}
 }
 
@@ -26,15 +27,11 @@ func NewHandler() *Handler {
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	/*
 		забираем url адресс из тела
-		генерим число и добавляем в мапу id[url]
-		возвращаем сокращенный url
+		счетчик count  добавляем в мапу count[long_url]
+		возвращаем сокращенный url  )
 	*/
 
-	rand.Seed(time.Now().UnixNano())
-	min := 1
-	max := 1000
-	count := rand.Intn(max-min+1) + min
-	countStr := strconv.Itoa(count)
+	countStr := strconv.Itoa(h.count)
 
 	defer r.Body.Close()
 	payload, err := io.ReadAll(r.Body)
@@ -42,8 +39,8 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
-
 		h.urls[countStr] = string(payload)
+		h.count++
 		w.WriteHeader(http.StatusCreated)
 		fmt.Fprintf(w, "%s", "http://localhost:8080/"+countStr)
 	}
