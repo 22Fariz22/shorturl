@@ -58,7 +58,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 	i, ok := h.urls[vars["id"]]
 	if ok {
-		r.Header.Set("Location", i)
+		w.Header().Set("Location", i)
 		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
 	}
 }
