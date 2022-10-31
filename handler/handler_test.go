@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"io"
@@ -61,7 +61,7 @@ func (f Fields) TestHandler_CreateShortURLHandler(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/", nil)
 
 			w := httptest.NewRecorder()
-			h := http.HandleFunc(handler.CreateShortURLHandler)
+			h := http.HandlerFunc(handler.CreateShortURLHandler)
 			h.ServeHTTP(w, request)
 
 			res := w.Result()
@@ -107,7 +107,7 @@ func (f Fields) TestHandler_GetShortURLByIDHandler(t *testing.T) {
 			// создаём новый Recorder
 			w := httptest.NewRecorder()
 			// определяем хендлер
-			h := http.HandlerFunc(handlers.GetShortURLByIDHandler)
+			h := http.HandlerFunc(handler.GetShortURLByIDHandler)
 			// запускаем сервер
 			h.ServeHTTP(w, request)
 			res := w.Result()
