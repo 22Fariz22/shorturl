@@ -61,7 +61,7 @@ func (f Fields) TestHandler_CreateShortURLHandler(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/", nil)
 
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(handler.CreateShortURLHandler)
+			h := http.HandlerFunc(CreateShortURLHandler)
 			h.ServeHTTP(w, request)
 
 			res := w.Result()
@@ -107,7 +107,7 @@ func (f Fields) TestHandler_GetShortURLByIDHandler(t *testing.T) {
 			// создаём новый Recorder
 			w := httptest.NewRecorder()
 			// определяем хендлер
-			h := http.HandlerFunc(handler.GetShortURLByIDHandler)
+			h := http.HandlerFunc(GetShortURLByIDHandler)
 			// запускаем сервер
 			h.ServeHTTP(w, request)
 			res := w.Result()
