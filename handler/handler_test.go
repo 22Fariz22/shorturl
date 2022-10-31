@@ -61,7 +61,10 @@ func (f Fields) TestHandler_CreateShortURLHandler(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/", nil)
 
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(CreateShortURLHandler)
+
+			hd := &Handler{}
+
+			h := http.HandlerFunc(hd.CreateShortURLHandler)
 			h.ServeHTTP(w, request)
 
 			res := w.Result()
@@ -106,8 +109,13 @@ func (f Fields) TestHandler_GetShortURLByIDHandler(t *testing.T) {
 
 			// создаём новый Recorder
 			w := httptest.NewRecorder()
+
+			hd := &Handler{}
+			h := http.HandlerFunc(hd.GetShortURLByIDHandler)
+
 			// определяем хендлер
-			h := http.HandlerFunc(GetShortURLByIDHandler)
+			//h := http.HandlerFunc(GetShortURLByIDHandler)
+
 			// запускаем сервер
 			h.ServeHTTP(w, request)
 			res := w.Result()
@@ -122,7 +130,7 @@ func (f Fields) TestHandler_GetShortURLByIDHandler(t *testing.T) {
 
 			// сравниваем location
 			if res_location != tt.want.location {
-				t.Errorf("Expected location %d, got %d", tt.want.location, res_location)
+				t.Errorf("Expected location %s, got %s", tt.want.location, res_location)
 			}
 		})
 	}
