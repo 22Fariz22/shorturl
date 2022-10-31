@@ -1,62 +1,129 @@
-package handler
+package main
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 )
 
-type Counter struct{
-	count int
+/*
+Создаем глобальную переменную наш URL
+вставляем в POST наш URL.
+берем выданный нам id и вставляем в GET.
+Смотрим на урл в заголовке Location и сравниваем с исходным
+Тесты:
+	1)посмотреть, что в посте что-то вернется
+		*проверить cтатус-код 201
+		*забрать из тела сокращенный урл
+	2)Посмотреть, что, если заранее заготовить данные, в локейшне будет заранее заготовленный урл
+		*переходим по сокращенному урлу,сравниваем статус-код 307 и сокращенный урл с урл из Location
+	3)Совместить: пост + гет
+
+*/
+type Fields struct {
+	urls map[string]string
 }
 
-func (c *Counter)CounterFunc()string{
-	c.count++
-	countStr := strconv.Itoa(c.count)
-	return countStr
+func NewFields() *Fields {
+	return &Fields{
+		urls: make(map[string]string),
+	}
 }
 
-func TestHandler_CreateShortURLHandler(t *testing.T) {
+func (f Fields) TestHandler_CreateShortURLHandler(t *testing.T) {
+	/* POST
+	вставляем свой урл url
+	ссравниваю статусКод ,нужен 201
+	беру урл и венрнувшийся шортурл,все это вставляю в map[string]string
+	*/
+
 	type want struct {
-		statusCode        int
-		shortURL string
+		code int
+		url  string
+		//response    string
+		//contentType string
 	}
 	tests := []struct {
 		name string
-		request string
-		counter string
 		want want
 	}{
 		{
-			name: "simple test #1",
-			counter: ,
+			name: "test POST #1",
 			want: want{
-				statusCode: 201,
-				shortURL: "",
+				code: 201,
+				url:  "https://ya.ru",
 			},
 		},
 	}
-	for _,tt := range tests{
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tt := range tests {
+		for t.Run(tt.name, func(t *testing.T) {}) {
+			request := httptest.NewRequest(http.MethodPost, "/", nil)
 
-			request := httptest.NewRequest(http.MethodPost, tt.request, nil)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(CreateShortURLHandler(w,request))
+			h := http.HandleFunc(handler.CreateShortURLHandler)
 			h.ServeHTTP(w, request)
-			result := w.Result()
 
-			assert.Equal(t, tt.want.statusCode, result.StatusCode)
+			res := w.Result()
 
-			shortURLResult, err := ioutil.ReadAll(result.Body)
-			require.NoError(t, err)
-			err = result.Body.Close()
-			require.NoError(t, err)
+			if res.StatusCode != tt.want.code {
+				t.Errorf("Exepted status code %d, got %d", tt.want.code, w.Code)
+			}
 
-			assert.Equal(t, tt.want.shortURL, shortURLResult)
+			defer res.Body.Close()
+			resBody, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatal()
+			}
 
-		})
+			// записываем в глобальную мапу наш url и полученный id для сравнения в GET
+			shortUrl := string(resBody)[len("http://localhost:8080/"):]
+			f.urls[tt.want.url] = shortUrl
+		}
 	}
 }
 
+func (f Fields) TestHandler_GetShortURLByIDHandler(t *testing.T) {
+	type want struct {
+		code     int
+		location string // f.
+	}
+	tests := []struct {
+		name string
+		want want
+	}{
+		{
+			name: "test GET #1",
+			want: want{
+				code:     307,
+				location: "https://ya.ru",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, "/"+tt.want.location, nil)
+
+			// создаём новый Recorder
+			w := httptest.NewRecorder()
+			// определяем хендлер
+			h := http.HandlerFunc(handlers.GetShortURLByIDHandler)
+			// запускаем сервер
+			h.ServeHTTP(w, request)
+			res := w.Result()
+
+			// проверяем код ответа
+			if res.StatusCode != tt.want.code {
+				t.Errorf("Expected status code %d, got %d", tt.want.code, w.Code)
+			}
+
+			// получаем location из заголовка
+			res_location := res.Header.Get("Location")
+
+			// сравниваем location
+			if res_location != tt.want.location {
+				t.Errorf("Expected location %d, got %d", tt.want.location, res_location)
+			}
+		})
+	}
+}
