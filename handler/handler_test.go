@@ -21,6 +21,7 @@ import (
 	3)Совместить: пост + гет
 
 */
+
 type Fields struct {
 	urls map[string]string
 }

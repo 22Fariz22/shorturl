@@ -2,7 +2,7 @@ package handler
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 	"io"
 	"log"
 	"net/http"
@@ -54,9 +54,10 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 		ищем по ключу id значение url в мапе Handler
 	*/
 
-	vars := mux.Vars(r)
+	//vars := mux.Vars(r)
+	vars := chi.URLParam(r, "id")
 
-	i, ok := h.urls[vars["id"]]
+	i, ok := h.urls[vars]
 	if ok {
 		w.Header().Set("Location", i)
 		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
