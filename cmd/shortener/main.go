@@ -4,15 +4,10 @@ import (
 	"22Fariz22/shorturl/handler"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"net/http"
 )
 
 func main() {
-	//h := handler.NewHandler()
-	//r := mux.NewRouter()
-	//
-	//r.HandleFunc("/", h.CreateShortURLHandler)
-	//r.HandleFunc("/{id:[0-9]+}", h.GetShortURLByIDHandler)
-	//http.ListenAndServe("localhost:8080", r)
 
 	r := chi.NewRouter()
 
@@ -21,7 +16,10 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Get("/", handler.CreateShortURLHandler)
-	r.Post("/{id}", handler.GetShortURLByIDHandler)
+	hd := &handler.Handler{}
 
+	r.Get("/", hd.CreateShortURLHandler)
+	r.Post("/{id}", hd.GetShortURLByIDHandler)
+
+	http.ListenAndServe(":8080", r)
 }
