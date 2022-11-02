@@ -1,17 +1,20 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 type Handler struct {
 	urls  map[string]string
 	count int
+}
+
+type Url struct {
+	url string `json:"url"`
 }
 
 func NewHandler() *Handler {
@@ -25,21 +28,29 @@ func NewHandler() *Handler {
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 //и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
-
-	countStr := strconv.Itoa(h.count)
-
-	defer r.Body.Close()
-	//payload, err := io.ReadAll(r.Body)
-	payload, err := ioutil.ReadAll(r.Body)
-
+	var url Url
+	err := json.NewDecoder(r.Body).Decode(&url)
 	if err != nil {
-		log.Printf("error: %s", err)
-	} else {
-		h.urls[countStr] = string(payload)
-		h.count++
-		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintf(w, "%s", "http://localhost:8080/"+countStr)
+		log.Println(err)
 	}
+	fmt.Println(url)
+
+	//countStr := strconv.Itoa(h.count)
+	//
+	//defer r.Body.Close()
+	////payload, err := io.ReadAll(r.Body)
+	//
+	//payload, err := ioutil.ReadAll(r.Body)
+	//fmt.Println(payload, err)
+	//
+	//if err != nil {
+	//	log.Printf("error: %s", err)
+	//} else {
+	//	h.urls[countStr] = string(payload)
+	//	h.count++
+	//	w.WriteHeader(http.StatusCreated)
+	//	fmt.Fprintf(w, "%s", "http://localhost:8080/"+countStr)
+	//}
 }
 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL

@@ -18,8 +18,8 @@ func main() {
 
 	hd := &handler.Handler{}
 
-	r.Get("/", hd.CreateShortURLHandler)
-	r.Post("/{id}", hd.GetShortURLByIDHandler)
+	r.Post("/", hd.CreateShortURLHandler)
+	r.Get("/{id}", hd.GetShortURLByIDHandler)
 
 	http.ListenAndServe(":8080", r)
 }
