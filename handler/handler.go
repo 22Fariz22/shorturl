@@ -13,10 +13,6 @@ type Handler struct {
 	count int
 }
 
-type Url struct {
-	UrlLong string `json:"url"`
-}
-
 func NewHandler() *Handler {
 	c := 0
 	return &Handler{
