@@ -53,6 +53,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 	vars := chi.URLParam(r, "id")
 	fmt.Println("vars", reflect.TypeOf(vars), vars)
+	fmt.Println("h.urls[vars]", h.urls[vars])
 
 	i, ok := h.urls[vars]
 	if ok {
