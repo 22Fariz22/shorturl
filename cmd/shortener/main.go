@@ -20,8 +20,6 @@ func main() {
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
-	r.Get("/panic", func(w http.ResponseWriter, r *http.Request) {
-		panic("test")
-	})
+
 	http.ListenAndServe(":8080", r)
 }

@@ -1,12 +1,10 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/go-chi/chi/v5"
+	"io"
 	"log"
 	"net/http"
-	"reflect"
 	"strconv"
 )
 
@@ -30,17 +28,15 @@ func NewHandler() *Handler {
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 //и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
-
-	var url Url
-
 	countStr := strconv.Itoa(h.count)
 
-	err := json.NewDecoder(r.Body).Decode(&url)
+	defer r.Body.Close()
+	payload, err := io.ReadAll(r.Body)
 
 	if err != nil {
-		log.Println(err)
+		log.Printf("error: %s", err)
 	} else {
-		h.urls[countStr] = url.UrlLong
+		h.urls[countStr] = string(payload)
 		h.count++
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("http://localhost:8080/" + countStr))
@@ -52,9 +48,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := chi.URLParam(r, "id")
-	fmt.Println("vars", reflect.TypeOf(vars), vars)
-	fmt.Println("h.urls[vars]", h.urls[vars])
-
 	i, ok := h.urls[vars]
 	if ok {
 		w.Header().Set("Location", i)
