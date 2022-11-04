@@ -1,12 +1,13 @@
 package handler
 
 import (
-	"github.com/go-chi/chi/v5"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {
@@ -33,11 +34,13 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
+
 		var mutex sync.Mutex
 		mutex.Lock()
 		h.urls[countStr] = string(payload)
 		h.count++
 		mutex.Unlock()
+
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("http://localhost:8080/" + countStr))
 	}
