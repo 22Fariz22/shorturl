@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 )
 
 type Handler struct {
@@ -24,16 +25,19 @@ func NewHandler() *Handler {
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 //и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
+
 	countStr := strconv.Itoa(h.count)
 
-	defer r.Body.Close()
 	payload, err := io.ReadAll(r.Body)
 
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
+		var mutex sync.Mutex
+		mutex.Lock()
 		h.urls[countStr] = string(payload)
 		h.count++
+		mutex.Unlock()
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("http://localhost:8080/" + countStr))
 	}
