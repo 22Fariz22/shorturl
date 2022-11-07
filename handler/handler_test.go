@@ -120,7 +120,7 @@ func (f Fields) TestHandler_GetShortURLByIDHandler(t *testing.T) {
 			// запускаем сервер
 			h.ServeHTTP(w, request)
 			res := w.Result()
-
+			defer res.Body().Close()
 			// проверяем код ответа
 			if res.StatusCode != tt.want.code {
 				t.Errorf("Expected status code %d, got %d", tt.want.code, w.Code)
@@ -128,7 +128,6 @@ func (f Fields) TestHandler_GetShortURLByIDHandler(t *testing.T) {
 
 			// получаем location из заголовка
 			resLocation := res.Header.Get("Location")
-
 			// сравниваем location
 			if resLocation != tt.want.location {
 				t.Errorf("Expected location %s, got %s", tt.want.location, resLocation)

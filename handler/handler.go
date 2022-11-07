@@ -30,7 +30,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	countStr := strconv.Itoa(h.count)
 
-	defer r.Body.Close()
 	payload, err := io.ReadAll(r.Body)
 
 	if err != nil {
@@ -50,7 +49,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 //и возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
-
 	vars := chi.URLParam(r, "id")
 	i, ok := h.urls[vars]
 	if ok {
