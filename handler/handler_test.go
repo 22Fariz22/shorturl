@@ -81,8 +81,8 @@ func (f Fields) TestHandler_CreateShortURLHandler(t *testing.T) {
 			}
 
 			// записываем в глобальную мапу наш url и полученный id для сравнения в GET
-			shortUrl := string(resBody)[len("http://localhost:8080/"):]
-			f.urls[tt.want.url] = shortUrl
+			shortURL := string(resBody)[len("http://localhost:8080/"):]
+			f.urls[tt.want.url] = shortURL
 		}
 	}
 }
@@ -127,11 +127,11 @@ func (f Fields) TestHandler_GetShortURLByIDHandler(t *testing.T) {
 			}
 
 			// получаем location из заголовка
-			res_location := res.Header.Get("Location")
+			resLocation := res.Header.Get("Location")
 
 			// сравниваем location
-			if res_location != tt.want.location {
-				t.Errorf("Expected location %s, got %s", tt.want.location, res_location)
+			if resLocation != tt.want.location {
+				t.Errorf("Expected location %s, got %s", tt.want.location, resLocation)
 			}
 		})
 	}

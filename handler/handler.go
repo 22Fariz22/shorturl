@@ -30,6 +30,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	countStr := strconv.Itoa(h.count)
 
+	defer r.Body.Close()
 	payload, err := io.ReadAll(r.Body)
 
 	if err != nil {
