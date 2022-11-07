@@ -35,6 +35,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
+
 		h.mu.Lock()
 		defer h.mu.Unlock()
 		h.urls[countStr] = string(payload)
