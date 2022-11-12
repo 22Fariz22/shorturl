@@ -77,12 +77,12 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		}
 
 		type Resp struct {
-			Url      string `json:"url"`
-			ShortUrl string `json:"short_url"`
+			URL      string `json:"url"`
+			ShortURL string `json:"short_url"`
 		}
 		resp := Resp{
-			Url:      value.Url,
-			ShortUrl: countStr,
+			URL:      value.Url,
+			ShortURL: countStr,
 		}
 		res, err := json.Marshal(resp)
 		if err != nil {
