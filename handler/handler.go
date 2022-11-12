@@ -15,7 +15,7 @@ type Handler struct {
 	mu    sync.Mutex        `json:"-"`
 	urls  map[string]string `json:"-"`
 	Count int               `json:"count"`
-	Url   string            `json:"url"`
+	URL   string            `json:"url"`
 }
 
 func NewHandler() *Handler {
@@ -81,14 +81,14 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 			ShortURL string `json:"short_url"`
 		}
 		resp := Resp{
-			URL:      value.Url,
+			URL:      value.URL,
 			ShortURL: countStr,
 		}
 		res, err := json.Marshal(resp)
 		if err != nil {
 			panic(err)
 		}
-		h.urls[countStr] = value.Url
+		h.urls[countStr] = value.URL
 		h.Count++
 
 		w.Header().Set("Content-Type", "application/json")
