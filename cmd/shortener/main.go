@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	cfg := NewConnectorConfig("ya.ru")
 
 	r := chi.NewRouter()
 

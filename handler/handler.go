@@ -11,6 +11,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+//type Config struct {
+//	ServerAddress string `env:"SERVER_ADDRESS" envDefault:":8080"`
+//	BaseUrl       string `env:"BASE_URL"`
+//}
+
 type Handler struct {
 	mu    sync.Mutex
 	urls  map[string]string
