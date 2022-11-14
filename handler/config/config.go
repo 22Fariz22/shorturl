@@ -7,35 +7,17 @@ import (
 
 type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS" envDefault:":8080"`
-	BaseUrl       string `env:"BASE_URL"`
+	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 }
 
 func NewConnectorConfig() *Config {
 	cfg := &Config{}
-	opts := &env.Options{Environment: map[string]string{
-		"SERVER_ADDRESS": ":8080",
-	}}
-	if err := env.Parse(cfg, *opts); err != nil {
+	if err := env.Parse(cfg); err != nil {
 		log.Fatal(err)
 	}
 
 	return &Config{
 		ServerAddress: cfg.ServerAddress,
+		BaseURL:       cfg.BaseURL,
 	}
-}
-
-func NewConnectorConfigURL(url string) *Config {
-	cfg := &Config{}
-	opts := &env.Options{Environment: map[string]string{
-		"SERVER_ADDRESS": ":8080",
-	}}
-	if err := env.Parse(cfg, *opts); err != nil {
-		log.Fatal(err)
-	}
-
-	return &Config{
-		ServerAddress: cfg.ServerAddress,
-		BaseUrl:       url,
-	}
-
 }
