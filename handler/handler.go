@@ -15,7 +15,10 @@ type Handler struct {
 	mu    sync.Mutex        `json:"-"`
 	urls  map[string]string `json:"-"`
 	Count int               `json:"count"`
-	URL   string            `json:"url"`
+}
+
+type CreateShortURLRequest struct {
+	URL string `json:"url"`
 }
 
 func NewHandler() *Handler {
@@ -29,19 +32,17 @@ func NewHandler() *Handler {
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 //и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
-
-	countStr := strconv.Itoa(h.Count)
-
 	payload, err := io.ReadAll(r.Body)
 
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
-
+		countStr := strconv.Itoa(h.Count)
+		p := string(payload)
 		h.mu.Lock()
-		defer h.mu.Unlock()
-		h.urls[countStr] = string(payload)
+		h.urls[countStr] = p
 		h.Count++
+		h.mu.Unlock()
 
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("http://localhost:8080/" + countStr))
@@ -67,10 +68,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
-		h.mu.Lock()
-		defer h.mu.Unlock()
-
-		value := Handler{}
+		value := CreateShortURLRequest{}
 
 		if err := json.Unmarshal(payload, &value); err != nil {
 			log.Printf("error: %s", err)
@@ -78,7 +76,6 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 		type Resp struct {
 			Result string `json:"result"`
-			//ShortURL string `json:"short_url"`
 		}
 		resp := Resp{
 			Result: "http://localhost:8080/" + countStr,
@@ -87,8 +84,10 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
+		h.mu.Lock()
 		h.urls[countStr] = value.URL
 		h.Count++
+		h.mu.Unlock()
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
