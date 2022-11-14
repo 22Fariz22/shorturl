@@ -81,7 +81,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 			//ShortURL string `json:"short_url"`
 		}
 		resp := Resp{
-			Result: countStr,
+			Result: "http://localhost:8080/" + countStr,
 		}
 		res, err := json.Marshal(resp)
 		if err != nil {
