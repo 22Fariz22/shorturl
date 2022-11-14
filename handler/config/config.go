@@ -1,4 +1,4 @@
-package handler
+package config
 
 import (
 	"github.com/caarlos0/env/v6"
@@ -37,4 +37,5 @@ func NewConnectorConfigURL(url string) *Config {
 		ServerAddress: cfg.ServerAddress,
 		BaseUrl:       url,
 	}
+
 }
