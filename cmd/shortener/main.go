@@ -2,6 +2,7 @@ package main
 
 import (
 	"22Fariz22/shorturl/handler"
+	"22Fariz22/shorturl/handler/config"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -9,7 +10,7 @@ import (
 )
 
 func main() {
-	cfg := NewConnectorConfig("ya.ru")
+	cfg := NewConnectorConfig()
 
 	r := chi.NewRouter()
 
@@ -24,5 +25,5 @@ func main() {
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
 	r.Post("/api/shorten", hd.CreateShortURLJSON)
 
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(cfg.ServerAddress, r)
 }
