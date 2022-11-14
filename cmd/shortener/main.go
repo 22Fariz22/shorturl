@@ -2,7 +2,6 @@ package main
 
 import (
 	"22Fariz22/shorturl/handler"
-	"22Fariz22/shorturl/handler/config"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -10,7 +9,7 @@ import (
 )
 
 func main() {
-	cfg := NewConnectorConfig()
+	cfg := config.NewConnectorConfig()
 
 	r := chi.NewRouter()
 
