@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -13,36 +14,50 @@ import (
 type Handler struct {
 	mu    sync.Mutex
 	urls  map[string]string
-	count int
+	Count int `json:"count"`
+}
+
+type CreateShortURLRequest struct {
+	URL string `json:"url"`
 }
 
 func NewHandler() *Handler {
 	c := 0
 	return &Handler{
 		urls:  make(map[string]string),
-		count: c,
+		Count: c,
 	}
+}
+
+func (h *Handler) ShortenURL(bodyStr string) string {
+	var value CreateShortURLRequest
+
+	h.mu.Lock()
+	countStr := strconv.Itoa(h.Count)
+	h.mu.Unlock()
+
+	value.URL = bodyStr
+
+	h.mu.Lock()
+	h.urls[countStr] = value.URL
+	h.Count++
+	h.mu.Unlock()
+
+	return "http://localhost:8080/" + countStr
 }
 
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 //и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
-
-	countStr := strconv.Itoa(h.count)
-
 	payload, err := io.ReadAll(r.Body)
 
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
-
-		h.mu.Lock()
-		defer h.mu.Unlock()
-		h.urls[countStr] = string(payload)
-		h.count++
+		short := h.ShortenURL(string(payload))
 
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("http://localhost:8080/" + countStr))
+		w.Write([]byte(short))
 	}
 }
 
@@ -54,5 +69,35 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	if ok {
 		w.Header().Set("Location", i)
 		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
+	}
+}
+
+func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
+
+	payload, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: %s", err)
+	} else {
+
+		var value CreateShortURLRequest
+
+		if err := json.Unmarshal(payload, &value); err != nil {
+			log.Printf("error: %s", err)
+		}
+
+		type Resp struct {
+			Result string `json:"result"`
+		}
+		resp := Resp{
+			Result: h.ShortenURL(value.URL),
+		}
+		res, err := json.Marshal(resp)
+		if err != nil {
+			panic(err)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		w.Write(res)
 	}
 }

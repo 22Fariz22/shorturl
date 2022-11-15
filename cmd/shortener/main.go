@@ -21,6 +21,7 @@ func main() {
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
+	r.Post("/api/shorten", hd.CreateShortURLJSON)
 
 	http.ListenAndServe(":8080", r)
 }
