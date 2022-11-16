@@ -17,6 +17,7 @@ type Handler struct {
 	count int `json:"count"`
 }
 
+//тест
 type CreateShortURLRequest struct {
 	URL string `json:"url"`
 }
