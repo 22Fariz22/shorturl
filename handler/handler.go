@@ -14,7 +14,7 @@ import (
 type Handler struct {
 	mu    sync.Mutex
 	urls  map[string]string
-	Count int `json:"count"`
+	count int `json:"count"`
 }
 
 type CreateShortURLRequest struct {
@@ -25,7 +25,7 @@ func NewHandler() *Handler {
 	c := 0
 	return &Handler{
 		urls:  make(map[string]string),
-		Count: c,
+		count: c,
 	}
 }
 
@@ -33,14 +33,14 @@ func (h *Handler) ShortenURL(bodyStr string) string {
 	var value CreateShortURLRequest
 
 	h.mu.Lock()
-	countStr := strconv.Itoa(h.Count)
+	countStr := strconv.Itoa(h.count)
 	h.mu.Unlock()
 
 	value.URL = bodyStr
 
 	h.mu.Lock()
 	h.urls[countStr] = value.URL
-	h.Count++
+	h.count++
 	h.mu.Unlock()
 
 	return "http://localhost:8080/" + countStr
