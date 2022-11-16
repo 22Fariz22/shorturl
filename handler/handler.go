@@ -62,7 +62,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 		short := h.ShortenURL(string(payload))
 
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(cfg.BaseURL + short))
+		w.Write([]byte(cfg.BaseURL + "/" + short))
 	}
 }
 
@@ -95,7 +95,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 			Result string `json:"result"`
 		}
 		resp := Resp{
-			Result: cfg.BaseURL + h.ShortenURL(value.URL),
+			Result: cfg.BaseURL + "/" + h.ShortenURL(value.URL),
 		}
 		res, err := json.Marshal(resp)
 		if err != nil {
