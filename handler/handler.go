@@ -14,7 +14,7 @@ import (
 type Handler struct {
 	mu    sync.Mutex
 	urls  map[string]string
-	count int `json:"count"`
+	count int
 }
 
 //тест
