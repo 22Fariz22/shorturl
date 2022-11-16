@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"22Fariz22/shorturl/handler/config"
 	"encoding/json"
 	"io"
 	"log"
@@ -31,6 +32,8 @@ func NewHandler() *Handler {
 }
 
 func (h *Handler) ShortenURL(bodyStr string) string {
+	cfg := config.NewConnectorConfig()
+
 	var value CreateShortURLRequest
 
 	h.mu.Lock()
@@ -44,7 +47,8 @@ func (h *Handler) ShortenURL(bodyStr string) string {
 	h.count++
 	h.mu.Unlock()
 
-	return "http://localhost:8080/" + countStr
+	//return "http://localhost:8080/" + countStr
+	return cfg.BaseURL + countStr
 }
 
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
