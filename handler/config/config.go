@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/caarlos0/env/v6"
 	"log"
 )
@@ -16,8 +15,7 @@ func NewConnectorConfig() *Config {
 	if err := env.Parse(cfg); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(cfg.ServerAddress)
-	fmt.Println(cfg.BaseURL)
+
 	return &Config{
 		ServerAddress: cfg.ServerAddress,
 		BaseURL:       cfg.BaseURL,

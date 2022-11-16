@@ -18,7 +18,6 @@ type Handler struct {
 	count int
 }
 
-//тест
 type CreateShortURLRequest struct {
 	URL string `json:"url"`
 }
@@ -31,8 +30,7 @@ func NewHandler() *Handler {
 	}
 }
 
-func (h *Handler) ShortenURL(bodyStr string) (string, string) {
-	cfg := config.NewConnectorConfig()
+func (h *Handler) ShortenURL(bodyStr string) string {
 
 	var value CreateShortURLRequest
 
@@ -48,7 +46,7 @@ func (h *Handler) ShortenURL(bodyStr string) (string, string) {
 	h.mu.Unlock()
 
 	//return "http://localhost:8080/" + countStr
-	return cfg.BaseURL, countStr
+	return countStr
 }
 
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
@@ -56,13 +54,15 @@ func (h *Handler) ShortenURL(bodyStr string) (string, string) {
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	payload, err := io.ReadAll(r.Body)
 
+	cfg := config.NewConnectorConfig()
+
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
-		base, short := h.ShortenURL(string(payload))
+		short := h.ShortenURL(string(payload))
 
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(base + short))
+		w.Write([]byte(cfg.BaseURL + short))
 	}
 }
 
@@ -93,9 +93,8 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		type Resp struct {
 			Result string `json:"result"`
 		}
-		base, short := h.ShortenURL(value.URL)
 		resp := Resp{
-			Result: base + short,
+			Result: h.ShortenURL(value.URL),
 		}
 		res, err := json.Marshal(resp)
 		if err != nil {
