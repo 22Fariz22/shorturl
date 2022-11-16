@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"22Fariz22/shorturl/handler/config"
 	"encoding/json"
 	"io"
 	"log"
@@ -14,7 +15,7 @@ import (
 type Handler struct {
 	mu    sync.Mutex
 	urls  map[string]string
-	Count int `json:"count"`
+	count int
 }
 
 type CreateShortURLRequest struct {
@@ -25,25 +26,27 @@ func NewHandler() *Handler {
 	c := 0
 	return &Handler{
 		urls:  make(map[string]string),
-		Count: c,
+		count: c,
 	}
 }
 
 func (h *Handler) ShortenURL(bodyStr string) string {
+
 	var value CreateShortURLRequest
 
 	h.mu.Lock()
-	countStr := strconv.Itoa(h.Count)
+	countStr := strconv.Itoa(h.count)
 	h.mu.Unlock()
 
 	value.URL = bodyStr
 
 	h.mu.Lock()
 	h.urls[countStr] = value.URL
-	h.Count++
+	h.count++
 	h.mu.Unlock()
 
-	return "http://localhost:8080/" + countStr
+	//return "http://localhost:8080/" + countStr
+	return countStr
 }
 
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
@@ -51,13 +54,15 @@ func (h *Handler) ShortenURL(bodyStr string) string {
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	payload, err := io.ReadAll(r.Body)
 
+	cfg := config.NewConnectorConfig()
+
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
 		short := h.ShortenURL(string(payload))
 
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(short))
+		w.Write([]byte(cfg.BaseURL + "/" + short))
 	}
 }
 
@@ -73,6 +78,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
+	cfg := config.NewConnectorConfig()
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -89,7 +95,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 			Result string `json:"result"`
 		}
 		resp := Resp{
-			Result: h.ShortenURL(value.URL),
+			Result: cfg.BaseURL + "/" + h.ShortenURL(value.URL),
 		}
 		res, err := json.Marshal(resp)
 		if err != nil {
