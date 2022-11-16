@@ -78,6 +78,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
+	cfg := config.NewConnectorConfig()
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -94,7 +95,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 			Result string `json:"result"`
 		}
 		resp := Resp{
-			Result: h.ShortenURL(value.URL),
+			Result: cfg.BaseURL + h.ShortenURL(value.URL),
 		}
 		res, err := json.Marshal(resp)
 		if err != nil {
