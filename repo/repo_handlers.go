@@ -1,12 +1,14 @@
 package repo
 
 import (
-	"22Fariz22/shorturl/handler"
 	"encoding/json"
 	"os"
 )
 
 //event это type CreateShortURLRequest struct{}
+type CreateShortURLRequest struct {
+	URL string `json:"url"`
+}
 
 type producer struct {
 	file    *os.File
@@ -14,6 +16,7 @@ type producer struct {
 }
 
 func NewProducer(fileName string) (*producer, error) {
+
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		return nil, err
@@ -24,7 +27,7 @@ func NewProducer(fileName string) (*producer, error) {
 	}, nil
 }
 
-func (p *producer) WriteEvent(event *handler.CreateShortURLRequest) error {
+func (p *producer) WriteEvent(event *CreateShortURLRequest) error {
 	return p.encoder.Encode(&event)
 }
 func (p *producer) Close() error {
@@ -49,8 +52,8 @@ func NewConsumer(fileName string) (*consumer, error) {
 	}, nil
 }
 
-func (c *consumer) ReadEvent() (*handler.CreateShortURLRequest, error) {
-	event := &handler.CreateShortURLRequest{}
+func (c *consumer) ReadEvent() (*CreateShortURLRequest, error) {
+	event := &CreateShortURLRequest{}
 	if err := c.decoder.Decode(&event); err != nil {
 		return nil, err
 	}

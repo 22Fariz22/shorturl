@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"22Fariz22/shorturl/repo"
-
 	"22Fariz22/shorturl/handler/config"
+	"22Fariz22/shorturl/repo"
 	"encoding/json"
 	"io"
 	"log"
@@ -20,9 +19,11 @@ type Handler struct {
 	count int
 }
 
-type CreateShortURLRequest struct {
-	URL string `json:"url"`
-}
+//type CreateShortURLRequest struct {
+//	URL string `json:"url"`
+//}
+
+var value repo.CreateShortURLRequest
 
 func NewHandler() *Handler {
 	c := 0
@@ -34,7 +35,7 @@ func NewHandler() *Handler {
 
 func (h *Handler) ShortenURL(bodyStr string) string {
 
-	var value CreateShortURLRequest
+	//var value CreateShortURLRequest
 
 	h.mu.Lock()
 	countStr := strconv.Itoa(h.count)
@@ -63,14 +64,15 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	} else {
 		short := h.ShortenURL(string(payload))
 
-		///////////////////////
 		//пишем в файл
-		fileName := "events.log"
-		producer, err := repo.NewProducer(fileName)
+		producer, err := repo.NewProducer(cfg.FileStoragePath)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer producer.Close()
+		if err := producer.WriteEvent(&value); err != nil {
+			log.Fatal(err)
+		}
 
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(cfg.BaseURL + "/" + short))
@@ -96,8 +98,6 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		log.Printf("error: %s", err)
 	} else {
 
-		var value CreateShortURLRequest
-
 		if err := json.Unmarshal(payload, &value); err != nil {
 			log.Printf("error: %s", err)
 		}
@@ -111,6 +111,16 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		res, err := json.Marshal(resp)
 		if err != nil {
 			panic(err)
+		}
+
+		//пишем в файл
+		producer, err := repo.NewProducer(cfg.FileStoragePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer producer.Close()
+		if err := producer.WriteEvent(&value); err != nil {
+			log.Fatal(err)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
