@@ -61,6 +61,9 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	} else {
 		short := h.ShortenURL(string(payload))
 
+		//пишем в файл
+		write()
+
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(cfg.BaseURL + "/" + short))
 	}
