@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"22Fariz22/shorturl/handler"
 	"encoding/json"
 	"os"
 )
@@ -23,7 +24,7 @@ func NewProducer(fileName string) (*producer, error) {
 	}, nil
 }
 
-func (p *producer) WriteEvent(event *CreateShortURLRequest) error {
+func (p *producer) WriteEvent(event *handler.CreateShortURLRequest) error {
 	return p.encoder.Encode(&event)
 }
 func (p *producer) Close() error {
@@ -48,8 +49,8 @@ func NewConsumer(fileName string) (*consumer, error) {
 	}, nil
 }
 
-func (c *consumer) ReadEvent() (*CreateShortURLRequest, error) {
-	event := &CreateShortURLRequest{}
+func (c *consumer) ReadEvent() (*handler.CreateShortURLRequest, error) {
+	event := &handler.CreateShortURLRequest{}
 	if err := c.decoder.Decode(&event); err != nil {
 		return nil, err
 	}

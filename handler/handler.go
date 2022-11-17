@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"22Fariz22/shorturl/repo"
+
 	"22Fariz22/shorturl/handler/config"
 	"encoding/json"
 	"io"
@@ -61,8 +63,14 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	} else {
 		short := h.ShortenURL(string(payload))
 
+		///////////////////////
 		//пишем в файл
-		write()
+		fileName := "events.log"
+		producer, err := repo.NewProducer(fileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer producer.Close()
 
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(cfg.BaseURL + "/" + short))
