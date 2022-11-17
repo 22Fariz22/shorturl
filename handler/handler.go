@@ -70,23 +70,17 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//если есть запись, то востанавливаем все записи в память
 	if h.count == 0 {
 		//RecoverEvents()
-
 	}
 
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
+		//сокращатель
 		short := h.ShortenURL(string(payload))
 
+		//пишем в json файл
 		producer.WriteEvent(h.count, h.urls)
-		//пишем в файл
-		//producer, err := repo.NewProducer(cfg.FileStoragePath)
-		//if err != nil {
-		//	log.Fatal(err)
-		//}
-		//defer producer.Close()
-		//if err := producer.WriteEvent(&value); err != nil {
-		//	log.Fatal(err)
+
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(cfg.BaseURL + "/" + short))
 	}

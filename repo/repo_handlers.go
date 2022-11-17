@@ -13,15 +13,11 @@ type CreateShortURLRequest struct {
 }
 
 type JSONModel struct {
-	count int               `json:"count"`
-	urls  map[string]string `json:"urls"`
+	Count int               `json:"count"`
+	Url   map[string]string `json:"url"`
 }
 type AllJSONModels struct {
-	allUrls []*JSONModel
-}
-
-type CreateShortURLRequestArray struct {
-	URLs []CreateShortURLRequestArray `json:"urls"`
+	AllUrls []*JSONModel
 }
 
 type producer struct {
@@ -30,7 +26,7 @@ type producer struct {
 }
 
 func NewProducer(fileName string) (*producer, error) {
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
@@ -43,18 +39,30 @@ func NewProducer(fileName string) (*producer, error) {
 func (p *producer) WriteEvent(cnt int, urlMap map[string]string) error {
 	cfg := config.NewConnectorConfig()
 	newURL := &JSONModel{}
-	newURL.urls = urlMap
-	newURL.count = cnt
+	newURL.Url = urlMap
+	newURL.Count = cnt
 
-	b, _ := ioutil.ReadAll(p.file)
-	var alUrls AllJSONModels
-	err := json.Unmarshal(b, &alUrls.allUrls)
+	//open file
+	file, err := os.OpenFile(cfg.FileStoragePath, os.O_RDWR, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	b, err := ioutil.ReadAll(file)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	alUrls.allUrls = append(alUrls.allUrls, newURL)
-	newURLBytes, err := json.MarshalIndent(&alUrls.allUrls, "", " ")
+	var alUrls AllJSONModels
+
+	err = json.Unmarshal(b, &alUrls.AllUrls)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	alUrls.AllUrls = append(alUrls.AllUrls, newURL)
+	newURLBytes, err := json.MarshalIndent(&alUrls.AllUrls, "", " ")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -94,7 +102,6 @@ func (c *consumer) ReadEvent() (*CreateShortURLRequest, error) {
 
 //функция для востановления списка urls
 func (c *consumer) RecoverEvents() {
-
 }
 
 func (c *consumer) Close() error {
