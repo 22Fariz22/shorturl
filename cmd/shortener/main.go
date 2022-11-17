@@ -3,11 +3,9 @@ package main
 import (
 	"22Fariz22/shorturl/handler"
 	"22Fariz22/shorturl/handler/config"
-
-	"net/http"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"net/http"
 )
 
 func main() {
@@ -27,4 +25,5 @@ func main() {
 	r.Post("/api/shorten", hd.CreateShortURLJSON)
 
 	http.ListenAndServe(cfg.ServerAddress, r)
+
 }
