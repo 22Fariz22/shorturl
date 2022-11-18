@@ -91,11 +91,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	cfg := config.NewConnectorConfig()
 
-	//err = env.Parse(cfg)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
 	fileName := cfg.FileStoragePath
 	if fileName != "" {
 		producer, err := repo.NewProducer(fileName)
@@ -135,10 +130,6 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	cfg := config.NewConnectorConfig()
 	fileName := cfg.FileStoragePath
 
-	if h.Count == 0 {
-		h.RecoverEvents()
-	}
-
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Fatal(err)
@@ -165,6 +156,10 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 		defer producer.Close()
+
+		if h.Count == 0 {
+			h.RecoverEvents()
+		}
 
 		//пишем в файл
 		if err := producer.WriteEvent(h.Count, h.Urls); err != nil {
