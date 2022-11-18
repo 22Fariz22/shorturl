@@ -41,7 +41,7 @@ func (h *Handler) RecoverEvents() {
 	fileName := cfg.FileStoragePath
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("", err)
 	}
 	b, err := ioutil.ReadAll(file)
 	if err != nil {
@@ -85,35 +85,39 @@ func (h *Handler) ShortenURL(bodyStr string) string {
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	payload, err := io.ReadAll(r.Body)
-
-	cfg := config.NewConnectorConfig()
-
-	fileName := cfg.FileStoragePath
-	producer, err := repo.NewProducer(fileName)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer producer.Close()
 
-	//проверяем счетчик, если 0,то это превый запуск
-	//а если первывый запуск то проверяем есть ли запись в events.json
-	//если есть запись, то востанавливаем все записи в память
-	if h.Count == 0 {
-		h.RecoverEvents()
-	}
+	cfg := config.NewConnectorConfig()
 
-	if err != nil {
-		log.Printf("error: %s", err)
-	} else {
-		//сокращатель
-		short := h.ShortenURL(string(payload))
+	//err = env.Parse(cfg)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
+	fileName := cfg.FileStoragePath
+	if fileName != "" {
+		producer, err := repo.NewProducer(fileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer producer.Close()
+
+		//проверяем счетчик, если 0,то это превый запуск
+		if h.Count == 0 {
+			h.RecoverEvents()
+		}
 
 		//пишем в json файл
 		producer.WriteEvent(h.Count, h.Urls)
-
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(cfg.BaseURL + "/" + short))
 	}
+
+	//сокращатель
+	short := h.ShortenURL(string(payload))
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(cfg.BaseURL + "/" + short))
 
 }
 
@@ -129,6 +133,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	cfg := config.NewConnectorConfig()
+	fileName := cfg.FileStoragePath
 
 	if h.Count == 0 {
 		h.RecoverEvents()
@@ -136,37 +141,38 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("error: %s", err)
-	} else {
+		log.Fatal(err)
+	}
 
-		if err := json.Unmarshal(payload, &value); err != nil {
-			log.Printf("error: %s", err)
-		}
+	if err := json.Unmarshal(payload, &value); err != nil {
+		log.Fatal(err)
+	}
 
-		type Resp struct {
-			Result string `json:"result"`
-		}
-		resp := Resp{
-			Result: cfg.BaseURL + "/" + h.ShortenURL(value.URL),
-		}
-		res, err := json.Marshal(resp)
-		if err != nil {
-			panic(err)
-		}
+	type Resp struct {
+		Result string `json:"result"`
+	}
+	resp := Resp{
+		Result: cfg.BaseURL + "/" + h.ShortenURL(value.URL),
+	}
+	res, err := json.Marshal(resp)
+	if err != nil {
+		panic(err)
+	}
 
-		//пишем в файл
-		producer, err := repo.NewProducer(cfg.FileStoragePath)
+	if fileName != "" {
+		producer, err := repo.NewProducer(fileName)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer producer.Close()
 
+		//пишем в файл
 		if err := producer.WriteEvent(h.Count, h.Urls); err != nil {
 			log.Fatal(err)
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		w.Write(res)
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(res)
 }
