@@ -5,13 +5,14 @@ import (
 	"22Fariz22/shorturl/model"
 	"22Fariz22/shorturl/repo"
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Handler model.HandlerModel
@@ -65,8 +66,6 @@ func (h *Handler) RecoverEvents() {
 }
 
 func (h *Handler) ShortenURL(bodyStr string) string {
-
-	//var value CreateShortURLRequest
 
 	h.Mu.Lock()
 	countStr := strconv.Itoa(h.Count)

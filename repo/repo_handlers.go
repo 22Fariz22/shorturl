@@ -27,7 +27,6 @@ type producer struct {
 }
 
 func NewProducer(fileName string) (*producer, error) {
-	//file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND, os.ModePerm)
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND, 0777)
 
 	if err != nil {
@@ -68,8 +67,6 @@ func (p *producer) Close() error {
 	return p.file.Close()
 }
 
-//********
-//дальше код для того чтобы приложение при перезапуске прочитала или востановила ранее сокращенные урлы
 type consumer struct {
 	file    *os.File
 	Decoder *json.Decoder
