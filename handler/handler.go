@@ -28,7 +28,7 @@ func NewHandler() *Handler {
 
 type JSONModel struct {
 	Count int               `json:"count"`
-	Url   map[string]string `json:"url"`
+	URL   map[string]string `json:"url"`
 }
 
 type AllJSONModels struct {
@@ -56,7 +56,7 @@ func (h *Handler) RecoverEvents() {
 			for i := 0; i < v.Count; i++ {
 				iStr := strconv.Itoa(i)
 				//типа востанавливаем
-				h.Urls[iStr] = v.Url[iStr]
+				h.Urls[iStr] = v.URL[iStr]
 				h.Count = v.Count
 
 			}
