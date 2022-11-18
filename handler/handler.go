@@ -2,35 +2,65 @@ package handler
 
 import (
 	"22Fariz22/shorturl/handler/config"
+	"22Fariz22/shorturl/model"
 	"22Fariz22/shorturl/repo"
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
-	"sync"
-
-	"github.com/go-chi/chi/v5"
 )
 
-type Handler struct {
-	mu    sync.Mutex
-	urls  map[string]string `json:"urls"` //map[0:http://ya.ru]
-	count int               `json:"count"`
-}
-
-//type CreateShortURLRequest struct {
-//	URL string `json:"url"`
-//}
+type Handler model.HandlerModel
 
 var value repo.CreateShortURLRequest
-var valueArr []repo.CreateShortURLRequest
 
 func NewHandler() *Handler {
 	c := 0
 	return &Handler{
-		urls:  make(map[string]string),
-		count: c,
+		Urls:  make(map[string]string),
+		Count: c,
+	}
+}
+
+type JSONModel struct {
+	Count int               `json:"count"`
+	Url   map[string]string `json:"url"`
+}
+
+type AllJSONModels struct {
+	AllUrls []*JSONModel
+}
+
+//функция для востановления списка urls
+func (h *Handler) RecoverEvents() {
+	cfg := config.NewConnectorConfig()
+	fileName := cfg.FileStoragePath
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND, 0777)
+	if err != nil {
+		log.Fatal(err)
+	}
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(b) != 0 {
+		var alUrls AllJSONModels
+
+		_ = json.Unmarshal(b, &alUrls.AllUrls)
+
+		for _, v := range alUrls.AllUrls {
+			for i := 0; i < v.Count; i++ {
+				iStr := strconv.Itoa(i)
+				//типа востанавливаем
+				h.Urls[iStr] = v.Url[iStr]
+				h.Count = v.Count
+
+			}
+		}
 	}
 }
 
@@ -38,16 +68,16 @@ func (h *Handler) ShortenURL(bodyStr string) string {
 
 	//var value CreateShortURLRequest
 
-	h.mu.Lock()
-	countStr := strconv.Itoa(h.count)
-	h.mu.Unlock()
+	h.Mu.Lock()
+	countStr := strconv.Itoa(h.Count)
+	h.Mu.Unlock()
 
 	value.URL = bodyStr
 
-	h.mu.Lock()
-	h.urls[countStr] = value.URL
-	h.count++
-	h.mu.Unlock()
+	h.Mu.Lock()
+	h.Urls[countStr] = value.URL
+	h.Count++
+	h.Mu.Unlock()
 
 	return countStr
 }
@@ -66,10 +96,10 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	defer producer.Close()
 
 	//проверяем счетчик, если 0,то это превый запуск
-	//а если первывый запуск то проверяем есть ли запись в events.log
+	//а если первывый запуск то проверяем есть ли запись в events.json
 	//если есть запись, то востанавливаем все записи в память
-	if h.count == 0 {
-		//RecoverEvents()
+	if h.Count == 0 {
+		h.RecoverEvents()
 	}
 
 	if err != nil {
@@ -79,7 +109,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 		short := h.ShortenURL(string(payload))
 
 		//пишем в json файл
-		producer.WriteEvent(h.count, h.urls)
+		producer.WriteEvent(h.Count, h.Urls)
 
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(cfg.BaseURL + "/" + short))
@@ -90,7 +120,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := chi.URLParam(r, "id")
-	i, ok := h.urls[vars]
+	i, ok := h.Urls[vars]
 	if ok {
 		w.Header().Set("Location", i)
 		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
@@ -99,6 +129,10 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	cfg := config.NewConnectorConfig()
+
+	if h.Count == 0 {
+		h.RecoverEvents()
+	}
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -126,7 +160,8 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 		defer producer.Close()
-		if err := producer.WriteEvent(h.count, h.urls); err != nil {
+
+		if err := producer.WriteEvent(h.Count, h.Urls); err != nil {
 			log.Fatal(err)
 		}
 
