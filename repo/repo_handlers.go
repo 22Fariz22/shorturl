@@ -46,7 +46,6 @@ func (p *Producer) WriteEvent(cnt int, urlMap map[string]string) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//defer p.file.Close()
 
 	var alUrls AllJSONModels
 

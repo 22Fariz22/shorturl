@@ -4,11 +4,10 @@ import (
 	"22Fariz22/shorturl/handler"
 	"22Fariz22/shorturl/handler/config"
 	"22Fariz22/shorturl/repo"
-	"log"
-	"net/http"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"log"
+	"net/http"
 )
 
 func main() {
@@ -35,15 +34,15 @@ func main() {
 
 	hd := handler.NewHandler(producer)
 
-	hd.RecoverEvents()
+	hd.RecoverEvents(fileName)
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
 	r.Post("/api/shorten", hd.CreateShortURLJSON)
 
-	err = http.ListenAndServe(cfg.ServerAddress, r)
-	if err != nil {
+	if err = http.ListenAndServe(cfg.ServerAddress, r); err != nil {
 		producer.Close()
 		log.Fatal("ListenAndServe: ", err)
 	}
+
 }

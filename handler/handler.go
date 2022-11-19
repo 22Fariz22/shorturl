@@ -38,9 +38,7 @@ type AllJSONModels struct {
 }
 
 //функция для востановления списка urls
-func (h *Handler) RecoverEvents() {
-	cfg := config.NewConnectorConfig()
-	fileName := cfg.FileStoragePath
+func (h *Handler) RecoverEvents(fileName string) {
 	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		log.Fatal("", err)
@@ -96,8 +94,10 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//сокращатель
 	short := h.ShortenURL(string(payload))
 
-	//пишем в json файл
-	h.Producer.WriteEvent(h.Count, h.Urls)
+	//пишем в json файл если есть FileStoragePath
+	if cfg.FileStoragePath != "" {
+		h.Producer.WriteEvent(h.Count, h.Urls)
+	}
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(cfg.BaseURL + "/" + short))
@@ -138,7 +138,10 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	h.Producer.WriteEvent(h.Count, h.Urls)
+	//пишем в json файл если есть FileStoragePath
+	if cfg.FileStoragePath != "" {
+		h.Producer.WriteEvent(h.Count, h.Urls)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

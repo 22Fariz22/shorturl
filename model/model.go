@@ -7,7 +7,7 @@ import (
 
 type HandlerModel struct {
 	Mu       sync.Mutex
-	Urls     map[string]string `json:"urls"` //map[0:http://ya.ru]
+	Urls     map[string]string `json:"urls"`
 	Count    int               `json:"count"`
 	Producer *repo.Producer
 }
