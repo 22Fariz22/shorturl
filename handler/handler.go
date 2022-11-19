@@ -40,7 +40,7 @@ type AllJSONModels struct {
 func (h *Handler) RecoverEvents() {
 	cfg := config.NewConnectorConfig()
 	fileName := cfg.FileStoragePath
-	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND, 0777)
+	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		log.Fatal("", err)
 	}
@@ -51,10 +51,13 @@ func (h *Handler) RecoverEvents() {
 	if len(b) != 0 {
 		var alUrls AllJSONModels
 
-		_ = json.Unmarshal(b, &alUrls.AllUrls)
+		err = json.Unmarshal(b, &alUrls.AllUrls)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		for _, v := range alUrls.AllUrls {
-			for i := 0; i < v.Count; i++ {
+			for i := 0; i < v.Count+1; i++ {
 				iStr := strconv.Itoa(i)
 				//типа востанавливаем
 				h.Urls[iStr] = v.URL[iStr]
@@ -90,23 +93,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	cfg := config.NewConnectorConfig()
 
-	fileName := cfg.FileStoragePath
-	if fileName != "" {
-		producer, err := repo.NewProducer(fileName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer producer.Close()
-
-		//проверяем счетчик, если 0,то это превый запуск
-		if h.Count == 0 {
-			h.RecoverEvents()
-		}
-
-		//пишем в json файл
-		producer.WriteEvent(h.Count, h.Urls)
-	}
-
 	//сокращатель
 	short := h.ShortenURL(string(payload))
 
@@ -127,7 +113,6 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	cfg := config.NewConnectorConfig()
-	fileName := cfg.FileStoragePath
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -144,26 +129,10 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	resp := Resp{
 		Result: cfg.BaseURL + "/" + h.ShortenURL(value.URL),
 	}
+
 	res, err := json.Marshal(resp)
 	if err != nil {
 		panic(err)
-	}
-
-	if fileName != "" {
-		producer, err := repo.NewProducer(fileName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer producer.Close()
-
-		if h.Count == 0 {
-			h.RecoverEvents()
-		}
-
-		//пишем в файл
-		if err := producer.WriteEvent(h.Count, h.Urls); err != nil {
-			log.Fatal(err)
-		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

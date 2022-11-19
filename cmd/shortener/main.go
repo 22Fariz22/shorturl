@@ -3,6 +3,8 @@ package main
 import (
 	"22Fariz22/shorturl/handler"
 	"22Fariz22/shorturl/handler/config"
+	"22Fariz22/shorturl/repo"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -10,7 +12,6 @@ import (
 )
 
 func main() {
-	cfg := config.NewConnectorConfig()
 
 	r := chi.NewRouter()
 
@@ -20,6 +21,22 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	hd := handler.NewHandler()
+	cfg := config.NewConnectorConfig()
+	fileName := cfg.FileStoragePath
+
+	//запускаем открытие файла при новом запуске приложении
+	if fileName != "" {
+		producer, err := repo.NewProducer(fileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer producer.Close()
+
+		//проверяем счетчик, если 0,то это первый запуск
+		if hd.Count == 0 {
+			hd.RecoverEvents()
+		}
+	}
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
