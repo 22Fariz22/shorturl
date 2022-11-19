@@ -32,10 +32,7 @@ func main() {
 		}
 		defer producer.Close()
 
-		//проверяем счетчик, если 0,то это первый запуск
-		if hd.Count == 0 {
-			hd.RecoverEvents()
-		}
+		hd.RecoverEvents()
 	}
 
 	r.Post("/", hd.CreateShortURLHandler)

@@ -3,6 +3,7 @@ package repo
 import (
 	"22Fariz22/shorturl/handler/config"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -21,24 +22,24 @@ type AllJSONModels struct {
 	AllUrls []*JSONModel
 }
 
-type producer struct {
+type Producer struct {
 	file    *os.File
 	encoder *json.Encoder
 }
 
-func NewProducer(fileName string) (*producer, error) {
+func NewProducer(fileName string) (*Producer, error) {
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND, 0777)
 
 	if err != nil {
 		return nil, err
 	}
-	return &producer{
+	return &Producer{
 		file:    file,
 		encoder: json.NewEncoder(file),
 	}, nil
 }
 
-func (p *producer) WriteEvent(cnt int, urlMap map[string]string) error {
+func (p *Producer) WriteEvent(cnt int, urlMap map[string]string) error {
 	cfg := config.NewConnectorConfig()
 	newURL := &JSONModel{}
 	newURL.URL = urlMap
@@ -46,6 +47,7 @@ func (p *producer) WriteEvent(cnt int, urlMap map[string]string) error {
 
 	b, err := ioutil.ReadAll(p.file)
 	if err != nil {
+		fmt.Println("ReadAll")
 		log.Fatal(err)
 	}
 	defer p.file.Close()
@@ -63,7 +65,7 @@ func (p *producer) WriteEvent(cnt int, urlMap map[string]string) error {
 	return nil
 }
 
-func (p *producer) Close() error {
+func (p *Producer) Close() error {
 	return p.file.Close()
 }
 

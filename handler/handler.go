@@ -96,6 +96,10 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//сокращатель
 	short := h.ShortenURL(string(payload))
 
+	//пишем в json файл
+	var producer repo.Producer
+	producer.WriteEvent(h.Count, h.Urls)
+
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(cfg.BaseURL + "/" + short))
 
