@@ -20,25 +20,30 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	hd := handler.NewHandler()
 	cfg := config.NewConnectorConfig()
 	fileName := cfg.FileStoragePath
 
-	//запускаем открытие файла при новом запуске приложении
-	if fileName != "" {
-		producer, err := repo.NewProducer(fileName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer producer.Close()
-
-		hd.RecoverEvents()
+	if fileName == "" {
+		fileName = "storage/events.json"
 	}
+
+	//запускаем открытие файла при новом запуске приложении
+	producer, err := repo.NewProducer(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	hd := handler.NewHandler(producer)
+
+	hd.RecoverEvents()
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
 	r.Post("/api/shorten", hd.CreateShortURLJSON)
 
-	http.ListenAndServe(cfg.ServerAddress, r)
-
+	err = http.ListenAndServe(cfg.ServerAddress, r)
+	if err != nil {
+		producer.Close()
+		log.Fatal("ListenAndServe: ", err)
+	}
 }

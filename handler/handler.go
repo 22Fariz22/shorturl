@@ -19,11 +19,12 @@ type Handler model.HandlerModel
 
 var value repo.CreateShortURLRequest
 
-func NewHandler() *Handler {
+func NewHandler(producer *repo.Producer) *Handler {
 	c := 0
 	return &Handler{
-		Urls:  make(map[string]string),
-		Count: c,
+		Urls:     make(map[string]string),
+		Count:    c,
+		Producer: producer,
 	}
 }
 
@@ -62,7 +63,6 @@ func (h *Handler) RecoverEvents() {
 				//типа востанавливаем
 				h.Urls[iStr] = v.URL[iStr]
 				h.Count = v.Count
-
 			}
 		}
 	}
@@ -97,8 +97,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	short := h.ShortenURL(string(payload))
 
 	//пишем в json файл
-	producer := repo.Producer{}
-	producer.WriteEvent(h.Count, h.Urls)
+	h.Producer.WriteEvent(h.Count, h.Urls)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(cfg.BaseURL + "/" + short))
@@ -138,6 +137,8 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
+	h.Producer.WriteEvent(h.Count, h.Urls)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
