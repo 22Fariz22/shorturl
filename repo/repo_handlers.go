@@ -44,7 +44,7 @@ func (p *Producer) WriteEvent(cnt int, urlMap map[string]string) error {
 	newURL := &JSONModel{}
 	newURL.URL = urlMap
 	newURL.Count = cnt
-
+	fmt.Println("p.file", p.file)
 	b, err := ioutil.ReadAll(p.file)
 	if err != nil {
 		fmt.Println("ReadAll")
