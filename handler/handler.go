@@ -11,6 +11,7 @@ import (
 )
 
 /// это itertest4.этот коммент должен появиться в test_branch через merge
+//
 type Handler struct {
 	mu    sync.Mutex
 	urls  map[string]string
