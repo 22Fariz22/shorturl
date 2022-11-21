@@ -14,7 +14,7 @@ import (
 func main() {
 	cfg := config.NewConnectorConfig()
 
-	flag.StringVar(&cfg.ServerAddress, "s", config.ServerAddress, "-a to set server address")
+	flag.StringVar(&cfg.ServerAddress, "s", config.ServerAddress, "-s to set server address")
 	flag.StringVar(&cfg.BaseURL, "b", config.BaseURL, "-b to set base url")
 	flag.StringVar(&cfg.FileStoragePath, "f", config.FileStoragePath, "-f to set location storage files")
 
