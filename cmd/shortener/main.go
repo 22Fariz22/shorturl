@@ -44,5 +44,4 @@ func main() {
 		producer.Close()
 		log.Fatal("ListenAndServe: ", err)
 	}
-
 }
