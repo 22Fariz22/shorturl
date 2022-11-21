@@ -29,8 +29,8 @@ func NewHandler(producer *repo.Producer) *Handler {
 }
 
 type JSONModel struct {
-	Count int               `json:"count"`
-	URL   map[string]string `json:"url"`
+	ID  int               `json:"id"`
+	URL map[string]string `json:"url"`
 }
 
 type AllJSONModels struct {
@@ -56,11 +56,11 @@ func (h *Handler) RecoverEvents(fileName string) {
 		}
 
 		for _, v := range alUrls.AllUrls {
-			for i := 0; i < v.Count+1; i++ {
+			for i := 0; i < v.ID+1; i++ {
 				iStr := strconv.Itoa(i)
 				//типа востанавливаем
 				h.Urls[iStr] = v.URL[iStr]
-				h.Count = v.Count
+				h.Count = v.ID
 			}
 		}
 	}

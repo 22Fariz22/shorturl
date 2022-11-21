@@ -4,6 +4,7 @@ import (
 	"22Fariz22/shorturl/handler"
 	"22Fariz22/shorturl/handler/config"
 	"22Fariz22/shorturl/repo"
+	"flag"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"log"
@@ -11,6 +12,13 @@ import (
 )
 
 func main() {
+	cfg := config.NewConnectorConfig()
+
+	flag.StringVar(&cfg.ServerAddress, "s", config.ServerAddress, "-a to set server address")
+	flag.StringVar(&cfg.BaseURL, "b", config.BaseURL, "-b to set base url")
+	flag.StringVar(&cfg.FileStoragePath, "f", config.FileStoragePath, "-f to set location storage files")
+
+	flag.Parse()
 
 	r := chi.NewRouter()
 
@@ -19,22 +27,19 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	cfg := config.NewConnectorConfig()
-	fileName := cfg.FileStoragePath
-
-	if fileName == "" {
-		fileName = "storage/events.json"
+	if cfg.FileStoragePath == "" {
+		cfg.FileStoragePath = config.FileStoragePath
 	}
 
 	//запускаем открытие файла при новом запуске приложении
-	producer, err := repo.NewProducer(fileName)
+	producer, err := repo.NewProducer(cfg.FileStoragePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	hd := handler.NewHandler(producer)
 
-	hd.RecoverEvents(fileName)
+	hd.RecoverEvents(cfg.FileStoragePath)
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
