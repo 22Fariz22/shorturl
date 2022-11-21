@@ -54,7 +54,7 @@ func (p *Producer) WriteEvent(cnt int, urlMap map[string]string) error {
 	//	log.Fatal(err)
 	//}
 
-	alUrls.AllUrls = append(alUrls.AllUrls[len(alUrls.AllUrls):], newURL)
+	alUrls.AllUrls = append(alUrls.AllUrls, newURL)
 	newURLBytes, err := json.MarshalIndent(&alUrls.AllUrls, "", " ")
 	if err != nil {
 		log.Fatal(err)
