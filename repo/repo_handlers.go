@@ -26,8 +26,8 @@ type Producer struct {
 	Cfg  *config.Config
 }
 
-func NewProducer(fileName string) (*Producer, error) {
-	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND, 0777)
+func NewProducer(cfg *config.Config) (*Producer, error) {
+	file, err := os.OpenFile(cfg.FileStoragePath, os.O_CREATE|os.O_APPEND, 0777)
 
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func NewProducer(fileName string) (*Producer, error) {
 }
 
 func (p *Producer) WriteEvent(cnt int, urlMap map[string]string) error {
-	cfg := config.NewConnectorConfig()
+
 	newURL := &JSONModel{}
 	newURL.URL = urlMap
 	newURL.Count = cnt
@@ -61,7 +61,7 @@ func (p *Producer) WriteEvent(cnt int, urlMap map[string]string) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ioutil.WriteFile(cfg.FileStoragePath, newURLBytes, 0666)
+	ioutil.WriteFile(p.Cfg.FileStoragePath, newURLBytes, 0666)
 	return nil
 }
 

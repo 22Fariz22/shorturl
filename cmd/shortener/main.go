@@ -42,7 +42,7 @@ func main() {
 
 	//fmt.Println("cfg.FileStoragePath after flag: ", cfg.FileStoragePath)
 	//запускаем открытие файла при новом запуске приложении
-	producer, err := repo.NewProducer(cfg.FileStoragePath)
+	producer, err := repo.NewProducer(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
