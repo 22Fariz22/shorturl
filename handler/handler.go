@@ -92,6 +92,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//fmt.Println("cfg.FileStoragePath in handler.go: ", cfg.FileStoragePath)
 	//fmt.Println("producer.FileStoragePath.ServerAddress in handler.go:   ", h.Producer.Cfg.ServerAddress)
 	//fmt.Println("producer.FileStoragePath.BaseURL in handler.go:         ", h.Producer.Cfg.BaseURL)
+	//fmt.Println("h.Producer.Cfg.ServerAddress in handler.go: ", h.Producer.Cfg.ServerAddress)
 	//fmt.Println("h.Producer.Cfg.FileStoragePath in handler.go: ", h.Producer.Cfg.FileStoragePath)
 
 	//сокращатель
