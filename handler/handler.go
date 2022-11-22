@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"22Fariz22/shorturl/handler/config"
 	"22Fariz22/shorturl/model"
 	"22Fariz22/shorturl/repo"
 	"encoding/json"
@@ -119,7 +118,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
-	cfg := config.NewConnectorConfig()
+	//cfg := config.NewConnectorConfig()
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -134,7 +133,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		Result string `json:"result"`
 	}
 	resp := Resp{
-		Result: cfg.BaseURL + "/" + h.ShortenURL(value.URL),
+		Result: h.Producer.Cfg.BaseURL + "/" + h.ShortenURL(value.URL),
 	}
 
 	res, err := json.Marshal(resp)
@@ -143,7 +142,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//пишем в json файл если есть FileStoragePath
-	if cfg.FileStoragePath != "" {
+	if h.Producer.Cfg.FileStoragePath != "" {
 		h.Producer.WriteEvent(h.Count, h.Urls)
 	}
 
