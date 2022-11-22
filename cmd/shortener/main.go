@@ -11,26 +11,36 @@ import (
 	"net/http"
 )
 
+var (
+	ServerAddress   string
+	BaseURL         string
+	FileStoragePath string
+)
+
 func main() {
 	cfg := config.NewConnectorConfig()
 
-	flag.StringVar(&cfg.ServerAddress, "s", config.ServerAddress, "-s to set server address")
-	flag.StringVar(&cfg.BaseURL, "b", config.BaseURL, "-b to set base url")
-	flag.StringVar(&cfg.FileStoragePath, "f", config.FileStoragePath, "-f to set location storage files")
+	flag.StringVar(&ServerAddress, "s", "", "-s to set server address")           //cfg.ServerAddress
+	flag.StringVar(&BaseURL, "b", "", "-b to set base url")                       //cfg.BaseURL
+	flag.StringVar(&FileStoragePath, "f", "", "-f to set location storage files") //cfg.FileStoragePath
 
 	flag.Parse()
 
-	r := chi.NewRouter()
+	//fmt.Println("ServerAddress:   ", ServerAddress)
+	//fmt.Println("BaseURL:         ", BaseURL)
+	//fmt.Println("FileStoragePath: ", FileStoragePath)
 
+	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	if cfg.FileStoragePath == "" {
-		cfg.FileStoragePath = config.FileStoragePath
+	if FileStoragePath != "" {
+		cfg.FileStoragePath = FileStoragePath
 	}
 
+	//fmt.Println("cfg.FileStoragePath after flag: ", cfg.FileStoragePath)
 	//запускаем открытие файла при новом запуске приложении
 	producer, err := repo.NewProducer(cfg.FileStoragePath)
 	if err != nil {
@@ -39,7 +49,19 @@ func main() {
 
 	hd := handler.NewHandler(producer)
 
-	hd.RecoverEvents(cfg.FileStoragePath)
+	if BaseURL != "" {
+		hd.Producer.Cfg.BaseURL = BaseURL
+	}
+	if ServerAddress != "" {
+		hd.Producer.Cfg.ServerAddress = ServerAddress
+	}
+	if FileStoragePath != "" {
+		hd.Producer.Cfg.FileStoragePath = FileStoragePath
+	}
+
+	//fmt.Println("hd.Producer.Cfg.FileStoragePath after flag: ", hd.Producer.Cfg.FileStoragePath)
+
+	hd.RecoverEvents(hd.Producer.Cfg.FileStoragePath)
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)

@@ -89,18 +89,22 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 		log.Fatal(err)
 	}
 
-	cfg := config.NewConnectorConfig()
+	//cfg := config.NewConnectorConfig()
+	//fmt.Println("cfg.FileStoragePath in handler.go: ", cfg.FileStoragePath)
+	//fmt.Println("producer.FileStoragePath.ServerAddress in handler.go:   ", h.Producer.Cfg.ServerAddress)
+	//fmt.Println("producer.FileStoragePath.BaseURL in handler.go:         ", h.Producer.Cfg.BaseURL)
+	//fmt.Println("producer.FileStoragePath.FileStoragePath in handler.go: ", h.Producer.Cfg.FileStoragePath)
 
 	//сокращатель
 	short := h.ShortenURL(string(payload))
 
 	//пишем в json файл если есть FileStoragePath
-	if cfg.FileStoragePath != "" {
+	if h.Producer.Cfg.FileStoragePath != "" {
 		h.Producer.WriteEvent(h.Count, h.Urls)
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(cfg.BaseURL + "/" + short))
+	w.Write([]byte(h.Producer.Cfg.BaseURL + "/" + short))
 
 }
 

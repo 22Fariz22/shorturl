@@ -23,6 +23,7 @@ type AllJSONModels struct {
 
 type Producer struct {
 	file *os.File
+	Cfg  *config.Config
 }
 
 func NewProducer(fileName string) (*Producer, error) {
@@ -33,6 +34,7 @@ func NewProducer(fileName string) (*Producer, error) {
 	}
 	return &Producer{
 		file: file,
+		Cfg:  config.NewConnectorConfig(),
 	}, nil
 }
 

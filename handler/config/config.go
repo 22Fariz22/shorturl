@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	ServerAddress   = "127.0.0.1:8080"
-	BaseURL         = "http://127.0.0.1:8080"
-	FileStoragePath = "storage/events.json"
+	DefaultServerAddress   = "127.0.0.1:8080"
+	DefaultBaseURL         = "http://127.0.0.1:8080"
+	DefaultFileStoragePath = "storage/events.json"
 )
 
 type Config struct {
