@@ -3,6 +3,7 @@ package handler
 import (
 	"22Fariz22/shorturl/model"
 	"22Fariz22/shorturl/repo"
+	"compress/gzip"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -150,4 +152,44 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(res)
+}
+
+func (r gzipReader) Close() error {
+	if err := r.Closer.Close(); err != nil {
+		log.Fatal(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// DeCompress возвращает распакованный gz
+func DeCompress(next http.Handler) http.Handler {
+	// переменная reader будет равна r.Body или *gzip.Reader
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if !strings.Contains(request.Header.Get("Content-Encoding"), "gzip") {
+			next.ServeHTTP(writer, request)
+			return
+		}
+		request.Header.Del("Content-Length")
+		reader, err := gzip.NewReader(request.Body)
+		if err != nil {
+			io.WriteString(writer, err.Error())
+			return
+		}
+
+		defer reader.Close()
+
+		request.Body = gzipReader{
+			reader,
+			request.Body,
+		}
+
+		next.ServeHTTP(writer, request)
+	})
+}
+
+type gzipReader struct {
+	*gzip.Reader
+	io.Closer
 }

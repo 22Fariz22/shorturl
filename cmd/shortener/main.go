@@ -5,7 +5,6 @@ import (
 	"22Fariz22/shorturl/handler/config"
 	"22Fariz22/shorturl/repo"
 	"flag"
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"log"
@@ -27,11 +26,12 @@ func main() {
 
 	flag.Parse()
 
-	fmt.Println("ServerAddress:   ", ServerAddress)
-	fmt.Println("BaseURL:         ", BaseURL)
-	fmt.Println("FileStoragePath: ", FileStoragePath)
+	//fmt.Println("ServerAddress:   ", ServerAddress)
+	//fmt.Println("BaseURL:         ", BaseURL)
+	//fmt.Println("FileStoragePath: ", FileStoragePath)
 
 	r := chi.NewRouter()
+	r.Use(handler.DeCompress)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)

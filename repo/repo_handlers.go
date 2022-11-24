@@ -28,7 +28,6 @@ type Producer struct {
 
 func NewProducer(cfg *config.Config) (*Producer, error) {
 	file, err := os.OpenFile(cfg.FileStoragePath, os.O_CREATE|os.O_APPEND, 0777)
-
 	if err != nil {
 		return nil, err
 	}
