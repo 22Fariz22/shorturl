@@ -18,7 +18,6 @@ type Config struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:"events.json"`
 }
 
-//envDefault:"storage/events.json"
 func NewConnectorConfig() *Config {
 	cfg := &Config{}
 	if err := env.Parse(cfg); err != nil {

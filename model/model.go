@@ -1,7 +1,7 @@
 package model
 
 import (
-	"22Fariz22/shorturl/repo"
+	"github.com/22Fariz22/shorturl/repo"
 	"sync"
 )
 

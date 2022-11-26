@@ -1,14 +1,16 @@
 package main
 
 import (
-	"22Fariz22/shorturl/handler"
-	"22Fariz22/shorturl/handler/config"
-	"22Fariz22/shorturl/repo"
 	"flag"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"log"
 	"net/http"
+
+	"github.com/22Fariz22/shorturl/handler"
+	"github.com/22Fariz22/shorturl/handler/config"
+	"github.com/22Fariz22/shorturl/repo"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 var (
@@ -74,8 +76,8 @@ func main() {
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
 	r.Post("/api/shorten", hd.CreateShortURLJSON)
 
-	if err = http.ListenAndServe(cfg.ServerAddress, r); err != nil {
+	if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
 		producer.Close()
-		log.Fatal("ListenAndServe: ", err)
+		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
 	}
 }

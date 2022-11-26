@@ -1,4 +1,4 @@
-module 22Fariz22/shorturl
+module github.com/22Fariz22/shorturl
 
 go 1.18
 

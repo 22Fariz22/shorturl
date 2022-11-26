@@ -1,10 +1,9 @@
 package handler
 
 import (
-	"22Fariz22/shorturl/model"
-	"22Fariz22/shorturl/repo"
 	"compress/gzip"
 	"encoding/json"
+	"github.com/22Fariz22/shorturl/model_json"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,6 +11,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/22Fariz22/shorturl/model"
+	"github.com/22Fariz22/shorturl/repo"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -29,15 +31,6 @@ func NewHandler(producer *repo.Producer) *Handler {
 	}
 }
 
-type JSONModel struct {
-	Count int               `json:"count"`
-	URL   map[string]string `json:"url"`
-}
-
-type AllJSONModels struct {
-	AllUrls []*JSONModel
-}
-
 //функция для востановления списка urls
 func (h *Handler) RecoverEvents(fileName string) {
 	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
@@ -49,7 +42,7 @@ func (h *Handler) RecoverEvents(fileName string) {
 		log.Fatal(err)
 	}
 	if len(b) != 0 {
-		var alUrls AllJSONModels
+		var alUrls model_json.AllJSONModels
 
 		err = json.Unmarshal(b, &alUrls.AllUrls)
 		if err != nil {
@@ -90,20 +83,11 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 		log.Fatal(err)
 	}
 
-	//cfg := config.NewConnectorConfig()
-	//fmt.Println("cfg.FileStoragePath in handler.go: ", cfg.FileStoragePath)
-	//fmt.Println("producer.FileStoragePath.ServerAddress in handler.go:   ", h.Producer.Cfg.ServerAddress)
-	//fmt.Println("producer.FileStoragePath.BaseURL in handler.go:         ", h.Producer.Cfg.BaseURL)
-	//fmt.Println("h.Producer.Cfg.ServerAddress in handler.go: ", h.Producer.Cfg.ServerAddress)
-	//fmt.Println("h.Producer.Cfg.FileStoragePath in handler.go: ", h.Producer.Cfg.FileStoragePath)
-
 	//сокращатель
 	short := h.ShortenURL(string(payload))
 
 	//пишем в json файл если есть FileStoragePath
-	//if h.Producer.Cfg.FileStoragePath != "" {
 	h.Producer.WriteEvent(h.Count, h.Urls)
-	//}
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.Producer.Cfg.BaseURL + "/" + short))
@@ -121,7 +105,6 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
-	//cfg := config.NewConnectorConfig()
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -129,7 +112,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.Unmarshal(payload, &value); err != nil {
-		log.Fatal(err)
+		log.Print(err)
 	}
 
 	type Resp struct {
@@ -141,13 +124,11 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 	res, err := json.Marshal(resp)
 	if err != nil {
-		panic(err)
+		log.Print(err)
 	}
 
 	//пишем в json файл если есть FileStoragePath
-	//if h.Producer.Cfg.FileStoragePath != "" {
 	h.Producer.WriteEvent(h.Count, h.Urls)
-	//}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -156,7 +137,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 func (r gzipReader) Close() error {
 	if err := r.Closer.Close(); err != nil {
-		log.Fatal(err.Error())
+		log.Print(err.Error())
 		return err
 	}
 
