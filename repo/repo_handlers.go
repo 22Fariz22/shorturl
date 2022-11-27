@@ -24,7 +24,7 @@ type CreateShortURLRequest struct {
 }
 
 type Producer struct {
-	file *os.File
+	File *os.File
 	Cfg  *config.Config
 }
 
@@ -34,7 +34,7 @@ func NewProducer(cfg *config.Config) (*Producer, error) {
 		return nil, err
 	}
 	return &Producer{
-		file: file,
+		File: file,
 		Cfg:  config.NewConnectorConfig(),
 	}, nil
 }

@@ -2,13 +2,14 @@ package main
 
 import (
 	"flag"
+	"github.com/22Fariz22/shorturl/repo"
+	"github.com/22Fariz22/shorturl/repository"
+	"github.com/22Fariz22/shorturl/repository/file"
 	"log"
 	"net/http"
 
 	"github.com/22Fariz22/shorturl/handler"
 	"github.com/22Fariz22/shorturl/handler/config"
-	"github.com/22Fariz22/shorturl/repo"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -20,6 +21,9 @@ var (
 )
 
 func main() {
+	var fileRepo repository.Repository
+	fileRepo = file.New()
+
 	cfg := config.NewConnectorConfig()
 
 	flag.StringVar(&ServerAddress, "s", "", "-s to set server address")           //cfg.ServerAddress
@@ -27,10 +31,6 @@ func main() {
 	flag.StringVar(&FileStoragePath, "f", "", "-f to set location storage files") //cfg.FileStoragePath
 
 	flag.Parse()
-
-	//fmt.Println("ServerAddress:   ", ServerAddress)
-	//fmt.Println("BaseURL:         ", BaseURL)
-	//fmt.Println("FileStoragePath: ", FileStoragePath)
 
 	r := chi.NewRouter()
 	r.Use(handler.DeCompress)
@@ -49,7 +49,6 @@ func main() {
 		cfg.FileStoragePath = FileStoragePath
 	}
 
-	//fmt.Println("cfg.FileStoragePath after flag: ", cfg.FileStoragePath)
 	//запускаем открытие файла при новом запуске приложении
 	producer, err := repo.NewProducer(cfg)
 	if err != nil {
@@ -67,8 +66,6 @@ func main() {
 	if FileStoragePath != "" {
 		hd.Producer.Cfg.FileStoragePath = FileStoragePath
 	}
-
-	//fmt.Println("hd.Producer.Cfg.FileStoragePath after flag: ", hd.Producer.Cfg.FileStoragePath)
 
 	hd.RecoverEvents(hd.Producer.Cfg.FileStoragePath)
 
