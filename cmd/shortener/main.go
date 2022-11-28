@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
-	"github.com/22Fariz22/shorturl/repo"
-	"github.com/22Fariz22/shorturl/repository"
-	"github.com/22Fariz22/shorturl/repository/file"
 	"log"
 	"net/http"
+
+	"github.com/22Fariz22/shorturl/repo"
+	"github.com/22Fariz22/shorturl/repository"
+	"github.com/22Fariz22/shorturl/repository/memory"
 
 	"github.com/22Fariz22/shorturl/handler"
 	"github.com/22Fariz22/shorturl/handler/config"
@@ -22,8 +23,8 @@ var (
 
 func main() {
 	var fileRepo repository.Repository
-	fileRepo = file.New()
-	
+	fileRepo = memory.New()
+
 	cfg := config.NewConnectorConfig()
 
 	flag.StringVar(&ServerAddress, "s", "", "-s to set server address")           //cfg.ServerAddress

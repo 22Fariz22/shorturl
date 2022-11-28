@@ -14,13 +14,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/22Fariz22/shorturl/model"
 	"github.com/22Fariz22/shorturl/repo"
 
 	"github.com/go-chi/chi/v5"
 )
 
-type Handler model.HandlerModel
+type HandlerModel struct {
+	Repository repository.Repository
+}
+
+type Handler HandlerModel
 
 var value repo.CreateShortURLRequest
 
@@ -93,9 +96,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	//сокращатель
 	short := h.ShortenURL(string(payload))
-
-	//пишем в json файл если есть FileStoragePath
-	//h.Producer.WriteEvent(h.Count, h.Urls)
 
 	h.Repository.SaveURL(short, string(payload))
 
