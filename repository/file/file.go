@@ -1,6 +1,7 @@
 package file
 
 import (
+	"bufio"
 	"github.com/22Fariz22/shorturl/handler/config"
 	"github.com/22Fariz22/shorturl/storage"
 	"io"
@@ -11,6 +12,7 @@ import (
 type inFileRepository struct {
 	file          io.WriteCloser
 	memoryStorage storage.MemoryStorage
+	reader        *bufio.Reader
 }
 
 func (i inFileRepository) SaveURL(shortID string, longURL string) error {
@@ -24,27 +26,29 @@ func (i inFileRepository) GetURL(shortID string) (string, error) {
 }
 
 type Consumer struct {
-	File *os.File
-	Cfg  *config.Config
+	File   *os.File
+	Cfg    *config.Config
+	reader *bufio.Reader
 }
 
-func NewConsumer(cfg *config.Config) (*Consumer, error) {
-	file, err := os.OpenFile(cfg.FileStoragePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+func NewConsumer() (*Consumer, error) {
+	file, err := os.OpenFile(config.DefaultFileStoragePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return nil, err
 	}
 	return &Consumer{
-		File: file,
-		Cfg:  config.NewConnectorConfig(),
+		File:   file,
+		Cfg:    config.NewConnectorConfig(),
+		reader: bufio.NewReader(file),
 	}, nil
 }
 
 func New() *inFileRepository {
 	var memoryStorage storage.MemoryStorage
 
-	cfg := config.NewConnectorConfig()
+	//cfg := config.NewConnectorConfig()
 
-	consumer, err := NewConsumer(cfg)
+	consumer, err := NewConsumer()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,5 +56,6 @@ func New() *inFileRepository {
 	return &inFileRepository{
 		file:          consumer.File,
 		memoryStorage: memoryStorage,
+		reader:        consumer.reader,
 	}
 }

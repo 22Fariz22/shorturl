@@ -23,7 +23,7 @@ var (
 func main() {
 	var fileRepo repository.Repository
 	fileRepo = file.New()
-
+	
 	cfg := config.NewConnectorConfig()
 
 	flag.StringVar(&ServerAddress, "s", "", "-s to set server address")           //cfg.ServerAddress
@@ -55,7 +55,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	hd := handler.NewHandler(producer)
+	hd := handler.NewHandler(fileRepo)
 
 	if BaseURL != "" {
 		hd.Producer.Cfg.BaseURL = BaseURL

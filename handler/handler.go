@@ -3,7 +3,9 @@ package handler
 import (
 	"compress/gzip"
 	"encoding/json"
+	"github.com/22Fariz22/shorturl/handler/config"
 	"github.com/22Fariz22/shorturl/model_json"
+	"github.com/22Fariz22/shorturl/repository"
 	"io"
 	"io/ioutil"
 	"log"
@@ -22,14 +24,20 @@ type Handler model.HandlerModel
 
 var value repo.CreateShortURLRequest
 
-func NewHandler(producer *repo.Producer) *Handler {
-	c := 0
+func NewHandler(repo repository.Repository) *Handler {
 	return &Handler{
-		Urls:     make(map[string]string),
-		Count:    c,
-		Producer: producer,
+		Repository: repo,
 	}
 }
+
+//func NewHandler(consumer repository.Repository) *Handler {
+//	c := 0
+//	return &Handler{
+//		Urls:     make(map[string]string),
+//		Count:    c,
+//		Consumer: consumer,
+//	}
+//}
 
 //функция для востановления списка urls
 func (h *Handler) RecoverEvents(fileName string) {
@@ -62,16 +70,16 @@ func (h *Handler) RecoverEvents(fileName string) {
 
 func (h *Handler) ShortenURL(bodyStr string) string {
 
-	h.Mu.Lock()
+	//h.Mu.Lock()
 	countStr := strconv.Itoa(h.Count)
-	h.Mu.Unlock()
+	//h.Mu.Unlock()
 
 	value.URL = bodyStr
 
-	h.Mu.Lock()
+	//h.Mu.Lock()
 	h.Urls[countStr] = value.URL
 	h.Count++
-	h.Mu.Unlock()
+	//h.Mu.Unlock()
 
 	return countStr
 }
@@ -87,10 +95,12 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	short := h.ShortenURL(string(payload))
 
 	//пишем в json файл если есть FileStoragePath
-	h.Producer.WriteEvent(h.Count, h.Urls)
+	//h.Producer.WriteEvent(h.Count, h.Urls)
+
+	h.Repository.SaveURL(short, string(payload))
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(h.Producer.Cfg.BaseURL + "/" + short))
+	w.Write([]byte(config.DefaultBaseURL + "/" + short))
 
 }
 
@@ -118,8 +128,9 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	type Resp struct {
 		Result string `json:"result"`
 	}
+
 	resp := Resp{
-		Result: h.Producer.Cfg.BaseURL + "/" + h.ShortenURL(value.URL),
+		Result: config.DefaultBaseURL + "/" + h.ShortenURL(value.URL),
 	}
 
 	res, err := json.Marshal(resp)
