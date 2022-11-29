@@ -33,15 +33,6 @@ func NewHandler(repo repository.Repository) *Handler {
 	}
 }
 
-//func NewHandler(consumer repository.Repository) *Handler {
-//	c := 0
-//	return &Handler{
-//		Urls:     make(map[string]string),
-//		Count:    c,
-//		Consumer: consumer,
-//	}
-//}
-
 //функция для востановления списка urls
 func (h *Handler) RecoverEvents(fileName string) {
 	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
@@ -101,7 +92,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(config.DefaultBaseURL + "/" + short))
-
 }
 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
@@ -139,7 +129,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//пишем в json файл если есть FileStoragePath
-	h.Producer.WriteEvent(h.Count, h.Urls)
+	h.Repository.SaveURL(h.Count, h.Urls)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

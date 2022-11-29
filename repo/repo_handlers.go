@@ -39,11 +39,11 @@ func NewProducer(cfg *config.Config) (*Producer, error) {
 	}, nil
 }
 
-func (p *Producer) WriteEvent(cnt int, urlMap map[string]string) error {
+func (p *Producer) WriteEvent(id int, urlMap map[string]string) error {
 
 	newURL := &model_json.JSONModel{}
 	newURL.URL = urlMap
-	newURL.Count = cnt
+	newURL.ID = id
 
 	b, err := ioutil.ReadAll(p.file)
 	if err != nil {

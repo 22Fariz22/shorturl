@@ -3,6 +3,8 @@ package file
 import (
 	"bufio"
 	"github.com/22Fariz22/shorturl/handler/config"
+	"github.com/22Fariz22/shorturl/model"
+	"github.com/22Fariz22/shorturl/repository"
 	"github.com/22Fariz22/shorturl/storage"
 	"io"
 	"log"
@@ -13,16 +15,6 @@ type inFileRepository struct {
 	file          io.WriteCloser
 	memoryStorage storage.MemoryStorage
 	reader        *bufio.Reader
-}
-
-func (i inFileRepository) SaveURL(shortID string, longURL string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (i inFileRepository) GetURL(shortID string) (string, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 type Consumer struct {
@@ -43,10 +35,8 @@ func NewConsumer() (*Consumer, error) {
 	}, nil
 }
 
-func New() *inFileRepository {
-	var memoryStorage storage.MemoryStorage
-
-	//cfg := config.NewConnectorConfig()
+func New() repository.Repository {
+	st := storage.New()
 
 	consumer, err := NewConsumer()
 	if err != nil {
@@ -55,7 +45,21 @@ func New() *inFileRepository {
 
 	return &inFileRepository{
 		file:          consumer.File,
-		memoryStorage: memoryStorage,
+		memoryStorage: st,
 		reader:        consumer.reader,
 	}
+}
+
+func (i *inFileRepository) SaveURL(shortID string, longURL string) error {
+	url := &model.URL{
+		ID:      shortID,
+		LongURL: longURL,
+	}
+
+	panic("implement me")
+}
+
+func (i *inFileRepository) GetURL(shortID string) (string, error) {
+	//TODO implement me
+	panic("implement me")
 }

@@ -2,17 +2,16 @@ package main
 
 import (
 	"flag"
-	"log"
-	"net/http"
-
-	"github.com/22Fariz22/shorturl/repo"
-	"github.com/22Fariz22/shorturl/repository"
-	"github.com/22Fariz22/shorturl/repository/memory"
-
 	"github.com/22Fariz22/shorturl/handler"
 	"github.com/22Fariz22/shorturl/handler/config"
+	"github.com/22Fariz22/shorturl/repo"
+	"github.com/22Fariz22/shorturl/repository"
+	"github.com/22Fariz22/shorturl/repository/file"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"log"
+	"net/http"
+	"os"
 )
 
 var (
@@ -21,11 +20,25 @@ var (
 	FileStoragePath string
 )
 
+func init(filename string) {
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+	if err != nil {
+		log.Print(err)
+	}
+
+}
 func main() {
 	var fileRepo repository.Repository
-	fileRepo = memory.New()
+	fileRepo = file.New()
 
 	cfg := config.NewConnectorConfig()
+
+	fileInMemory := func(filename string) {
+		file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+		if err != nil {
+			log.Print(err)
+		}
+	}(cfg.FileStoragePath)
 
 	flag.StringVar(&ServerAddress, "s", "", "-s to set server address")           //cfg.ServerAddress
 	flag.StringVar(&BaseURL, "b", "", "-b to set base url")                       //cfg.BaseURL
@@ -58,17 +71,7 @@ func main() {
 
 	hd := handler.NewHandler(fileRepo)
 
-	if BaseURL != "" {
-		hd.Producer.Cfg.BaseURL = BaseURL
-	}
-	if ServerAddress != "" {
-		hd.Producer.Cfg.ServerAddress = ServerAddress
-	}
-	if FileStoragePath != "" {
-		hd.Producer.Cfg.FileStoragePath = FileStoragePath
-	}
-
-	hd.RecoverEvents(hd.Producer.Cfg.FileStoragePath)
+	hd.RecoverEvents(cfg.FileStoragePath)
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
