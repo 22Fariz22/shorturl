@@ -9,6 +9,11 @@ type inMemoryRepository struct {
 	memoryStorage storage.MemoryStorage
 }
 
+func (m *inMemoryRepository) Init() error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func New() repository.Repository {
 	st := storage.New()
 	return &inMemoryRepository{
@@ -16,11 +21,12 @@ func New() repository.Repository {
 	}
 }
 
-func (f *inMemoryRepository) SaveURL(shortID string, longURL string) error {
-
+func (m *inMemoryRepository) SaveURL(shortID string, longURL string) error {
+	m.memoryStorage.Insert(shortID, longURL)
 	return nil
 }
 
-func (f *inMemoryRepository) GetURL(shortID string) (string, error) {
-	return "", nil
+func (m *inMemoryRepository) GetURL(shortID string) (string, bool) {
+	v, ok := m.memoryStorage.Get(shortID)
+	return v, ok
 }

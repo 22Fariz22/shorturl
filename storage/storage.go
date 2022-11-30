@@ -5,7 +5,7 @@ import (
 )
 
 type MemoryStorage interface {
-	Get(key string) (string, error)
+	Get(key string) (string, bool)
 	Insert(key, value string) error
 }
 
@@ -14,16 +14,18 @@ type memoryStorage struct {
 	mutex   sync.RWMutex
 }
 
-func (m *memoryStorage) Get(key string) (string, error) {
-	//TODO implement me
-	panic("implement me")
+func (m *memoryStorage) Get(key string) (string, bool) {
+	v, ok := m.storage[key]
+	return v, ok
 }
 
 func (m *memoryStorage) Insert(key, value string) error {
-	//TODO implement me
-	panic("implement me")
+	m.storage[key] = value
+	return nil
 }
 
 func New() MemoryStorage {
-	return &memoryStorage{}
+	return &memoryStorage{
+		storage: make(map[string]string),
+	}
 }
