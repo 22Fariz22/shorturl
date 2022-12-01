@@ -25,7 +25,7 @@ type Consumer struct {
 }
 
 func NewConsumer() (*Consumer, error) {
-	file, err := os.OpenFile(config.DefaultFileStoragePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	file, err := os.OpenFile(config.DefaultFileStoragePath, os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		return nil, err
 	}

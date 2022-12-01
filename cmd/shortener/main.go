@@ -5,7 +5,6 @@ import (
 	"github.com/22Fariz22/shorturl/handler/config"
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/22Fariz22/shorturl/repository/file"
-	"github.com/22Fariz22/shorturl/repository/memory"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"log"
@@ -29,12 +28,12 @@ func main() {
 
 	// При отсутствии переменной окружения или
 	//при её пустом значении вернитесь к хранению сокращённых URL в памяти.
-	if cfg.FileStoragePath != "" {
-		fileRepo = file.New()
-		fileRepo.Init()
-	} else {
-		fileRepo = memory.New()
-	}
+	//if cfg.FileStoragePath != "" {
+	fileRepo = file.New()
+	fileRepo.Init()
+	//} else {
+	//	fileRepo = memory.New()
+	//}
 
 	//flag.StringVar(&ServerAddress, "s", "", "-s to set server address")           //cfg.ServerAddress
 	//flag.StringVar(&BaseURL, "b", "", "-b to set base url")                       //cfg.BaseURL
