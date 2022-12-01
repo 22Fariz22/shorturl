@@ -3,13 +3,14 @@ package file
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/22Fariz22/shorturl/handler/config"
-	"github.com/22Fariz22/shorturl/model"
-	"github.com/22Fariz22/shorturl/repository"
-	"github.com/22Fariz22/shorturl/storage"
 	"io"
 	"log"
 	"os"
+
+	"github.com/22Fariz22/shorturl/config"
+	"github.com/22Fariz22/shorturl/model"
+	"github.com/22Fariz22/shorturl/repository"
+	"github.com/22Fariz22/shorturl/storage"
 )
 
 type inFileRepository struct {
@@ -19,27 +20,27 @@ type inFileRepository struct {
 }
 
 type Consumer struct {
-	File   *os.File
-	Cfg    *config.Config
+	File *os.File
+	//Cfg    *config.Config
 	reader *bufio.Reader
 }
 
-func NewConsumer() (*Consumer, error) {
-	file, err := os.OpenFile(config.DefaultFileStoragePath, os.O_CREATE|os.O_APPEND, 0644)
+func NewConsumer(cfg config.Config) (*Consumer, error) {
+	file, err := os.OpenFile(cfg.FileStoragePath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
 	}
 	return &Consumer{
-		File:   file,
-		Cfg:    config.NewConnectorConfig(),
+		File: file,
+		//Cfg:    config.NewConfig(),
 		reader: bufio.NewReader(file),
 	}, nil
 }
 
-func New() repository.Repository {
+func New(cfg *config.Config) repository.Repository {
 	st := storage.New()
 
-	consumer, err := NewConsumer()
+	consumer, err := NewConsumer(*cfg)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -3,9 +3,6 @@ package handler
 import (
 	"compress/gzip"
 	"encoding/json"
-	"github.com/22Fariz22/shorturl/handler/config"
-	"github.com/22Fariz22/shorturl/repository"
-	"github.com/oklog/ulid/v2"
 	"io"
 	"log"
 	"math/rand"
@@ -13,12 +10,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/22Fariz22/shorturl/config"
+	"github.com/22Fariz22/shorturl/repository"
+	"github.com/oklog/ulid/v2"
+
 	"github.com/go-chi/chi/v5"
 )
 
 type HandlerModel struct {
 	Repository repository.Repository
 	count      int
+	cfg        config.Config
 }
 
 type Handler HandlerModel
@@ -29,11 +31,12 @@ type reqURL struct {
 
 var rURL reqURL
 
-func NewHandler(repo repository.Repository) *Handler {
+func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 	count := 0
 	return &Handler{
 		Repository: repo,
 		count:      count,
+		cfg:        *cfg,
 	}
 }
 
@@ -57,7 +60,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	h.Repository.SaveURL(short, string(payload))
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(config.DefaultBaseURL + "/" + short))
+	w.Write([]byte(h.cfg.BaseURL + "/" + short))
 }
 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
@@ -88,7 +91,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := respURL{
-		Result: config.DefaultBaseURL + "/" + short,
+		Result: h.cfg.BaseURL + "/" + short,
 	}
 
 	res, err := json.Marshal(resp)
@@ -97,7 +100,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//пишем в json файл если есть FileStoragePath
-	h.Repository.SaveURL(short, string(payload))
+	h.Repository.SaveURL(short, rURL.URL)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
