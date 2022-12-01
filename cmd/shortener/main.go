@@ -41,4 +41,5 @@ func main() {
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
 		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
 	}
+
 }
