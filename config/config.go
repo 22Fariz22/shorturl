@@ -7,10 +7,10 @@ import (
 	"github.com/caarlos0/env/v6"
 )
 
-var (
+const (
 	DefaultServerAddress   = "127.0.0.1:8080"
 	DefaultBaseURL         = "http://127.0.0.1:8080"
-	DefaultFileStoragePath = "events.json"
+	DefaultFileStoragePath = ""
 )
 
 type Config struct {
@@ -25,29 +25,21 @@ func NewConfig() *Config {
 		log.Fatal(err)
 	}
 
-	var (
-		servAddr string
-		bURL     string
-		filest   string
-	)
+	//var (
+	//	servAddr string
+	//	bURL     string
+	//	filest   string
+	//)
 
-	pflag.StringVarP(&servAddr, "server", "a", DefaultServerAddress, "server address")
-	pflag.StringVarP(&bURL, "baseurl", "b", DefaultBaseURL, "base URL")
-	pflag.StringVarP(&filest, "file", "f", DefaultFileStoragePath, "file storage path")
+	pflag.StringVarP(&cfg.ServerAddress, "server", "a", DefaultServerAddress, "server address")
+	pflag.StringVarP(&cfg.BaseURL, "baseurl", "b", DefaultBaseURL, "base URL")
+	pflag.StringVarP(&cfg.FileStoragePath, "file", "f", DefaultFileStoragePath, "file storage path")
 
 	pflag.Parse()
 
-	//fmt.Println("servAddr", servAddr)
-	//fmt.Println("bURL", bURL)
-	//fmt.Println("filest", filest)
-	//fmt.Printf("конф %+v\n", cfg)
-	//
-	//foo, ok := os.LookupEnv("SERVER_ADDRESS")
-	//fmt.Println(foo, ok)
-
 	return &Config{
-		ServerAddress:   servAddr,
-		BaseURL:         bURL,
-		FileStoragePath: filest,
+		ServerAddress:   cfg.ServerAddress,
+		BaseURL:         cfg.BaseURL,
+		FileStoragePath: cfg.FileStoragePath,
 	}
 }
