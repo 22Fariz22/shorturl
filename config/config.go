@@ -18,28 +18,17 @@ type Config struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"  envDefault:"events.json"` //envDefault:"events.json"
 }
 
-type Flags struct {
-	servAddr string
-	bURL     string
-	filest   string
-}
-
 func NewConfig() *Config {
 	cfg := &Config{}
-
-	//var (
-	//	servAddr string
-	//	bURL     string
-	//	filest   string
-	//)
 
 	pflag.StringVarP(&cfg.ServerAddress, "server", "a", DefaultServerAddress, "server address")
 	pflag.StringVarP(&cfg.BaseURL, "baseurl", "b", DefaultBaseURL, "base URL")
 	pflag.StringVarP(&cfg.FileStoragePath, "file", "f", DefaultFileStoragePath, "file storage path")
 
 	if err := env.Parse(cfg); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
+
 	pflag.Parse()
 
 	return &Config{

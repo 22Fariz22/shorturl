@@ -20,10 +20,10 @@ func main() {
 
 	if cfg.FileStoragePath != "" {
 		fileRepo = file.New(cfg)
-		fileRepo.Init()
 	} else {
 		fileRepo = memory.New()
 	}
+	fileRepo.Init()
 
 	r := chi.NewRouter()
 	r.Use(handler.DeCompress)

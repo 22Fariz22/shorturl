@@ -42,7 +42,7 @@ func New(cfg *config.Config) repository.Repository {
 
 	consumer, err := NewConsumer(*cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	return &inFileRepository{
@@ -63,11 +63,10 @@ func (f *inFileRepository) Init() error {
 			return err
 		}
 		f.memoryStorage.Insert(u.ID, u.LongURL)
-		log.Println(u)
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	return nil
 }
