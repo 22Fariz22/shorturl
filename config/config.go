@@ -7,7 +7,7 @@ import (
 	"github.com/caarlos0/env/v6"
 )
 
-const (
+var (
 	DefaultServerAddress   = "127.0.0.1:8080"
 	DefaultBaseURL         = "http://127.0.0.1:8080"
 	DefaultFileStoragePath = "events.json"
@@ -25,13 +25,15 @@ func NewConfig() *Config {
 		log.Fatal(err)
 	}
 
-	var servAddr string
-	var bURL string
-	var filest string
+	var (
+		servAddr string
+		bURL     string
+		filest   string
+	)
 
 	pflag.StringVarP(&servAddr, "server", "a", DefaultServerAddress, "server address")
 	pflag.StringVarP(&bURL, "baseurl", "b", DefaultBaseURL, "base URL")
-	pflag.StringVarP(&filest, "file", "f", "", "file storage path")
+	pflag.StringVarP(&filest, "file", "f", DefaultFileStoragePath, "file storage path")
 
 	pflag.Parse()
 
