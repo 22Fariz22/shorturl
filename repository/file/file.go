@@ -31,8 +31,7 @@ func NewConsumer(cfg config.Config) (*Consumer, error) {
 		return nil, err
 	}
 	return &Consumer{
-		File: file,
-		//Cfg:    config.NewConfig(),
+		File:   file,
 		reader: bufio.NewReader(file),
 	}, nil
 }
@@ -54,7 +53,7 @@ func New(cfg *config.Config) repository.Repository {
 
 func (f *inFileRepository) Init() error {
 	scanner := bufio.NewScanner(f.file)
-	// optionally, resize scanner's capacity for lines over 64K, see next example
+
 	for scanner.Scan() {
 		txt := scanner.Text()
 		var u model.URL
@@ -63,6 +62,7 @@ func (f *inFileRepository) Init() error {
 			return err
 		}
 		f.memoryStorage.Insert(u.ID, u.LongURL)
+
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -81,8 +81,8 @@ func (f *inFileRepository) SaveURL(shortID string, longURL string) error {
 		log.Println(err)
 		return err
 	}
-	f.file.Write([]byte("\n"))
 	f.file.Write(data)
+	f.file.Write([]byte("\n"))
 	f.memoryStorage.Insert(shortID, longURL)
 	return nil
 }
@@ -90,4 +90,9 @@ func (f *inFileRepository) SaveURL(shortID string, longURL string) error {
 func (f *inFileRepository) GetURL(shortID string) (string, bool) {
 	v, ok := f.memoryStorage.Get(shortID)
 	return v, ok
+}
+
+func (f *inFileRepository) GetAll() []model.URL {
+	return f.memoryStorage.GetAllStorageURL()
+
 }

@@ -3,6 +3,7 @@ package handler
 import (
 	"compress/gzip"
 	"encoding/json"
+	"github.com/22Fariz22/shorturl/cookie"
 	"io"
 	"log"
 	"math/rand"
@@ -44,11 +45,39 @@ func GenUlid() string {
 	t := time.Now().UTC()
 	entropy := rand.New(rand.NewSource(t.UnixNano()))
 	id := ulid.MustNew(ulid.Timestamp(t), entropy)
-	return id.String()[len(id.String())-7:]
+	moreShorter := id.String()[len(id.String())-7:]
+	return moreShorter
+}
+
+//вернуть все URLS
+func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
+	cookie.CheckInPOST(w, r)
+	type resp struct {
+		ShortURL    string `json:"short_url"`
+		OriginalURL string `json:"original_url"`
+	}
+	var res []resp
+	list := h.Repository.GetAll()
+
+	for i := range list {
+		res = append(res, resp{
+			ShortURL:    h.cfg.BaseURL + "/" + list[i].ID,
+			OriginalURL: list[i].LongURL})
+	}
+	res1, err := json.Marshal(res)
+	if err != nil {
+		log.Println(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	w.Write(res1)
 }
 
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
+
+	cookie.CreateAndCheckCookieInGET(w, r)
+
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Fatal(err)
@@ -74,6 +103,8 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
+
+	cookie.CreateAndCheckCookieInGET(w, r)
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {

@@ -37,6 +37,7 @@ func main() {
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
 	r.Post("/api/shorten", hd.CreateShortURLJSON)
+	r.Get("/api/user/urls", hd.GetAllURL)
 
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
 		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
