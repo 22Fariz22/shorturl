@@ -43,6 +43,9 @@ func Cook() string {
 
 	// создаём вектор инициализации
 	nonce, err := generateRandom(aesgcm.NonceSize())
+	if err != nil {
+		log.Println(err)
+	}
 
 	dst := aesgcm.Seal(nil, nonce, src, nil)
 	return string(dst)
