@@ -69,8 +69,11 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	w.Header().Set("Content-Type", "application/json")
-
+	if len(res) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+	}
 	w.Write(res1)
+
 }
 
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
