@@ -51,7 +51,8 @@ func GenUlid() string {
 
 //вернуть все URLS
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
-	cookie.CheckInPOST(w, r)
+	//cookie.CheckInGET(w, r)
+	cookie.CreateAndCheckCookie(w, r)
 	type resp struct {
 		ShortURL    string `json:"short_url"`
 		OriginalURL string `json:"original_url"`
@@ -79,7 +80,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 
-	cookie.CreateAndCheckCookieInGET(w, r)
+	cookie.CreateAndCheckCookie(w, r)
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -107,7 +108,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
-	cookie.CreateAndCheckCookieInGET(w, r)
+	cookie.CreateAndCheckCookie(w, r)
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {

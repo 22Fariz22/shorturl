@@ -51,33 +51,44 @@ func Cook() string {
 	return string(dst)
 }
 
-func CreateAndCheckCookieInGET(w http.ResponseWriter, r *http.Request) {
+func CreateAndCheckCookie(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println("r.Cookies(): ", r.Cookies())
 	if len(r.Cookies()) == 0 {
 		//fmt.Println("hasn`t cookie")
 		dst := Cook()
 		dst2 := http.Cookie{Name: "leo", Value: dst}
 		http.SetCookie(w, &dst2)
+
 	} else {
 		//fmt.Println("has cookie")
+		//_, err := r.Cookie("leo")
+		//if err != nil {
+		//	dst := Cook()
+		//	dst2 := http.Cookie{Name: "leo", Value: dst}
+		//	http.SetCookie(w, &dst2)
 		_, err := r.Cookie("leo")
 		if err != nil {
-			dst := Cook()
-			dst2 := http.Cookie{Name: "leo", Value: dst}
-			http.SetCookie(w, &dst2)
+			switch {
+			case errors.Is(err, http.ErrNoCookie):
+				dst := Cook()
+				dst2 := http.Cookie{Name: "leo", Value: dst}
+				http.SetCookie(w, &dst2)
+			}
+			//return
 		}
 	}
 }
 
-func CheckInPOST(w http.ResponseWriter, r *http.Request) {
+func CheckInGET(w http.ResponseWriter, r *http.Request) {
 	_, err := r.Cookie("leo")
 	if err != nil {
 		switch {
 		case errors.Is(err, http.ErrNoCookie):
 			http.Error(w, "cookie not found", http.StatusBadRequest)
 		default:
-			log.Println(err)
-			http.Error(w, "server error", http.StatusInternalServerError)
+			dst := Cook()
+			dst2 := http.Cookie{Name: "leo", Value: dst}
+			http.SetCookie(w, &dst2)
 		}
 		return
 	}
