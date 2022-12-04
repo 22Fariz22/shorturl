@@ -1,10 +1,8 @@
 package memory
 
 import (
-	"github.com/22Fariz22/shorturl/model"
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/22Fariz22/shorturl/storage"
-	"net/http"
 )
 
 type inMemoryRepository struct {
@@ -23,7 +21,7 @@ func New() repository.Repository {
 	}
 }
 
-func (m *inMemoryRepository) SaveURL(shortID string, longURL string, cook *http.Cookie) error {
+func (m *inMemoryRepository) SaveURL(shortID string, longURL string, cook string) error {
 	m.memoryStorage.Insert(shortID, longURL, cook)
 	return nil
 }
@@ -34,6 +32,6 @@ func (m *inMemoryRepository) GetURL(shortID string) (string, bool) {
 	return v, ok
 }
 
-func (m *inMemoryRepository) GetAll() []model.URL {
-	return m.memoryStorage.GetAllStorageURL()
+func (m *inMemoryRepository) GetAll(cook string) []map[string]string {
+	return m.memoryStorage.GetAllStorageURL(cook)
 }

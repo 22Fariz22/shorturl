@@ -3,6 +3,7 @@ package handler
 import (
 	"compress/gzip"
 	"encoding/json"
+	"fmt"
 	"github.com/22Fariz22/shorturl/cookies"
 	"io"
 	"log"
@@ -49,30 +50,38 @@ func GenUlid() string {
 	return moreShorter
 }
 
-//вернуть все URLS
+//вернуть все свои URL
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
-	cookies.GetCookieHandler(w, r)
+	cook := cookies.GetCookieHandler(w, r) // получаем куки если нету  (а если есть то такой куки нету???)
 
 	type resp struct {
 		ShortURL    string `json:"short_url"`
 		OriginalURL string `json:"original_url"`
 	}
 	var res []resp
-	list := h.Repository.GetAll()
 
+	list := h.Repository.GetAll(cook.Value)
+
+	fmt.Println(list)
 	for i := range list {
-		res = append(res, resp{
-			ShortURL:    h.cfg.BaseURL + "/" + list[i].ID,
-			OriginalURL: list[i].LongURL})
+		for k, v := range list[i] {
+			res = append(res, resp{
+				ShortURL:    h.cfg.BaseURL + "/" + k,
+				OriginalURL: v,
+			})
+		}
 	}
 	res1, err := json.Marshal(res)
 	if err != nil {
 		log.Println(err)
 	}
+
 	w.Header().Set("Content-Type", "application/json")
+
 	if len(res) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 	}
+
 	w.Write(res1)
 }
 
@@ -88,7 +97,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//сокращатель
 	short := GenUlid()
 
-	h.Repository.SaveURL(short, string(payload), cook)
+	h.Repository.SaveURL(short, string(payload), cook.Value)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
@@ -133,7 +142,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//пишем в json файл если есть FileStoragePath
-	h.Repository.SaveURL(short, rURL.URL, cook)
+	h.Repository.SaveURL(short, rURL.URL, cook.Value)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/22Fariz22/shorturl/config"
@@ -62,7 +61,7 @@ func (f *inFileRepository) Init() error {
 		if err != nil {
 			return err
 		}
-		f.memoryStorage.Insert(u.ID, u.LongURL)
+		f.memoryStorage.Insert(u.ID, u.LongURL, u.Cookies)
 
 	}
 
@@ -72,7 +71,7 @@ func (f *inFileRepository) Init() error {
 	return nil
 }
 
-func (f *inFileRepository) SaveURL(shortID string, longURL string, cook *http.Cookie) error {
+func (f *inFileRepository) SaveURL(shortID string, longURL string, cook string) error {
 	url := &model.URL{
 		Cookies: cook,
 		ID:      shortID,
@@ -85,7 +84,7 @@ func (f *inFileRepository) SaveURL(shortID string, longURL string, cook *http.Co
 	}
 	f.file.Write(data)
 	f.file.Write([]byte("\n"))
-	f.memoryStorage.Insert(shortID, longURL)
+	f.memoryStorage.Insert(shortID, longURL, cook)
 	return nil
 }
 
@@ -94,7 +93,7 @@ func (f *inFileRepository) GetURL(shortID string) (string, bool) {
 	return v, ok
 }
 
-func (f *inFileRepository) GetAll() []model.URL {
-	return f.memoryStorage.GetAllStorageURL()
+func (f *inFileRepository) GetAll(cook string) []map[string]string {
+	return f.memoryStorage.GetAllStorageURL(cook)
 
 }
