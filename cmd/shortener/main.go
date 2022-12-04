@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+
 	cfg := config.NewConfig()
 
 	var fileRepo repository.Repository

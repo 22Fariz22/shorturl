@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/22Fariz22/shorturl/config"
@@ -71,8 +72,9 @@ func (f *inFileRepository) Init() error {
 	return nil
 }
 
-func (f *inFileRepository) SaveURL(shortID string, longURL string) error {
+func (f *inFileRepository) SaveURL(shortID string, longURL string, cook *http.Cookie) error {
 	url := &model.URL{
+		Cookies: cook,
 		ID:      shortID,
 		LongURL: longURL,
 	}

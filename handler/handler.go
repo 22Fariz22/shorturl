@@ -3,7 +3,7 @@ package handler
 import (
 	"compress/gzip"
 	"encoding/json"
-	"github.com/22Fariz22/shorturl/cookie"
+	"github.com/22Fariz22/shorturl/cookies"
 	"io"
 	"log"
 	"math/rand"
@@ -51,8 +51,8 @@ func GenUlid() string {
 
 //вернуть все URLS
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
-	//cookie.CheckInGET(w, r)
-	cookie.CreateAndCheckCookie(w, r)
+	cookies.GetCookieHandler(w, r)
+
 	type resp struct {
 		ShortURL    string `json:"short_url"`
 		OriginalURL string `json:"original_url"`
@@ -74,13 +74,11 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 	w.Write(res1)
-
 }
 
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
-
-	cookie.CreateAndCheckCookie(w, r)
+	cook := cookies.GetCookieHandler(w, r)
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -90,7 +88,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//сокращатель
 	short := GenUlid()
 
-	h.Repository.SaveURL(short, string(payload))
+	h.Repository.SaveURL(short, string(payload), cook)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
@@ -108,7 +106,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
-	cookie.CreateAndCheckCookie(w, r)
+	cook := cookies.GetCookieHandler(w, r)
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -135,7 +133,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//пишем в json файл если есть FileStoragePath
-	h.Repository.SaveURL(short, rURL.URL)
+	h.Repository.SaveURL(short, rURL.URL, cook)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

@@ -2,12 +2,13 @@ package storage
 
 import (
 	"github.com/22Fariz22/shorturl/model"
+	"net/http"
 	"sync"
 )
 
 type MemoryStorage interface {
 	Get(key string) (string, bool)
-	Insert(key, value string) error
+	Insert(key, value string, cook *http.Cookie) error
 	GetAllStorageURL() []model.URL
 }
 
@@ -33,7 +34,7 @@ func (m *memoryStorage) Get(key string) (string, bool) {
 	return v, ok
 }
 
-func (m *memoryStorage) Insert(key, value string) error {
+func (m *memoryStorage) Insert(key, value string, cook *http.Cookie) error {
 	m.storage[key] = value
 	return nil
 }
