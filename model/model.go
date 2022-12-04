@@ -2,13 +2,9 @@ package model
 
 type URL struct {
 	Cookies string
-	ID      string //`json:"short_url"`
-	LongURL string //`json:"original_url"`
+	ID      string
+	LongURL string
 }
-
-//type OwnerURL struct {
-//	ownerURL map[string][]URL
-//}
 
 type OwnerID struct {
 	ownerID map[string][]string

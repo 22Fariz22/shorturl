@@ -38,6 +38,6 @@ func (m *memoryStorage) Insert(key, value string, cook string) error {
 func New() MemoryStorage {
 	return &memoryStorage{
 		storage:        make(map[string]string),
-		storageCookies: make(map[string][]map[string]string), //make(map[*http.Cookie][]string),
+		storageCookies: make(map[string][]map[string]string),
 	}
 }

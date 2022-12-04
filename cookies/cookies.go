@@ -45,12 +45,12 @@ func setCookieHandler(w http.ResponseWriter, r *http.Request) {
 	err := writeEncrypted(w, cookie, secr)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "server error", http.StatusInternalServerError)
+		//http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
 }
 
-func GetCookieHandler(w http.ResponseWriter, r *http.Request) *http.Cookie {
+func GetCookieHandler(w http.ResponseWriter, r *http.Request) string {
 	secr, erro := SecretKeyNew()
 	if erro != nil {
 		log.Println(erro)
@@ -60,14 +60,13 @@ func GetCookieHandler(w http.ResponseWriter, r *http.Request) *http.Cookie {
 	if err != nil {
 		switch {
 		case errors.Is(err, http.ErrNoCookie):
-			fmt.Println("no cookie, but now you have")
 			setCookieHandler(w, r)
 		default:
 			log.Println(err)
-			http.Error(w, "server error", http.StatusInternalServerError)
+			//http.Error(w, "server error", http.StatusInternalServerError)
 		}
 	}
-	return r.Cookies()[0]
+	return r.Cookies()[0].Value
 }
 
 func write(w http.ResponseWriter, cookie http.Cookie) error {

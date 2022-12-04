@@ -4,13 +4,14 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"github.com/22Fariz22/shorturl/cookies"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/22Fariz22/shorturl/cookies"
 
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/repository"
@@ -60,7 +61,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	}
 	var res []resp
 
-	list := h.Repository.GetAll(cook.Value)
+	list := h.Repository.GetAll(cook)
 
 	fmt.Println(list)
 	for i := range list {
@@ -97,7 +98,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//сокращатель
 	short := GenUlid()
 
-	h.Repository.SaveURL(short, string(payload), cook.Value)
+	h.Repository.SaveURL(short, string(payload), cook)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
@@ -142,7 +143,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//пишем в json файл если есть FileStoragePath
-	h.Repository.SaveURL(short, rURL.URL, cook.Value)
+	h.Repository.SaveURL(short, rURL.URL, cook)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
