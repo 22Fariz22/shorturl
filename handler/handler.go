@@ -85,7 +85,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	if len(res) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 	} else {
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 	}
 
 	w.Write(res1)
