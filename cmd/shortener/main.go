@@ -26,15 +26,16 @@ func main() {
 	}
 	fileRepo.Init()
 
+	hd := handler.NewHandler(fileRepo, cfg)
+
 	r := chi.NewRouter()
+	//r.Use(hd.SetCookieMiddleware)
+
 	r.Use(handler.DeCompress)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
-	hd := handler.NewHandler(fileRepo, cfg)
-	//r.Use(hd.SetCookieMiddleware)
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)

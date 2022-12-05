@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -13,13 +12,6 @@ import (
 	"net/http"
 	"strings"
 )
-
-var secretKey []byte
-
-func secretKeyNew() ([]byte, error) {
-	secretKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
-	return secretKey, err
-}
 
 var (
 	ErrValueTooLong = errors.New("cookie value too long")
@@ -37,7 +29,7 @@ func SetCookieHandler(w http.ResponseWriter, r *http.Request, secretKey []byte) 
 		SameSite: http.SameSiteLaxMode,
 	}
 
-	err := writeEncrypted(w, cookie, secretKey)
+	err := writeEncrypted(w, cookie, secretKey, r)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "server error", http.StatusInternalServerError)
@@ -47,13 +39,8 @@ func SetCookieHandler(w http.ResponseWriter, r *http.Request, secretKey []byte) 
 	w.Write([]byte("cookie set!"))
 }
 
-func GetCookieHandler(w http.ResponseWriter, r *http.Request) {
-	secr, erro := secretKeyNew()
-	if erro != nil {
-		log.Println(erro)
-	}
-
-	value, err := readEncrypted(r, "exampleCookie", secr)
+func GetCookieHandler(w http.ResponseWriter, r *http.Request, secretKey []byte) {
+	value, err := readEncrypted(r, "exampleCookie", secretKey)
 	if err != nil {
 		switch {
 		case errors.Is(err, http.ErrNoCookie):
@@ -70,7 +57,7 @@ func GetCookieHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func Write(w http.ResponseWriter, cookie http.Cookie) error {
+func Write(w http.ResponseWriter, cookie http.Cookie, r *http.Request) error {
 	// Encode the cookie value using base64.
 	cookie.Value = base64.URLEncoding.EncodeToString([]byte(cookie.Value))
 
@@ -82,7 +69,7 @@ func Write(w http.ResponseWriter, cookie http.Cookie) error {
 
 	// Write the cookie as normal.
 	http.SetCookie(w, &cookie)
-
+	r.AddCookie(&cookie)
 	return nil
 }
 
@@ -105,7 +92,7 @@ func read(r *http.Request, name string) (string, error) {
 	return string(value), nil
 }
 
-func writeEncrypted(w http.ResponseWriter, cookie http.Cookie, secretKey []byte) error {
+func writeEncrypted(w http.ResponseWriter, cookie http.Cookie, secretKey []byte, r *http.Request) error {
 	// Create a new AES cipher block from the secret key.
 	block, err := aes.NewCipher(secretKey)
 	if err != nil {
@@ -142,7 +129,7 @@ func writeEncrypted(w http.ResponseWriter, cookie http.Cookie, secretKey []byte)
 	cookie.Value = string(encryptedValue)
 
 	// Write the cookie as normal.
-	return Write(w, cookie)
+	return Write(w, cookie, r)
 }
 
 func readEncrypted(r *http.Request, name string, secretKey []byte) (string, error) {

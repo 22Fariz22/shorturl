@@ -53,7 +53,7 @@ func GenUlid() string {
 
 //вернуть все свои URL
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
-	cookies.GetCookieHandler(w, r) // получаем куки если нету  (а если есть то такой куки нету???)
+	cookies.GetCookieHandler(w, r, h.cfg.SecretKey) // получаем куки если нету  (а если есть то такой куки нету???)
 
 	type resp struct {
 		ShortURL    string `json:"short_url"`
@@ -91,22 +91,20 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 //CreateShortUrlHandler Эндпоинт POST / принимает в теле запроса строку URL для сокращения
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		fmt.Println("len(r.Cookies()): ", len(r.Cookies()))
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
-	fmt.Println("after len(r.Cookies()): ", len(r.Cookies()))
 
 	//cook := cookies.GetCookieHandler(w, r)
 
-	//payload, err := io.ReadAll(r.Body)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
+	payload, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	//сокращатель
 	short := GenUlid()
 
-	//h.Repository.SaveURL(short, string(payload), cook)
+	h.Repository.SaveURL(short, string(payload), r.Cookies()[0].Value)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
@@ -123,8 +121,9 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
-
-	cookies.GetCookieHandler(w, r)
+	if len(r.Cookies()) == 0 {
+		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+	}
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -198,15 +197,15 @@ type gzipReader struct {
 	io.Closer
 }
 
-//func (h *Handler) SetCookieMiddleware(next http.Handler) http.Handler {
-//	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-//		if len(request.Cookies()) != 0 {
-//			next.ServeHTTP(writer, request)
-//			return
-//		}
-//		cookies.SetCookieHandler(writer, request, h.cfg.SecretKey)
-//		next.ServeHTTP(writer, request)
-//		fmt.Println("in SetCookieMiddleware and len:", len(request.Cookies()))
-//		return
-//	})
-//}
+func (h *Handler) SetCookieMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if len(request.Cookies()) != 0 {
+			next.ServeHTTP(writer, request)
+			return
+		}
+		cookies.SetCookieHandler(writer, request, h.cfg.SecretKey)
+		fmt.Println("in SetCookieMiddleware after SetCookieHandler and len:", len(request.Cookies()))
+
+		next.ServeHTTP(writer, request)
+	})
+}
