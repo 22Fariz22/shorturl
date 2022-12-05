@@ -34,6 +34,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	hd := handler.NewHandler(fileRepo, cfg)
+	//r.Use(hd.SetCookieMiddleware)
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
