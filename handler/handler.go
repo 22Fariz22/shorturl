@@ -53,7 +53,10 @@ func GenUlid() string {
 
 //вернуть все свои URL
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
-	cookies.GetCookieHandler(w, r, h.cfg.SecretKey) // получаем куки если нету  (а если есть то такой куки нету???)
+	//cookies.GetCookieHandler(w, r, h.cfg.SecretKey) // получаем куки если нету  (а если есть то такой куки нету???)
+	if len(r.Cookies()) == 0 {
+		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+	}
 
 	type resp struct {
 		ShortURL    string `json:"short_url"`
@@ -93,6 +96,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
+	//fmt.Println("CreateShortURLHandler len(r.Cookies()):", len(r.Cookies()))
 
 	//cook := cookies.GetCookieHandler(w, r)
 
@@ -124,6 +128,8 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
+
+	fmt.Println("CreateShortURLJSON len(r.Cookies()):", len(r.Cookies()))
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -204,8 +210,6 @@ func (h *Handler) SetCookieMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		cookies.SetCookieHandler(writer, request, h.cfg.SecretKey)
-		fmt.Println("in SetCookieMiddleware after SetCookieHandler and len:", len(request.Cookies()))
-
 		next.ServeHTTP(writer, request)
 	})
 }
