@@ -10,8 +10,7 @@ type inMemoryRepository struct {
 }
 
 func (m *inMemoryRepository) Init() error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func New() repository.Repository {

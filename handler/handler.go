@@ -2,12 +2,16 @@ package handler
 
 import (
 	"compress/gzip"
+	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -24,6 +28,7 @@ type HandlerModel struct {
 	Repository repository.Repository
 	count      int
 	cfg        config.Config
+	conn       *pgx.Conn
 }
 
 type Handler HandlerModel
@@ -33,6 +38,9 @@ type reqURL struct {
 }
 
 var rURL reqURL
+var (
+	db *sql.DB
+)
 
 func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 	count := 0
@@ -41,6 +49,33 @@ func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 		count:      count,
 		cfg:        *cfg,
 	}
+}
+func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
+
+	conn, err := pgx.Connect(context.Background(), h.cfg.DatabaseDSN)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	err = conn.Ping(ctx)
+	status := http.StatusOK
+
+	if err != nil {
+		status = http.StatusInternalServerError
+	}
+	w.WriteHeader(status)
+
+	//defer conn.Close(context.Background())
+	//ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	//defer cancel()
+	//status := http.StatusOK
+	//if err := db.PingContext(ctx); err != nil {
+	//	status = http.StatusInternalServerError
+	//}
+	//w.WriteHeader(status)
+
 }
 
 func GenUlid() string {
@@ -53,7 +88,6 @@ func GenUlid() string {
 
 //вернуть все свои URL
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
-	//cookies.GetCookieHandler(w, r, h.cfg.SecretKey) // получаем куки если нету  (а если есть то такой куки нету???)
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
@@ -96,9 +130,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
-	//fmt.Println("CreateShortURLHandler len(r.Cookies()):", len(r.Cookies()))
-
-	//cook := cookies.GetCookieHandler(w, r)
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -201,15 +232,4 @@ func DeCompress(next http.Handler) http.Handler {
 type gzipReader struct {
 	*gzip.Reader
 	io.Closer
-}
-
-func (h *Handler) SetCookieMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if len(request.Cookies()) != 0 {
-			next.ServeHTTP(writer, request)
-			return
-		}
-		cookies.SetCookieHandler(writer, request, h.cfg.SecretKey)
-		next.ServeHTTP(writer, request)
-	})
 }

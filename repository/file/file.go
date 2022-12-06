@@ -62,7 +62,6 @@ func (f *inFileRepository) Init() error {
 			return err
 		}
 		f.memoryStorage.Insert(u.ID, u.LongURL, u.Cookies)
-
 	}
 
 	if err := scanner.Err(); err != nil {
