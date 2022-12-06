@@ -47,6 +47,7 @@ func (i *inDBRepository) Init() error {
 }
 
 func (i *inDBRepository) Ping() int {
+	//
 	//conn, err := pgx.Connect(context.Background(), i.databaseDSN)
 	//if err != nil {
 	//	fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
