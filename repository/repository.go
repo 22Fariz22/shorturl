@@ -5,4 +5,5 @@ type Repository interface {
 	GetURL(shortID string) (string, bool)
 	GetAll(string) []map[string]string
 	Init() error
+	Ping() int
 }

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/handler"
 	"github.com/22Fariz22/shorturl/repository"
@@ -9,8 +12,6 @@ import (
 	"github.com/22Fariz22/shorturl/repository/memory"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"log"
-	"net/http"
 )
 
 func main() {

@@ -96,3 +96,6 @@ func (f *inFileRepository) GetAll(cook string) []map[string]string {
 	return f.memoryStorage.GetAllStorageURL(cook)
 
 }
+func (f *inFileRepository) Ping() int {
+	return 0
+}

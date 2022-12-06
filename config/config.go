@@ -2,9 +2,10 @@ package config
 
 import (
 	"encoding/hex"
+	"log"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/spf13/pflag"
-	"log"
 )
 
 const (

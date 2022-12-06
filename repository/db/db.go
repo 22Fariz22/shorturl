@@ -2,6 +2,10 @@ package db
 
 import (
 	"context"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/jackc/pgx/v5"
@@ -41,4 +45,25 @@ func (i *inDBRepository) Init() error {
 	}
 	i.conn = conn
 	return nil
+}
+
+func (i *inDBRepository) Ping() int {
+	//conn, err := pgx.Connect(context.Background(), i.databaseDSN)
+	//if err != nil {
+	//	fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+	//	os.Exit(1)
+	//}
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	err := i.conn.Ping(ctx)
+	if err != nil {
+		log.Println(err)
+		return 0
+	}
+	status := http.StatusOK
+
+	if err != nil {
+		status = http.StatusInternalServerError
+	}
+	return status
 }

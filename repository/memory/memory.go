@@ -34,3 +34,8 @@ func (m *inMemoryRepository) GetURL(shortID string) (string, bool) {
 func (m *inMemoryRepository) GetAll(cook string) []map[string]string {
 	return m.memoryStorage.GetAllStorageURL(cook)
 }
+
+func (m *inMemoryRepository) Ping() int {
+	return 0
+
+}
