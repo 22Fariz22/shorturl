@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
@@ -56,10 +55,7 @@ func (i *inDBRepository) Ping() int {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	err := i.conn.Ping(ctx)
-	if err != nil {
-		log.Println(err)
-		return 0
-	}
+
 	status := http.StatusOK
 
 	if err != nil {
