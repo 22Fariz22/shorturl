@@ -3,6 +3,7 @@ package memory
 import (
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/22Fariz22/shorturl/storage"
+	"net/http"
 )
 
 type inMemoryRepository struct {
@@ -36,6 +37,6 @@ func (m *inMemoryRepository) GetAll(cook string) []map[string]string {
 }
 
 func (m *inMemoryRepository) Ping() int {
-	return 0
+	return http.StatusInternalServerError
 
 }

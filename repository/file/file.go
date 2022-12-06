@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/22Fariz22/shorturl/config"
@@ -97,5 +98,5 @@ func (f *inFileRepository) GetAll(cook string) []map[string]string {
 
 }
 func (f *inFileRepository) Ping() int {
-	return 0
+	return http.StatusInternalServerError
 }

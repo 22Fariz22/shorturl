@@ -2,7 +2,6 @@ package handler
 
 import (
 	"compress/gzip"
-	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -10,7 +9,6 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -53,20 +51,20 @@ func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 }
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 
-	conn, err := pgx.Connect(context.Background(), h.cfg.DatabaseDSN)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-	err = conn.Ping(ctx)
-	status := http.StatusOK
-
-	if err != nil {
-		status = http.StatusInternalServerError
-	}
-	//status := h.Repository.Ping()
+	//conn, err := pgx.Connect(context.Background(), h.cfg.DatabaseDSN)
+	//if err != nil {
+	//	fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+	//	os.Exit(1)
+	//}
+	//ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	//defer cancel()
+	//err = conn.Ping(ctx)
+	//status := http.StatusOK
+	//
+	//if err != nil {
+	//	status = http.StatusInternalServerError
+	//}
+	status := h.Repository.Ping()
 	w.WriteHeader(status)
 
 }
