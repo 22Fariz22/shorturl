@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/22Fariz22/shorturl/repository/db"
 	"github.com/22Fariz22/shorturl/repository/file"
 	"github.com/22Fariz22/shorturl/repository/memory"
 	"log"
@@ -19,19 +20,14 @@ func main() {
 
 	var repo repository.Repository
 
-	//if cfg.DatabaseDSN != "" {
-	//	repo = db.New(cfg)
-	//} else if cfg.FileStoragePath != "" {
-	//	repo = file.New(cfg)
-	//} else {
-	//	repo = memory.New()
-	//}
-	if cfg.FileStoragePath != "" {
+	if cfg.DatabaseDSN != "" {
+		repo = db.New(cfg)
+	} else if cfg.FileStoragePath != "" {
 		repo = file.New(cfg)
 	} else {
 		repo = memory.New()
 	}
-	repo.Init()
+
 	repo.Init()
 
 	hd := handler.NewHandler(repo, cfg)
