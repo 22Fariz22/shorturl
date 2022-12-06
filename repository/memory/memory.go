@@ -1,7 +1,8 @@
 package memory
 
 import (
-	"errors"
+	"context"
+
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/22Fariz22/shorturl/storage"
 )
@@ -36,6 +37,6 @@ func (m *inMemoryRepository) GetAll(cook string) []map[string]string {
 	return m.memoryStorage.GetAllStorageURL(cook)
 }
 
-func (m *inMemoryRepository) Ping() error {
-	return errors.New("error")
+func (m *inMemoryRepository) Ping(ctx context.Context) error {
+	return nil
 }

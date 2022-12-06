@@ -2,8 +2,8 @@ package file
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"log"
 	"os"
@@ -97,6 +97,7 @@ func (f *inFileRepository) GetAll(cook string) []map[string]string {
 	return f.memoryStorage.GetAllStorageURL(cook)
 
 }
-func (f *inFileRepository) Ping() error {
-	return errors.New("error")
+func (f *inFileRepository) Ping(ctx context.Context) error {
+
+	return nil
 }

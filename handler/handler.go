@@ -2,6 +2,7 @@ package handler
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -57,12 +58,14 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	//if err != nil {
 	//	status = http.StatusInternalServerError
 	//}
-	err := h.Repository.Ping()
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	err := h.Repository.Ping(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-
 }
 
 func GenUlid() string {
