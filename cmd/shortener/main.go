@@ -1,15 +1,14 @@
 package main
 
 import (
+	"github.com/22Fariz22/shorturl/repository/file"
+	"github.com/22Fariz22/shorturl/repository/memory"
 	"log"
 	"net/http"
 
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/handler"
 	"github.com/22Fariz22/shorturl/repository"
-	"github.com/22Fariz22/shorturl/repository/db"
-	"github.com/22Fariz22/shorturl/repository/file"
-	"github.com/22Fariz22/shorturl/repository/memory"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -18,16 +17,21 @@ func main() {
 
 	cfg := config.NewConfig()
 
-	///////////////
 	var repo repository.Repository
 
-	if cfg.DatabaseDSN != "" {
-		repo = db.New(cfg)
-	} else if cfg.FileStoragePath != "" {
+	//if cfg.DatabaseDSN != "" {
+	//	repo = db.New(cfg)
+	//} else if cfg.FileStoragePath != "" {
+	//	repo = file.New(cfg)
+	//} else {
+	//	repo = memory.New()
+	//}
+	if cfg.FileStoragePath != "" {
 		repo = file.New(cfg)
 	} else {
 		repo = memory.New()
 	}
+	repo.Init()
 	repo.Init()
 
 	hd := handler.NewHandler(repo, cfg)
