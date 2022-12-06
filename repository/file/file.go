@@ -3,9 +3,9 @@ package file
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/22Fariz22/shorturl/config"
@@ -97,6 +97,6 @@ func (f *inFileRepository) GetAll(cook string) []map[string]string {
 	return f.memoryStorage.GetAllStorageURL(cook)
 
 }
-func (f *inFileRepository) Ping() int {
-	return http.StatusInternalServerError
+func (f *inFileRepository) Ping() error {
+	return errors.New("error")
 }

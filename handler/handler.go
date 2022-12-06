@@ -2,7 +2,6 @@ package handler
 
 import (
 	"compress/gzip"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,8 +10,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 
 	"github.com/22Fariz22/shorturl/cookies"
 
@@ -27,7 +24,6 @@ type HandlerModel struct {
 	Repository repository.Repository
 	count      int
 	cfg        config.Config
-	conn       *pgx.Conn
 }
 
 type Handler HandlerModel
@@ -37,9 +33,6 @@ type reqURL struct {
 }
 
 var rURL reqURL
-var (
-	db *sql.DB
-)
 
 func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 	count := 0
@@ -64,8 +57,11 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	//if err != nil {
 	//	status = http.StatusInternalServerError
 	//}
-	status := h.Repository.Ping()
-	w.WriteHeader(status)
+	err := h.Repository.Ping()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusOK)
 
 }
 

@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/22Fariz22/shorturl/config"
@@ -46,7 +45,7 @@ func (i *inDBRepository) Init() error {
 	return nil
 }
 
-func (i *inDBRepository) Ping() int {
+func (i *inDBRepository) Ping() error {
 	//
 	//conn, err := pgx.Connect(context.Background(), i.databaseDSN)
 	//if err != nil {
@@ -57,10 +56,8 @@ func (i *inDBRepository) Ping() int {
 	defer cancel()
 	err := i.conn.Ping(ctx)
 
-	status := http.StatusOK
-
 	if err != nil {
-		status = http.StatusInternalServerError
+		return err
 	}
-	return status
+	return nil
 }
