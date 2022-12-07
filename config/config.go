@@ -39,7 +39,7 @@ func NewConfig() *Config {
 	pflag.StringVarP(&cfg.ServerAddress, "server", "a", DefaultServerAddress, "server address")
 	pflag.StringVarP(&cfg.BaseURL, "baseurl", "b", DefaultBaseURL, "base URL")
 	pflag.StringVarP(&cfg.FileStoragePath, "file", "f", DefaultFileStoragePath, "file storage path")
-	pflag.StringVarP(&cfg.DatabaseDSN, "databasedsn", "d", "", "databaseDSN")
+	pflag.StringVarP(&cfg.DatabaseDSN, "databasedsn", "d", DefaultDatabaseDSN, "databaseDSN")
 
 	if err := env.Parse(cfg); err != nil {
 		log.Println(err)
