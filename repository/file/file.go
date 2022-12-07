@@ -88,12 +88,12 @@ func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL 
 	return nil
 }
 
-func (f *inFileRepository) GetURL(shortID string) (string, bool) {
+func (f *inFileRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
 	v, ok := f.memoryStorage.Get(shortID)
 	return v, ok
 }
 
-func (f *inFileRepository) GetAll(cook string) []map[string]string {
+func (f *inFileRepository) GetAll(ctx context.Context, cook string) []map[string]string {
 	return f.memoryStorage.GetAllStorageURL(cook)
 
 }

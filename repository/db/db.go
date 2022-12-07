@@ -20,7 +20,6 @@ func New(cfg *config.Config) repository.Repository {
 }
 
 func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
-
 	_, err := i.conn.Exec(ctx, "create table if not exists urls(cookies text, id text,longurl text);")
 	if err != nil {
 		log.Println(err)
@@ -35,12 +34,54 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 	return nil
 }
 
-func (i *inDBRepository) GetURL(shortID string) (string, bool) {
-	return "", false
+func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
+	_, err := i.conn.Exec(ctx, "create table if not exists urls(cookies text, id text,longurl text);")
+	if err != nil {
+		log.Println(err)
+		return "", false
+	}
+
+	var s string
+
+	err = i.conn.QueryRow(ctx, "select longurl from urls where id = $1;", shortID).Scan(&s)
+	if err != nil {
+		log.Println(err)
+		return "", false
+	}
+	return s, true
 }
 
-func (i *inDBRepository) GetAll(s string) []map[string]string {
-	return nil
+//example [map[7PJPPAZ:http://ya.ru] map[JRK5X81:http://ya.ru]]
+func (i *inDBRepository) GetAll(ctx context.Context, cook string) []map[string]string {
+	_, err := i.conn.Exec(ctx, "create table if not exists urls(cookies text, id text,longurl text);")
+	if err != nil {
+		log.Println(err)
+	}
+
+	rows, err := i.conn.Query(ctx, "select id, longurl from urls where cookies = $1;", cook)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	defer rows.Close()
+
+	list := make([]map[string]string, 0)
+
+	for rows.Next() {
+		var id string
+		var longurl string
+		err = rows.Scan(&id, &longurl)
+		if err != nil {
+			log.Println(err)
+			return nil
+		}
+
+		aMap := map[string]string{id: longurl}
+
+		list = append(list, aMap)
+
+	}
+	return list
 }
 
 func (i *inDBRepository) Init() error {
@@ -49,6 +90,7 @@ func (i *inDBRepository) Init() error {
 		return err
 	}
 	i.conn = conn
+
 	return nil
 }
 

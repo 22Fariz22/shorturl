@@ -27,13 +27,13 @@ func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longUR
 	return nil
 }
 
-func (m *inMemoryRepository) GetURL(shortID string) (string, bool) {
+func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
 	v, ok := m.memoryStorage.Get(shortID)
 
 	return v, ok
 }
 
-func (m *inMemoryRepository) GetAll(cook string) []map[string]string {
+func (m *inMemoryRepository) GetAll(ctx context.Context, cook string) []map[string]string {
 	return m.memoryStorage.GetAllStorageURL(cook)
 }
 

@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -74,8 +75,11 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	}
 	var res []resp
 
-	list := h.Repository.GetAll(r.Cookies()[0].Value)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
 
+	list := h.Repository.GetAll(ctx, r.Cookies()[0].Value)
+	fmt.Println(list)
 	for i := range list {
 		for k, v := range list[i] {
 			res = append(res, resp{
@@ -126,7 +130,12 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := chi.URLParam(r, "id")
-	i, ok := h.Repository.GetURL(vars)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	i, ok := h.Repository.GetURL(ctx, vars)
+	fmt.Println(i)
 	if ok {
 		w.Header().Set("Location", i)
 		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
