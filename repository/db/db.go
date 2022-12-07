@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
+	"log"
+
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/jackc/pgx/v5"
-	"log"
 )
 
 type inDBRepository struct {
