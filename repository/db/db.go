@@ -2,10 +2,10 @@ package db
 
 import (
 	"context"
-
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/jackc/pgx/v5"
+	"log"
 )
 
 type inDBRepository struct {
@@ -19,7 +19,19 @@ func New(cfg *config.Config) repository.Repository {
 	}
 }
 
-func (i *inDBRepository) SaveURL(shortID string, longURL string, cook string) error {
+func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
+
+	_, err := i.conn.Exec(ctx, "create table if not exists urls(cookies text, id text,longurl text);")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	_, err = i.conn.Exec(ctx, "insert into urls (cookies, id, longurl) values($1,$2,$3);", cook, shortID, longURL)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 	return nil
 }
 

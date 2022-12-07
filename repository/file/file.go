@@ -71,7 +71,7 @@ func (f *inFileRepository) Init() error {
 	return nil
 }
 
-func (f *inFileRepository) SaveURL(shortID string, longURL string, cook string) error {
+func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
 	url := &model.URL{
 		Cookies: cook,
 		ID:      shortID,
@@ -98,6 +98,5 @@ func (f *inFileRepository) GetAll(cook string) []map[string]string {
 
 }
 func (f *inFileRepository) Ping(ctx context.Context) error {
-
 	return nil
 }

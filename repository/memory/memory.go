@@ -22,7 +22,7 @@ func New() repository.Repository {
 	}
 }
 
-func (m *inMemoryRepository) SaveURL(shortID string, longURL string, cook string) error {
+func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
 	m.memoryStorage.Insert(shortID, longURL, cook)
 	return nil
 }

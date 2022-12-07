@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -44,22 +43,9 @@ func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 	}
 }
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
-
-	//conn, err := pgx.Connect(context.Background(), h.cfg.DatabaseDSN)
-	//if err != nil {
-	//	fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-	//	os.Exit(1)
-	//}
-	//ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	//defer cancel()
-	//err = conn.Ping(ctx)
-	//status := http.StatusOK
-	//
-	//if err != nil {
-	//	status = http.StatusInternalServerError
-	//}
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
+
 	err := h.Repository.Ping(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -90,7 +76,6 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 
 	list := h.Repository.GetAll(r.Cookies()[0].Value)
 
-	fmt.Println(list)
 	for i := range list {
 		for k, v := range list[i] {
 			res = append(res, resp{
@@ -129,7 +114,10 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//сокращатель
 	short := GenUlid()
 
-	h.Repository.SaveURL(short, string(payload), r.Cookies()[0].Value)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
@@ -149,8 +137,6 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
-
-	fmt.Println("CreateShortURLJSON len(r.Cookies()):", len(r.Cookies()))
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -176,8 +162,10 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
 	//пишем в json файл если есть FileStoragePath
-	h.Repository.SaveURL(short, rURL.URL, r.Cookies()[0].Value)
+	h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

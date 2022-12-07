@@ -17,7 +17,7 @@ const (
 	DefaultUser            = "postgres"
 	DefaultPassword        = "55555"
 	DefaultDbname          = "urlshortener"
-	//DefaultDatabaseDSN     = "postgres://postgres:55555@127.0.0.1:5432/dburl"
+	DefaultDatabaseDSN     = "postgres://postgres:55555@127.0.0.1:5432/dburl"
 )
 
 type Config struct {
@@ -30,7 +30,7 @@ type Config struct {
 	User            string //`env:"USER" envDefault:"postgres"`
 	Password        string //`env:"PASSWORD" envDefault:"55555"`
 	Dbname          string //`env:"DBNAME" envDefault:"dburl"`
-	DatabaseDSN     string `env:"DATABASE_DSN" ` //envDefault:"postgres://postgres:55555@127.0.0.1:5432/dburl"
+	DatabaseDSN     string `env:"DATABASE_DSN" envDefault:"postgres://postgres:55555@127.0.0.1:5432/dburl"`
 }
 
 func NewConfig() *Config {
