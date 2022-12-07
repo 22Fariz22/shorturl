@@ -33,8 +33,8 @@ func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string) (string
 	return v, ok
 }
 
-func (m *inMemoryRepository) GetAll(ctx context.Context, cook string) []map[string]string {
-	return m.memoryStorage.GetAllStorageURL(cook)
+func (m *inMemoryRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
+	return m.memoryStorage.GetAllStorageURL(cook), nil
 }
 
 func (m *inMemoryRepository) Ping(ctx context.Context) error {

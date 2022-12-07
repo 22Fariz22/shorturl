@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -78,8 +77,12 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	list := h.Repository.GetAll(ctx, r.Cookies()[0].Value)
-	fmt.Println(list)
+	list, err := h.Repository.GetAll(ctx, r.Cookies()[0].Value)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	for i := range list {
 		for k, v := range list[i] {
 			res = append(res, resp{
@@ -112,7 +115,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	//сокращатель
@@ -135,7 +138,6 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	defer cancel()
 
 	i, ok := h.Repository.GetURL(ctx, vars)
-	fmt.Println(i)
 	if ok {
 		w.Header().Set("Location", i)
 		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
@@ -149,11 +151,12 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	if err := json.Unmarshal(payload, &rURL); err != nil {
 		log.Print(err)
+		return
 	}
 
 	short := GenUlid()
