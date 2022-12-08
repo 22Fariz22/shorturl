@@ -1,8 +1,11 @@
 package repository
 
+import "context"
+
 type Repository interface {
-	SaveURL(shortID string, longURL string, cook string) error
-	GetURL(shortID string) (string, bool)
-	GetAll(string) []map[string]string
+	SaveURL(ctx context.Context, shortID string, longURL string, cook string) error
+	GetURL(ctx context.Context, shortID string) (string, bool)
+	GetAll(context.Context, string) ([]map[string]string, error)
 	Init() error
+	Ping(context.Context) error
 }

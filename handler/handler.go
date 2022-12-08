@@ -2,8 +2,8 @@ package handler
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -42,6 +42,17 @@ func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 		cfg:        *cfg,
 	}
 }
+func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	err := h.Repository.Ping(ctx)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
 
 func GenUlid() string {
 	t := time.Now().UTC()
@@ -53,7 +64,6 @@ func GenUlid() string {
 
 //вернуть все свои URL
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
-	//cookies.GetCookieHandler(w, r, h.cfg.SecretKey) // получаем куки если нету  (а если есть то такой куки нету???)
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
@@ -64,9 +74,15 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	}
 	var res []resp
 
-	list := h.Repository.GetAll(r.Cookies()[0].Value)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
 
-	fmt.Println(list)
+	list, err := h.Repository.GetAll(ctx, r.Cookies()[0].Value)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusNoContent)
+	}
+
 	for i := range list {
 		for k, v := range list[i] {
 			res = append(res, resp{
@@ -96,19 +112,19 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
-	//fmt.Println("CreateShortURLHandler len(r.Cookies()):", len(r.Cookies()))
-
-	//cook := cookies.GetCookieHandler(w, r)
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	//сокращатель
 	short := GenUlid()
 
-	h.Repository.SaveURL(short, string(payload), r.Cookies()[0].Value)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
@@ -117,7 +133,11 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := chi.URLParam(r, "id")
-	i, ok := h.Repository.GetURL(vars)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	i, ok := h.Repository.GetURL(ctx, vars)
 	if ok {
 		w.Header().Set("Location", i)
 		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
@@ -129,15 +149,15 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
 
-	fmt.Println("CreateShortURLJSON len(r.Cookies()):", len(r.Cookies()))
-
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		http.Error(w, "", 500)
 	}
 
 	if err := json.Unmarshal(payload, &rURL); err != nil {
 		log.Print(err)
+		return
 	}
 
 	short := GenUlid()
@@ -155,8 +175,10 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
 	//пишем в json файл если есть FileStoragePath
-	h.Repository.SaveURL(short, rURL.URL, r.Cookies()[0].Value)
+	h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -201,15 +223,4 @@ func DeCompress(next http.Handler) http.Handler {
 type gzipReader struct {
 	*gzip.Reader
 	io.Closer
-}
-
-func (h *Handler) SetCookieMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if len(request.Cookies()) != 0 {
-			next.ServeHTTP(writer, request)
-			return
-		}
-		cookies.SetCookieHandler(writer, request, h.cfg.SecretKey)
-		next.ServeHTTP(writer, request)
-	})
 }

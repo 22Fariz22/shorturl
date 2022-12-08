@@ -2,6 +2,7 @@ package file
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -62,7 +63,6 @@ func (f *inFileRepository) Init() error {
 			return err
 		}
 		f.memoryStorage.Insert(u.ID, u.LongURL, u.Cookies)
-
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -71,7 +71,7 @@ func (f *inFileRepository) Init() error {
 	return nil
 }
 
-func (f *inFileRepository) SaveURL(shortID string, longURL string, cook string) error {
+func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
 	url := &model.URL{
 		Cookies: cook,
 		ID:      shortID,
@@ -88,12 +88,15 @@ func (f *inFileRepository) SaveURL(shortID string, longURL string, cook string) 
 	return nil
 }
 
-func (f *inFileRepository) GetURL(shortID string) (string, bool) {
+func (f *inFileRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
 	v, ok := f.memoryStorage.Get(shortID)
 	return v, ok
 }
 
-func (f *inFileRepository) GetAll(cook string) []map[string]string {
-	return f.memoryStorage.GetAllStorageURL(cook)
+func (f *inFileRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
+	return f.memoryStorage.GetAllStorageURL(cook), nil
 
+}
+func (f *inFileRepository) Ping(ctx context.Context) error {
+	return nil
 }

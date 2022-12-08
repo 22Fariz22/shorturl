@@ -1,6 +1,8 @@
 package memory
 
 import (
+	"context"
+
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/22Fariz22/shorturl/storage"
 )
@@ -10,8 +12,7 @@ type inMemoryRepository struct {
 }
 
 func (m *inMemoryRepository) Init() error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func New() repository.Repository {
@@ -21,17 +22,21 @@ func New() repository.Repository {
 	}
 }
 
-func (m *inMemoryRepository) SaveURL(shortID string, longURL string, cook string) error {
+func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
 	m.memoryStorage.Insert(shortID, longURL, cook)
 	return nil
 }
 
-func (m *inMemoryRepository) GetURL(shortID string) (string, bool) {
+func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
 	v, ok := m.memoryStorage.Get(shortID)
 
 	return v, ok
 }
 
-func (m *inMemoryRepository) GetAll(cook string) []map[string]string {
-	return m.memoryStorage.GetAllStorageURL(cook)
+func (m *inMemoryRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
+	return m.memoryStorage.GetAllStorageURL(cook), nil
+}
+
+func (m *inMemoryRepository) Ping(ctx context.Context) error {
+	return nil
 }
