@@ -56,6 +56,7 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (string, bo
 	err := i.conn.QueryRow(ctx, "select longurl from urls where id = $1;", shortID).Scan(&s)
 	if err != nil {
 		log.Println(err)
+		//TODO сделать возврат ошибки
 		return "", false
 	}
 	return s, true
@@ -65,7 +66,7 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (string, bo
 func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
 	rows, err := i.conn.Query(ctx, "select id, longurl from urls where cookies = $1;", cook)
 	if err != nil {
-		log.Println(err)
+		//log.Println(err)
 		return nil, err
 	}
 	defer rows.Close()

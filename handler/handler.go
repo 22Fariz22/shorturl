@@ -80,7 +80,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	list, err := h.Repository.GetAll(ctx, r.Cookies()[0].Value)
 	if err != nil {
 		log.Println(err)
-		return
+		w.WriteHeader(http.StatusNoContent)
 	}
 
 	for i := range list {
@@ -152,6 +152,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Println(err)
+		http.Error(w, "", 500)
 	}
 
 	if err := json.Unmarshal(payload, &rURL); err != nil {
