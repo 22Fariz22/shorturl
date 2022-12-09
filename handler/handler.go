@@ -191,7 +191,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 
 		resp := model.PackResponse{
 			CorrelationID: batchResp[i].CorrelationID,
-			ShortURL:      h.cfg.ServerAddress + "/" + short,
+			ShortURL:      h.cfg.BaseURL + "/" + short,
 		}
 
 		listReq = append(listReq, req)
