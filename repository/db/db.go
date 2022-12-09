@@ -66,7 +66,7 @@ type inDBRepository struct {
 func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
 	for b := range batchList {
 		_, err := i.conn.Exec(ctx, "insert into urls (cookies,correlation_id, id, longurl) values($1,$2,$3,$4);",
-			cook, batchList[b].Correlation_id, batchList[b].Short_url, batchList[b].Original_url)
+			cook, batchList[b].CorrelationID, batchList[b].ShortURL, batchList[b].OriginalURL)
 		if err != nil {
 			log.Println(err)
 			return err
