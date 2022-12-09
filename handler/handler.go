@@ -144,11 +144,12 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 	i, ok := h.Repository.GetURL(ctx, vars)
 	if ok {
-		fmt.Println("location", i)
 		w.Header().Set("Location", i)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		//http.Redirect(w, r, i, http.StatusTemporaryRedirect)
-		//w.Write([]byte(i))
+		w.Write([]byte(""))
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
