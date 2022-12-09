@@ -151,11 +151,12 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 		w.Header().Set("Location", i)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		//http.Redirect(w, r, i, http.StatusTemporaryRedirect)
-	} else {
-		w.Header().Set("Location", i)
-		fmt.Println("bad req")
-		w.WriteHeader(http.StatusBadRequest)
 	}
+	//else {
+	//	w.Header().Set("Location", i)
+	//	fmt.Println("bad req")
+	//	w.WriteHeader(http.StatusBadRequest)
+	//}
 }
 
 func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
