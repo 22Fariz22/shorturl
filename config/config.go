@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	DefaultServerAddress   = "http://127.0.0.1:8080"
+	DefaultServerAddress   = "127.0.0.1:8080"
 	DefaultBaseURL         = "http://127.0.0.1:8080"
 	DefaultFileStoragePath = "events.json"
 	DefaultHost            = "127.0.0.1"
@@ -20,9 +20,8 @@ const (
 	DefaultDatabaseDSN     = "" //"postgres://postgres:55555@127.0.0.1:5432/dburl"
 )
 
-//
 type Config struct {
-	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:"http://127.0.0.1:8080"`
+	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:"127.0.0.1:8080"`
 	BaseURL         string `env:"BASE_URL" envDefault:"http://127.0.0.1:8080"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"  ` //envDefault:"events.json"
 	SecretKey       []byte
@@ -38,7 +37,7 @@ func NewConfig() *Config {
 	cfg := &Config{}
 
 	pflag.StringVarP(&cfg.ServerAddress, "server", "a", DefaultServerAddress, "server address")
-	pflag.StringVarP(&cfg.BaseURL, "baseurl", "b", DefaultBaseURL, "base URL")
+	pflag.StringVarP(&cfg.BaseURL, "baseurl", "b", "", "base URL")
 	pflag.StringVarP(&cfg.FileStoragePath, "file", "f", "", "file storage path")
 	pflag.StringVarP(&cfg.DatabaseDSN, "databasedsn", "d", "", "databaseDSN")
 
