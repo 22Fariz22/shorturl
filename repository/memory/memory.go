@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"github.com/22Fariz22/shorturl/model"
 
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/22Fariz22/shorturl/storage"
@@ -9,6 +10,10 @@ import (
 
 type inMemoryRepository struct {
 	memoryStorage storage.MemoryStorage
+}
+
+func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
+	return nil
 }
 
 func (m *inMemoryRepository) Init() error {

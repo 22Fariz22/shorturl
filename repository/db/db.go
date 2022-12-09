@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"github.com/22Fariz22/shorturl/model"
 	"log"
 	"time"
 
@@ -10,14 +11,74 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+type db interface {
+	AddURL(*model.PackResponse)
+	Flush(string, string) error
+	repository.Repository
+}
+
 type inDBRepository struct {
 	conn        *pgx.Conn
 	databaseDSN string
+	buffer      []model.PackResponse
+	ctx         context.Context
+}
+
+//func (i *inDBRepository) AddURL(p *model.PackResponse) error {
+//	i.buffer = append(i.buffer, *p)
+//
+//	if cap(i.buffer) == len(i.buffer) {
+//		err := i.Flush()
+//		if err != nil {
+//			return errors.New("cannot add records to the database")
+//		}
+//	}
+//	return nil
+//}
+//func (i *inDBRepository) Flush(cook string, shortUrl string) error {
+//	if i.conn == nil {
+//		return errors.New("You haven`t opened the database connection")
+//	}
+//	tx, err := i.conn.Begin(i.ctx)
+//	if err != nil {
+//		return err
+//	}
+//	defer tx.Rollback(i.ctx)
+//
+//	//defer stmt.Close()
+//	for _, v := range i.buffer {
+//		_, err := tx.Exec(i.ctx, "INSERT INTO urls(cookies,correlation_id, id, longurl) VALUES($1,$2,$3,$4)",
+//			cook, v.Correlation_id, shortUrl, v.Original_url)
+//		if err != nil {
+//			return err
+//		}
+//	}
+//
+//	if err := tx.Commit(i.ctx); err != nil {
+//		log.Println("update drivers: unable to commit: %v", err)
+//		return err
+//	}
+//
+//	i.buffer = i.buffer[:0]
+//	return nil
+//}
+
+func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
+	for b := range batchList {
+		_, err := i.conn.Exec(ctx, "insert into urls (cookies,correlation_id, id, longurl) values($1,$2,$3,$4);",
+			cook, batchList[b].Correlation_id, batchList[b].Short_url, batchList[b].Original_url)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+	}
+	return nil
 }
 
 func New(cfg *config.Config) repository.Repository {
 	return &inDBRepository{
 		databaseDSN: cfg.DatabaseDSN,
+		buffer:      make([]model.PackResponse, 0, 1000),
 	}
 }
 
@@ -32,7 +93,7 @@ func (i *inDBRepository) Init() error {
 	defer cancel()
 
 	_, err = conn.Exec(ctx, "create table if not exists urls("+
-		"cookies text, id text CONSTRAINT id_pk PRIMARY KEY,longurl text);")
+		"cookies text, correlation_id text, id text CONSTRAINT id_pk PRIMARY KEY, longurl text);")
 	if err != nil {
 		log.Println(err)
 		return err

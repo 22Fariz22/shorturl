@@ -4,6 +4,8 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/22Fariz22/shorturl/model"
 	"io"
 	"log"
 	"math/rand"
@@ -34,6 +36,8 @@ type reqURL struct {
 
 var rURL reqURL
 
+var batchResp []model.PackReq
+
 func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 	count := 0
 	return &Handler{
@@ -42,6 +46,7 @@ func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 		cfg:        *cfg,
 	}
 }
+
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
@@ -142,6 +147,63 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 		w.Header().Set("Location", i)
 		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
 	}
+}
+
+func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
+	if len(r.Cookies()) == 0 {
+		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	payload, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "", 500)
+	}
+	if err := json.Unmarshal(payload, &batchResp); err != nil { // [{1 mail.ru} {2 ya.ru} {3 google.ru}]
+		log.Print(err)
+		return
+	}
+
+	var listReq []model.PackReq
+
+	var listResp []model.PackResponse
+
+	for i := range batchResp {
+		short := GenUlid()
+
+		req := model.PackReq{
+			Correlation_id: batchResp[i].Correlation_id,
+			Original_url:   batchResp[i].Original_url,
+			Short_url:      short,
+		}
+
+		resp := model.PackResponse{
+			Correlation_id: batchResp[i].Correlation_id,
+			Short_url:      short,
+		}
+
+		listReq = append(listReq, req)
+
+		listResp = append(listResp, resp)
+	}
+
+	fmt.Println(listReq)
+	err = h.Repository.RepoBatch(ctx, r.Cookies()[0].Value, listReq)
+	if err != nil {
+		log.Println(err)
+	} else {
+		res, err := json.Marshal(listResp)
+		if err != nil {
+			log.Print(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		w.Write(res)
+	}
+
 }
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {

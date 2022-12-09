@@ -20,6 +20,10 @@ type inFileRepository struct {
 	reader        *bufio.Reader
 }
 
+func (f *inFileRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
+	return nil
+}
+
 type Consumer struct {
 	File *os.File
 	//Cfg    *config.Config
