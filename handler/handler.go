@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/22Fariz22/shorturl/model"
 	"io"
 	"log"
@@ -127,7 +128,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
-
+	fmt.Println(" short, string(payload), r.Cookies()[0].Value form handler:::", short, string(payload), r.Cookies()[0].Value)
 	h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
 
 	w.WriteHeader(http.StatusCreated)
