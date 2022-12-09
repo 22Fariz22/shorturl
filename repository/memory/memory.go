@@ -13,6 +13,16 @@ type inMemoryRepository struct {
 }
 
 func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
+
+	for i := range batchList {
+		url := &model.URL{
+			Cookies: cook,
+			ID:      batchList[i].ShortURL,
+			LongURL: batchList[i].OriginalURL,
+		}
+		m.memoryStorage.Insert(url.ID, url.LongURL, cook)
+
+	}
 	return nil
 }
 
