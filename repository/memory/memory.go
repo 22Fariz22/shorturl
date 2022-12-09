@@ -2,7 +2,6 @@ package memory
 
 import (
 	"context"
-	"fmt"
 	"github.com/22Fariz22/shorturl/model"
 
 	"github.com/22Fariz22/shorturl/repository"
@@ -39,7 +38,6 @@ func New() repository.Repository {
 }
 
 func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
-	fmt.Println("shortID, longURL, cook in Saveurl() inmemory:::", shortID, longURL, cook)
 	m.memoryStorage.Insert(shortID, longURL, cook)
 	return nil
 }
