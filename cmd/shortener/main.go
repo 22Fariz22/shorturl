@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -23,10 +24,15 @@ func main() {
 
 	if cfg.DatabaseDSN != "" {
 		repo = db.New(cfg)
+		fmt.Println("here in db")
+		fmt.Println("cfg.DatabaseDSN:", cfg.DatabaseDSN)
 	} else if cfg.FileStoragePath != "" {
 		repo = file.New(cfg)
+		fmt.Println("here in file")
+		fmt.Println("cfg.FileStoragePath:", cfg.FileStoragePath)
 	} else {
 		repo = memory.New()
+		fmt.Println("here in memory")
 	}
 
 	repo.Init()
