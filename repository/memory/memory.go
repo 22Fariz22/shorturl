@@ -44,7 +44,7 @@ func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longUR
 	return nil
 }
 
-func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
+func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
 	v, ok := m.memoryStorage.Get(shortID)
 
 	return v, ok

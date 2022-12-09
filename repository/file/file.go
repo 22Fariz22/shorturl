@@ -109,7 +109,7 @@ func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL 
 	return nil
 }
 
-func (f *inFileRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
+func (f *inFileRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
 	v, ok := f.memoryStorage.Get(shortID)
 	return v, ok
 }

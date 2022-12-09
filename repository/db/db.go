@@ -111,9 +111,9 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 	return nil
 }
 
-func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
+func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
 	var s string
-	err := i.conn.QueryRow(ctx, "select longurl from urls where id = $1;", shortID).Scan(&s)
+	err := i.conn.QueryRow(ctx, "select longurl from urls where id = $1 and cookies=$2;", shortID, cook).Scan(&s)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки

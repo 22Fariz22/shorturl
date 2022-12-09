@@ -137,12 +137,16 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
+	if len(r.Cookies()) == 0 {
+		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+	}
+
 	vars := chi.URLParam(r, "id")
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	i, ok := h.Repository.GetURL(ctx, vars)
+	i, ok := h.Repository.GetURL(ctx, vars, r.Cookies()[0].Value)
 	if ok {
 		w.Header().Set("Location", i)
 		//w.WriteHeader(http.StatusTemporaryRedirect)
