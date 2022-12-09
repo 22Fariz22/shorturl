@@ -147,7 +147,8 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 		fmt.Println("location", i)
 		w.Header().Set("Location", i)
 		w.WriteHeader(http.StatusTemporaryRedirect)
-		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
+		//http.Redirect(w, r, i, http.StatusTemporaryRedirect)
+		//w.Write([]byte(i))
 	}
 }
 
