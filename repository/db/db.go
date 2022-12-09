@@ -113,13 +113,13 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 
 func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
 	var s string
-
 	err := i.conn.QueryRow(ctx, "select longurl from urls where id = $1;", shortID).Scan(&s)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки
 		return "", false
 	}
+
 	return s, true
 }
 

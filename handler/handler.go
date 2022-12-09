@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/22Fariz22/shorturl/model"
 	"io"
 	"log"
@@ -190,7 +189,6 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		listResp = append(listResp, resp)
 	}
 
-	fmt.Println(listReq)
 	err = h.Repository.RepoBatch(ctx, r.Cookies()[0].Value, listReq)
 	if err != nil {
 		log.Println(err)
