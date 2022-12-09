@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-
 	"github.com/22Fariz22/shorturl/repository/db"
 	"github.com/22Fariz22/shorturl/repository/file"
 	"github.com/22Fariz22/shorturl/repository/memory"
+	"log"
+	"net/http"
 
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/handler"
@@ -24,15 +22,10 @@ func main() {
 
 	if cfg.DatabaseDSN != "" {
 		repo = db.New(cfg)
-		fmt.Println("here in db")
-		fmt.Println("cfg.DatabaseDSN:", cfg.DatabaseDSN)
 	} else if cfg.FileStoragePath != "" {
 		repo = file.New(cfg)
-		fmt.Println("here in file")
-		fmt.Println("cfg.FileStoragePath:", cfg.FileStoragePath)
 	} else {
 		repo = memory.New()
-		fmt.Println("here in memory")
 	}
 
 	repo.Init()

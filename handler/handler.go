@@ -144,8 +144,10 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 	i, ok := h.Repository.GetURL(ctx, vars)
 	if ok {
+		fmt.Println("location", i)
 		w.Header().Set("Location", i)
 		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
+		w.WriteHeader(http.StatusCreated)
 	}
 }
 
@@ -202,7 +204,6 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 		w.Write(res)
 	}
-
 }
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
