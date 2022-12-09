@@ -12,13 +12,13 @@ type OwnerID struct {
 }
 
 type PackReq struct {
-	Correlation_id string `json:"correlation_id"`
-	Original_url   string `json:"original_url"`
-	Short_url      string `json:"short_url"`
+	CorrelationID string `json:"correlation_id"`
+	OriginalURL   string `json:"original_url"`
+	ShortURL      string `json:"short_url"`
 }
 
 type PackResponse struct {
-	Correlation_id string `json:"correlation_id"`
+	CorrelationID string `json:"correlation_id"`
 	//Original_url   string `json:"original_url"`
-	Short_url string `json:"short_url"`
+	ShortURL string `json:"short_url"`
 }

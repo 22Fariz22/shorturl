@@ -175,14 +175,14 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		short := GenUlid()
 
 		req := model.PackReq{
-			Correlation_id: batchResp[i].Correlation_id,
-			Original_url:   batchResp[i].Original_url,
-			Short_url:      short,
+			CorrelationID: batchResp[i].CorrelationID,
+			OriginalURL:   batchResp[i].OriginalURL,
+			ShortURL:      short,
 		}
 
 		resp := model.PackResponse{
-			Correlation_id: batchResp[i].Correlation_id,
-			Short_url:      short,
+			CorrelationID: batchResp[i].CorrelationID,
+			ShortURL:      short,
 		}
 
 		listReq = append(listReq, req)
