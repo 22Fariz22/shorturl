@@ -137,7 +137,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	w.WriteHeader(http.StatusConflict)
-	w.Write([]byte(h.cfg.BaseURL + "/" + s))
+	w.Write([]byte(s))
 
 	//w.WriteHeader(http.StatusCreated)
 	//w.Write([]byte(h.cfg.BaseURL + "/" + short))
