@@ -103,7 +103,6 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string
 		//TODO сделать возврат ошибки
 		return "", false
 	}
-
 	return s, true
 }
 

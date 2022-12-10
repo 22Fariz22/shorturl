@@ -131,7 +131,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
 	fmt.Println("s in handler", s)
 	if err != nil {
-		log.Println(err)
+		//log.Println(err)
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(h.cfg.BaseURL + "/" + short))
 	} else {
@@ -263,8 +263,16 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 		w.Write(res)
 	} else {
+		resp := respURL{
+			Result: h.cfg.BaseURL + "/" + s,
+		}
+
+		res1, err := json.Marshal(resp)
+		if err != nil {
+			log.Print(err)
+		}
 		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte(h.cfg.BaseURL + "/" + s))
+		w.Write([]byte(res1))
 	}
 
 	////пишем в json файл если есть FileStoragePath
