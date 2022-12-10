@@ -11,57 +11,12 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type db interface {
-	AddURL(*model.PackResponse)
-	Flush(string, string) error
-	repository.Repository
-}
-
 type inDBRepository struct {
 	conn        *pgx.Conn
 	databaseDSN string
 	buffer      []model.PackResponse
 	ctx         context.Context
 }
-
-//func (i *inDBRepository) AddURL(p *model.PackResponse) error {
-//	i.buffer = append(i.buffer, *p)
-//
-//	if cap(i.buffer) == len(i.buffer) {
-//		err := i.Flush()
-//		if err != nil {
-//			return errors.New("cannot add records to the database")
-//		}
-//	}
-//	return nil
-//}
-//func (i *inDBRepository) Flush(cook string, shortUrl string) error {
-//	if i.conn == nil {
-//		return errors.New("You haven`t opened the database connection")
-//	}
-//	tx, err := i.conn.Begin(i.ctx)
-//	if err != nil {
-//		return err
-//	}
-//	defer tx.Rollback(i.ctx)
-//
-//	//defer stmt.Close()
-//	for _, v := range i.buffer {
-//		_, err := tx.Exec(i.ctx, "INSERT INTO urls(cookies,correlation_id, id, longurl) VALUES($1,$2,$3,$4)",
-//			cook, v.Correlation_id, shortUrl, v.Original_url)
-//		if err != nil {
-//			return err
-//		}
-//	}
-//
-//	if err := tx.Commit(i.ctx); err != nil {
-//		log.Println("update drivers: unable to commit: %v", err)
-//		return err
-//	}
-//
-//	i.buffer = i.buffer[:0]
-//	return nil
-//}
 
 func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
 	for b := range batchList {

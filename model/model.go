@@ -19,6 +19,5 @@ type PackReq struct {
 
 type PackResponse struct {
 	CorrelationID string `json:"correlation_id"`
-	//Original_url   string `json:"original_url"`
-	ShortURL string `json:"short_url"`
+	ShortURL      string `json:"short_url"`
 }
