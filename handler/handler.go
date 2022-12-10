@@ -132,11 +132,11 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	fmt.Println("s in handler", s)
 	if err != nil {
 		//log.Println(err)
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(h.cfg.BaseURL + "/" + short))
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusConflict)
 	w.Write([]byte(h.cfg.BaseURL + "/" + s))
 
 	//w.WriteHeader(http.StatusCreated)
