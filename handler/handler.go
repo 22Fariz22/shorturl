@@ -252,12 +252,26 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
-	//пишем в json файл если есть FileStoragePath
-	h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
 
+	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(res)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusCreated)
+		w.Write(res)
+	} else {
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(h.cfg.BaseURL + "/" + s))
+	}
+
+	////пишем в json файл если есть FileStoragePath
+	//h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
+	//
+	//w.Header().Set("Content-Type", "application/json")
+	//w.WriteHeader(http.StatusCreated)
+	//w.Write(res)
+	//
+
 }
 
 func (r gzipReader) Close() error {
