@@ -267,15 +267,15 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 			log.Print(err)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
-		w.Write(res1)
-	} else {
-		log.Println(err)
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		w.Write(res)
-
+		w.Write(res1)
+		return
 	}
+
+	log.Println(err)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusConflict)
+	w.Write(res)
 
 	////пишем в json файл если есть FileStoragePath
 	//h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
