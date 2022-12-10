@@ -79,18 +79,19 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 	}
 
 	if s != longURL {
-		fmt.Println("такой есть")
-		return shortID, nil
+		fmt.Printf("такой есть. longurl:%s, s:%s\n", longURL, s)
+		return s, nil
 
+	} else {
+		fmt.Printf("такого нету. longurl:%s, s:%s\n", longURL, s)
+		_, err = i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortID, longURL)
+		if err != nil {
+			log.Println(err)
+			return "", err
+		}
 	}
-	fmt.Println("такого нету")
-	_, err = i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortID, longURL)
-	if err != nil {
-		log.Println(err)
-		return "", err
 
-	}
-	fmt.Println("s:", s)
+	fmt.Println("s:\n", s)
 	return "", nil
 }
 
