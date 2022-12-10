@@ -257,9 +257,9 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
-	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		log.Println(err)
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		w.Write(res)
 	} else {
