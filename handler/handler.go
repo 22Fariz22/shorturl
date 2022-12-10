@@ -132,12 +132,12 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	fmt.Println("s in handler", s)
 	if err != nil {
 		//log.Println(err)
-		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte(h.cfg.BaseURL + "/" + s))
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(h.cfg.BaseURL + "/" + short))
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(h.cfg.BaseURL + "/" + short))
+	w.WriteHeader(http.StatusConflict)
+	w.Write([]byte(h.cfg.BaseURL + "/" + s))
 
 	//w.WriteHeader(http.StatusCreated)
 	//w.Write([]byte(h.cfg.BaseURL + "/" + short))
@@ -258,24 +258,24 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
 	if err != nil {
-		resp := respURL{
-			Result: h.cfg.BaseURL + "/" + s,
-		}
-
-		res1, err := json.Marshal(resp)
-		if err != nil {
-			log.Print(err)
-		}
+		log.Println(err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		w.Write(res1)
+		w.Write(res)
 		return
+
+	}
+	resp1 := respURL{
+		Result: h.cfg.BaseURL + "/" + s,
 	}
 
-	log.Println(err)
+	res1, err := json.Marshal(resp1)
+	if err != nil {
+		log.Print(err)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusConflict)
-	w.Write(res)
+	w.Write(res1)
 
 	////пишем в json файл если есть FileStoragePath
 	//h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
