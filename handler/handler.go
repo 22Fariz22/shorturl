@@ -252,7 +252,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err)
 	}
-	fmt.Println("resp from json:", rURL.URL)
+	fmt.Println("resp from handlerj son:", rURL.URL)
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
