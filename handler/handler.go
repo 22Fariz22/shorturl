@@ -271,8 +271,9 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Print(err)
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte(res1))
+		w.Write(res1)
 	}
 
 	////пишем в json файл если есть FileStoragePath
