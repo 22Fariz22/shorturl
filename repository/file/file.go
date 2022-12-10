@@ -92,7 +92,7 @@ func (f *inFileRepository) Init() error {
 	return nil
 }
 
-func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
+func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) (string, error) {
 	url := &model.URL{
 		Cookies: cook,
 		ID:      shortID,
@@ -101,12 +101,12 @@ func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL 
 	data, err := json.Marshal(url)
 	if err != nil {
 		log.Println(err)
-		return err
+		return "", err
 	}
 	f.file.Write(data)
 	f.file.Write([]byte("\n"))
 	f.memoryStorage.Insert(shortID, longURL, cook)
-	return nil
+	return "", nil
 }
 
 func (f *inFileRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {

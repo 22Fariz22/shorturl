@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"github.com/22Fariz22/shorturl/model"
 	"log"
 	"time"
@@ -47,8 +48,9 @@ func (i *inDBRepository) Init() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err = conn.Exec(ctx, "create table if not exists urls("+
-		"cookies text, correlation_id text, id text CONSTRAINT id_pk PRIMARY KEY, longurl text);")
+	//_, err = conn.Exec(ctx, "create table if not exists urls(cookies text, correlation_id text, id text CONSTRAINT id_pk PRIMARY KEY UNIQUE, longurl text);")
+	_, err = conn.Exec(ctx,
+		"create table if not exists urls(id_pk SERIAL PRIMARY KEY, cookies TEXT, correlation_id TEXT, short_url TEXT, long_url TEXT UNIQUE);")
 	if err != nil {
 		log.Println(err)
 		return err
@@ -57,18 +59,44 @@ func (i *inDBRepository) Init() error {
 	return nil
 }
 
-func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
-	_, err := i.conn.Exec(ctx, "insert into urls (cookies, id, longurl) values($1,$2,$3);", cook, shortID, longURL)
+func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) (string, error) {
+
+	var s string
+	err := i.conn.QueryRow(ctx, `
+				WITH e AS(
+				INSERT INTO urls (cookies, short_url, long_url) 
+					   VALUES ($1, $2, $3)
+				ON CONFLICT("long_url") DO NOTHING
+				RETURNING long_url
+			)
+			SELECT long_url FROM e
+			Union 
+			SELECT short_url FROM urls where long_url=$3
+;`, cook, shortID, longURL).Scan(&s)
 	if err != nil {
 		log.Println(err)
-		return err
+		return "", err
 	}
-	return nil
+
+	if s != longURL {
+		fmt.Println("такой есть")
+		return shortID, nil
+
+	}
+	fmt.Println("такого нету")
+	_, err = i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortID, longURL)
+	if err != nil {
+		log.Println(err)
+		return "", err
+
+	}
+	fmt.Println("s:", s)
+	return "", nil
 }
 
 func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
 	var s string
-	err := i.conn.QueryRow(ctx, "select longurl from urls where id = $1 ;", shortID).Scan(&s)
+	err := i.conn.QueryRow(ctx, "select long_url from urls where short_url = $1 ;", shortID).Scan(&s)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки

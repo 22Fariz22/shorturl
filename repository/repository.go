@@ -6,7 +6,7 @@ import (
 )
 
 type Repository interface {
-	SaveURL(context.Context, string, string, string) error
+	SaveURL(context.Context, string, string, string) (string, error)
 	GetURL(context.Context, string, string) (string, bool)
 	GetAll(context.Context, string) ([]map[string]string, error)
 	Init() error

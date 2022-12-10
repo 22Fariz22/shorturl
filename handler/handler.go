@@ -126,10 +126,18 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
-	h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
+	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(h.cfg.BaseURL + "/" + short))
+	} else {
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(h.cfg.BaseURL + "/" + s))
+	}
 
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(h.cfg.BaseURL + "/" + short))
+	//w.WriteHeader(http.StatusCreated)
+	//w.Write([]byte(h.cfg.BaseURL + "/" + short))
 }
 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
