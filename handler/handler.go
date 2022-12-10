@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -36,8 +35,6 @@ type reqURL struct {
 }
 
 var rURL reqURL
-
-var batchResp []model.PackReq
 
 func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 	count := 0
@@ -129,7 +126,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
-	fmt.Println(" short, string(payload), r.Cookies()[0].Value form handler:::", short, string(payload), r.Cookies()[0].Value)
 	h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
 
 	w.WriteHeader(http.StatusCreated)
@@ -150,6 +146,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	i, ok := h.Repository.GetURL(ctx, vars, r.Cookies()[0].Value)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	w.Header().Set("Location", i)
 	http.Redirect(w, r, i, http.StatusTemporaryRedirect)
@@ -163,10 +160,13 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
+	var batchResp []model.PackReq
+
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "", 500)
+		return
 	}
 	if err := json.Unmarshal(payload, &batchResp); err != nil { // [{1 mail.ru} {2 ya.ru} {3 google.ru}]
 		log.Print(err)
@@ -199,15 +199,16 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	err = h.Repository.RepoBatch(ctx, r.Cookies()[0].Value, listReq)
 	if err != nil {
 		log.Println(err)
-	} else {
-		res, err := json.Marshal(listResp)
-		if err != nil {
-			log.Print(err)
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		w.Write(res)
+		return
 	}
+
+	res, err := json.Marshal(listResp)
+	if err != nil {
+		log.Print(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(res)
 }
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
