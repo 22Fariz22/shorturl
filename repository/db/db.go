@@ -73,10 +73,10 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 			Union 
 			SELECT short_url FROM urls where long_url=$3
 ;`, cook, shortID, longURL).Scan(&s)
-	if err != nil {
-		log.Println(err)
-		return "", err
-	}
+	//if err != nil {
+	//	log.Println(err)
+	//	return "", err
+	//}
 
 	if s != longURL {
 		fmt.Printf("такой есть. longurl:%s, s:%s\n", longURL, s)
