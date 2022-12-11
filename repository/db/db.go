@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/22Fariz22/shorturl/model"
 	"log"
@@ -62,7 +63,7 @@ func (i *inDBRepository) Init() error {
 func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) (string, error) {
 
 	var s string
-	err := i.conn.QueryRow(ctx, `
+	_ = i.conn.QueryRow(ctx, `
 				WITH e AS(
 				INSERT INTO urls (cookies, short_url, long_url) 
 					   VALUES ($1, $2, $3)
@@ -79,16 +80,18 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 	//}
 
 	if s != longURL {
-		fmt.Printf("такой есть. longurl:%s, s:%s\n", longURL, s)
+		fmt.Println("такой есть. longurl: ", longURL, " s:", s)
 		return s, nil
 
 	} else {
-		fmt.Printf("такого нету. longurl:%s, s:%s\n", longURL, s)
-		_, err = i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortID, longURL)
-		if err != nil {
-			log.Println(err)
-			return "", err
-		}
+		fmt.Println("такого нету. longurl: ", longURL, " s:", s)
+		_, _ = i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortID, longURL)
+		//fmt.Println("err in db after insert:\n", err)
+		//if err != nil {
+		//	log.Println(err)
+		//	return "", err
+		//}
+		return "", errors.New("такого нету.записываем в bd")
 	}
 
 	fmt.Println("s:\n", s)
