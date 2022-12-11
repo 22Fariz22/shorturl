@@ -101,7 +101,7 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 
 func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
 	var s string
-	err := i.conn.QueryRow(ctx, "select long_url from urls where short_url = $1 ;", shortID).Scan(&s)
+	err := i.conn.QueryRow(ctx, "select long_url from urls where short_url = $1 and cookies=$2 ;", shortID, cook).Scan(&s)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки
@@ -112,7 +112,7 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string
 
 //example [map[7PJPPAZ:http://ya.ru] map[JRK5X81:http://ya.ru]]
 func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
-	rows, err := i.conn.Query(ctx, "select id, longurl from urls where cookies = $1;", cook)
+	rows, err := i.conn.Query(ctx, "select short_url, long_url from urls where cookies = $1;", cook)
 	if err != nil {
 		//log.Println(err)
 		return nil, err
