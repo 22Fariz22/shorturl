@@ -130,6 +130,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
 	fmt.Println("s in handler", s)
+	fmt.Println("err in handler:", err)
 	if err != nil {
 		//log.Println(err)
 		w.WriteHeader(http.StatusCreated)

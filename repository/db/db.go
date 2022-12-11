@@ -86,13 +86,8 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 
 	fmt.Println("такого нету. longurl: ", longURL, " s:", s)
 	_, err := i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortID, longURL)
-	fmt.Println("err:", err)
+	fmt.Println("err in saveurl() db:", err)
 
-	//fmt.Println("err in db after insert:\n", err)
-	//if err != nil {
-	//	log.Println(err)
-	//	return "", err
-	//}
 	return "", err
 }
 
