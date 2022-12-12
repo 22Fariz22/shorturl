@@ -66,6 +66,7 @@ func GenUlid() string {
 	return moreShorter
 }
 
+//
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
