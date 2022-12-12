@@ -40,7 +40,7 @@ func SetCookieHandler(w http.ResponseWriter, r *http.Request, secretKey []byte) 
 }
 
 func GetCookieHandler(w http.ResponseWriter, r *http.Request, secretKey []byte) {
-	_, err := readEncrypted(r, "exampleCookie", secretKey)
+	value, err := readEncrypted(r, "exampleCookie", secretKey)
 	if err != nil {
 		switch {
 		case errors.Is(err, http.ErrNoCookie):
@@ -53,6 +53,7 @@ func GetCookieHandler(w http.ResponseWriter, r *http.Request, secretKey []byte) 
 		}
 		return
 	}
+	fmt.Println(value)
 	//w.Write([]byte(value))
 
 }

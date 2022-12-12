@@ -73,11 +73,7 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 			Union 
 			SELECT short_url FROM urls where long_url=$3
 ;`, cook, shortID, longURL).Scan(&s)
-	//if err != nil {
-	//	log.Println(err)
-	//	return "", err
-	//}
-	//fmt.Println("err:",err)
+
 	if s != longURL {
 		fmt.Println("такой есть. longurl: ", longURL, " s:", s)
 		return s, nil
@@ -90,9 +86,6 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 
 	return "", err
 }
-
-//fmt.Println("s:\n", s)
-//return "", nil
 
 func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
 	var s string
