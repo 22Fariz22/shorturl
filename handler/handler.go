@@ -178,7 +178,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "", 500)
-		//return
+		return
 	}
 	if err := json.Unmarshal(payload, &batchResp); err != nil { // [{1 mail.ru} {2 ya.ru} {3 google.ru}]
 		log.Print(err)
