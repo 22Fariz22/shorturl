@@ -125,7 +125,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//сокращатель
 	short := GenUlid()
 
-	ctx, cancel := context.WithTimeout(r.Context(), 180*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
@@ -158,7 +158,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	i, ok := h.Repository.GetURL(ctx, vars, r.Cookies()[0].Value)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		return
+		//return
 	}
 	w.Header().Set("Location", i)
 	http.Redirect(w, r, i, http.StatusTemporaryRedirect)
@@ -178,7 +178,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "", 500)
-		return
+		//return
 	}
 	if err := json.Unmarshal(payload, &batchResp); err != nil { // [{1 mail.ru} {2 ya.ru} {3 google.ru}]
 		log.Print(err)
@@ -254,7 +254,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 	}
 	fmt.Println("resp from handlerj son:", rURL.URL)
-	ctx, cancel := context.WithTimeout(r.Context(), 180*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
