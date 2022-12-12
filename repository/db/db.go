@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"github.com/22Fariz22/shorturl/model"
 	"log"
 	"time"
@@ -48,7 +47,6 @@ func (i *inDBRepository) Init() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	//_, err = conn.Exec(ctx, "create table if not exists urls(cookies text, correlation_id text, id text CONSTRAINT id_pk PRIMARY KEY UNIQUE, longurl text);")
 	_, err = conn.Exec(ctx,
 		"create table if not exists urls(id_pk SERIAL PRIMARY KEY, cookies TEXT, correlation_id TEXT, short_url TEXT, long_url TEXT UNIQUE);")
 	if err != nil {
@@ -63,26 +61,23 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 
 	var s string
 	_ = i.conn.QueryRow(ctx, `
-				WITH e AS(
-				INSERT INTO urls (cookies, short_url, long_url) 
-					   VALUES ($1, $2, $3)
-				ON CONFLICT("long_url") DO NOTHING
-				RETURNING long_url
-			)
-			SELECT long_url FROM e
-			Union 
-			SELECT short_url FROM urls where long_url=$3
-;`, cook, shortID, longURL).Scan(&s)
+	   				WITH e AS(
+	   				INSERT INTO urls (cookies, short_url, long_url)
+	   					   VALUES ($1, $2, $3)
+	   				ON CONFLICT("long_url") DO NOTHING
+	   				RETURNING long_url
+	   			)
+	   			SELECT long_url FROM e
+	   			Union
+	   			SELECT short_url FROM urls where long_url=$3
+	   ;`, cook, shortID, longURL).Scan(&s)
 
 	if s != longURL {
-		fmt.Println("такой есть. longurl: ", longURL, " s:", s)
 		return s, nil
 
 	}
 
-	fmt.Println("такого нету. longurl: ", longURL, " s:", s)
 	_, err := i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortID, longURL)
-	fmt.Println("err in saveurl() db:", err)
 
 	return "", err
 }
@@ -90,7 +85,6 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
 	var s string
 	err := i.conn.QueryRow(ctx, "select long_url from urls where short_url = $1  ;", shortID).Scan(&s)
-	fmt.Println("err in geturl db", err)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки

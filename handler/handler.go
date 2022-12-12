@@ -128,8 +128,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
-	//fmt.Println("value SaveUrl in handler:", s)
-	//fmt.Println("err SaveUrl in handler:", err)
+
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusCreated)
@@ -139,8 +138,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusConflict)
 	w.Write([]byte(h.cfg.BaseURL + "/" + s))
 
-	//w.WriteHeader(http.StatusCreated)
-	//w.Write([]byte(h.cfg.BaseURL + "/" + short))
 }
 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
@@ -275,14 +272,6 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusConflict)
 	w.Write(res1)
-
-	////пишем в json файл если есть FileStoragePath
-	//h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
-	//
-	//w.Header().Set("Content-Type", "application/json")
-	//w.WriteHeader(http.StatusCreated)
-	//w.Write(res)
-	//
 
 }
 
