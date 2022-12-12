@@ -23,7 +23,6 @@ type inFileRepository struct {
 
 func (f *inFileRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
 	// [{1 http://mail.ru 0ATJMCH} {2 http://ya.ru 3DXH7RG} {3 http://google.ru VGGFB0D}]
-
 	for i := range batchList {
 		url := &model.URL{
 			Cookies: cook,
@@ -86,7 +85,6 @@ func (f *inFileRepository) Init() error {
 		}
 		f.memoryStorage.Insert(u.ID, u.LongURL, u.Cookies)
 	}
-
 	if err := scanner.Err(); err != nil {
 		log.Println(err)
 	}

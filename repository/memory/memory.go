@@ -18,7 +18,6 @@ func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchLi
 
 	for i := range batchList {
 		url := &model.URL{
-			//Cookies: cook,
 			ID:      batchList[i].ShortURL,
 			LongURL: batchList[i].OriginalURL,
 		}

@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"github.com/22Fariz22/shorturl/model"
 	"log"
 	"time"
+
+	"github.com/22Fariz22/shorturl/model"
 
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/repository"
