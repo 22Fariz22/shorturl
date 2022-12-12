@@ -96,7 +96,8 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL st
 
 func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
 	var s string
-	err := i.conn.QueryRow(ctx, "select long_url from urls where short_url = $1 and cookies=$2 ;", shortID, cook).Scan(&s)
+	err := i.conn.QueryRow(ctx, "select long_url from urls where short_url = $1  ;", shortID).Scan(&s)
+	fmt.Println("err in geturl db", err)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки
