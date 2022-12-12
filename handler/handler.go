@@ -158,7 +158,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	i, ok := h.Repository.GetURL(ctx, vars, r.Cookies()[0].Value)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		//return
+		return
 	}
 	w.Header().Set("Location", i)
 	http.Redirect(w, r, i, http.StatusTemporaryRedirect)
