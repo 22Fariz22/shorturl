@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/22Fariz22/shorturl/model"
+
 	"github.com/22Fariz22/shorturl/cookies"
 
 	"github.com/22Fariz22/shorturl/config"
@@ -42,6 +44,7 @@ func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 		cfg:        *cfg,
 	}
 }
+
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
@@ -62,7 +65,7 @@ func GenUlid() string {
 	return moreShorter
 }
 
-//вернуть все свои URL
+//
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
@@ -124,24 +127,95 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
+	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
 
+	if err != nil {
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(h.cfg.BaseURL + "/" + s))
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
+
 }
 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
+	if len(r.Cookies()) == 0 {
+		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+	}
+
 	vars := chi.URLParam(r, "id")
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	i, ok := h.Repository.GetURL(ctx, vars)
-	if ok {
-		w.Header().Set("Location", i)
-		http.Redirect(w, r, i, http.StatusTemporaryRedirect)
+	i, ok := h.Repository.GetURL(ctx, vars, r.Cookies()[0].Value)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
+	w.Header().Set("Location", i)
+	http.Redirect(w, r, i, http.StatusTemporaryRedirect)
+}
+
+func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
+	if len(r.Cookies()) == 0 {
+		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
+	defer cancel()
+
+	var batchResp []model.PackReq
+
+	payload, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "", 500)
+		return
+	}
+	if err := json.Unmarshal(payload, &batchResp); err != nil { // [{1 mail.ru} {2 ya.ru} {3 google.ru}]
+		log.Print(err)
+		return
+	}
+
+	var listReq []model.PackReq
+
+	var listResp []model.PackResponse
+
+	for i := range batchResp {
+		short := GenUlid()
+
+		req := model.PackReq{
+			CorrelationID: batchResp[i].CorrelationID,
+			OriginalURL:   batchResp[i].OriginalURL,
+			ShortURL:      short,
+		}
+
+		resp := model.PackResponse{
+			CorrelationID: batchResp[i].CorrelationID,
+			ShortURL:      h.cfg.BaseURL + "/" + short,
+		}
+
+		listReq = append(listReq, req)
+
+		listResp = append(listResp, resp)
+	}
+
+	err = h.Repository.RepoBatch(ctx, r.Cookies()[0].Value, listReq)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	res, err := json.Marshal(listResp)
+	if err != nil {
+		log.Print(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(res)
 }
 
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
@@ -177,12 +251,26 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
-	//пишем в json файл если есть FileStoragePath
-	h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
 
+	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
+	if err != nil {
+		resp1 := respURL{
+			Result: h.cfg.BaseURL + "/" + s,
+		}
+		res1, err := json.Marshal(resp1)
+		if err != nil {
+			log.Print(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		w.Write(res1)
+
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(res)
+
 }
 
 func (r gzipReader) Close() error {

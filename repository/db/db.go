@@ -2,8 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
+
+	"github.com/22Fariz22/shorturl/model"
 
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/repository"
@@ -13,11 +16,26 @@ import (
 type inDBRepository struct {
 	conn        *pgx.Conn
 	databaseDSN string
+	buffer      []model.PackResponse
+	ctx         context.Context
+}
+
+func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
+	for b := range batchList {
+		_, err := i.conn.Exec(ctx, "insert into urls (cookies,correlation_id, short_url, long_url) values($1,$2,$3,$4);",
+			cook, batchList[b].CorrelationID, batchList[b].ShortURL, batchList[b].OriginalURL)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+	}
+	return nil
 }
 
 func New(cfg *config.Config) repository.Repository {
 	return &inDBRepository{
 		databaseDSN: cfg.DatabaseDSN,
+		buffer:      make([]model.PackResponse, 0, 1000),
 	}
 }
 
@@ -31,8 +49,8 @@ func (i *inDBRepository) Init() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err = conn.Exec(ctx, "create table if not exists urls("+
-		"cookies text, id text CONSTRAINT id_pk PRIMARY KEY,longurl text);")
+	_, err = conn.Exec(ctx,
+		"create table if not exists urls(id_pk SERIAL PRIMARY KEY, cookies TEXT, correlation_id TEXT, short_url TEXT, long_url TEXT UNIQUE);")
 	if err != nil {
 		log.Println(err)
 		return err
@@ -41,19 +59,33 @@ func (i *inDBRepository) Init() error {
 	return nil
 }
 
-func (i *inDBRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
-	_, err := i.conn.Exec(ctx, "insert into urls (cookies, id, longurl) values($1,$2,$3);", cook, shortID, longURL)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	return nil
-}
-
-func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
+func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
 	var s string
+	_ = i.conn.QueryRow(ctx, `
+		   				WITH e AS(
+		   				INSERT INTO urls (cookies, short_url, long_url)
+		   					   VALUES ($1, $2, $3)
+		   				ON CONFLICT("long_url") DO NOTHING
+		   				RETURNING long_url
+		   			)
+		   			SELECT long_url FROM e
+		   			Union
+		   			SELECT short_url FROM urls where long_url=$3
+		   ;`, cook, shortURL, longURL).Scan(&s)
+	if s != longURL {
+		return s, errors.New("такой есть")
+	}
 
-	err := i.conn.QueryRow(ctx, "select longurl from urls where id = $1;", shortID).Scan(&s)
+	_, err := i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortURL, longURL)
+	if err != nil {
+		log.Println(err)
+	}
+	return "", nil
+}
+
+func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
+	var s string
+	err := i.conn.QueryRow(ctx, "select long_url from urls where short_url = $1  ;", shortID).Scan(&s)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки
@@ -64,9 +96,9 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (string, bo
 
 //example [map[7PJPPAZ:http://ya.ru] map[JRK5X81:http://ya.ru]]
 func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
-	rows, err := i.conn.Query(ctx, "select id, longurl from urls where cookies = $1;", cook)
+	rows, err := i.conn.Query(ctx, "select short_url, long_url from urls where cookies = $1;", cook)
 	if err != nil {
-		//log.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	defer rows.Close()

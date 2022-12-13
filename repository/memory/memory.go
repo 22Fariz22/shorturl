@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"github.com/22Fariz22/shorturl/model"
 
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/22Fariz22/shorturl/storage"
@@ -9,6 +10,19 @@ import (
 
 type inMemoryRepository struct {
 	memoryStorage storage.MemoryStorage
+}
+
+func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
+
+	for i := range batchList {
+		url := &model.URL{
+			ID:      batchList[i].ShortURL,
+			LongURL: batchList[i].OriginalURL,
+		}
+		m.memoryStorage.Insert(url.ID, url.LongURL, cook)
+
+	}
+	return nil
 }
 
 func (m *inMemoryRepository) Init() error {
@@ -22,14 +36,13 @@ func New() repository.Repository {
 	}
 }
 
-func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) error {
+func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) (string, error) {
 	m.memoryStorage.Insert(shortID, longURL, cook)
-	return nil
+	return "", nil
 }
 
-func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string) (string, bool) {
+func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
 	v, ok := m.memoryStorage.Get(shortID)
-
 	return v, ok
 }
 

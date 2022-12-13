@@ -46,6 +46,7 @@ func main() {
 	r.Post("/api/shorten", hd.CreateShortURLJSON)
 	r.Get("/api/user/urls", hd.GetAllURL)
 	r.Get("/ping", hd.Ping)
+	r.Post("/api/shorten/batch", hd.Batch)
 
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
 		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
