@@ -58,71 +58,8 @@ func (i *inDBRepository) Init() error {
 
 	return nil
 }
-func (i *inDBRepository) Store(userID string, longURL string, shortURL string, ctx context.Context) {
-	_, err := i.conn.Exec(ctx, "INSERT INTO url (userhexid, longUrl, short_url) VALUES ($1, $2, $3) ",
-		userID, longURL, shortURL)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-}
-
-func (i *inDBRepository) LoadShort(longlink string, ctx context.Context) (string, bool) {
-	var shortlink string
-	//вставляем шортурл по условию лонгурла оз запроса
-	rows := i.conn.QueryRow(ctx, "SELECT shortlink FROM linklisttable WHERE longlink = $1", longlink)
-	err := rows.Scan(&shortlink)
-	if shortlink != "" && err == nil {
-		return shortlink, false
-	}
-	return longlink, true
-}
 
 func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
-	/*
-		rows, err := i.conn.Query(ctx, "select long_url from urls where long_url=$1", longURL)
-		fmt.Println(reflect.TypeOf(i))
-		if err != nil {
-			return "", err
-		}
-		fmt.Println("err:", err)
-		defer rows.Close()
-
-		for rows.Next() {
-			var lu string
-			err = rows.Scan(&lu)
-			//fmt.Println("lu:", lu)
-			if err != nil {
-				return "", err
-			}
-			if lu != "" {
-				//такой есть, возвращаем существ.shorturl (err, Conflict)
-
-				return "", err
-			} else {
-				//вставляем,тк такого нету (nil, statusCreated
-				_, err := i.conn.Exec(ctx, "INSERT INTO url (cookies,short_url, shu) VALUES ($1, $2, $3) ",
-					cook, longURL, shortURL)
-				if err != nil {
-					log.Println(err)
-					return "",err
-				}
-
-				return "", nil
-
-			}
-		}
-
-		if rows.Err() != nil {
-			fmt.Println("rows.Err()", rows.Err())
-			return "", err
-		}
-		return "", nil
-
-	*/
-
-	//return "", err
-
 	var s string
 	_ = i.conn.QueryRow(ctx, `
 		   				WITH e AS(
@@ -135,21 +72,15 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 		   			Union
 		   			SELECT short_url FROM urls where long_url=$3
 		   ;`, cook, shortURL, longURL).Scan(&s)
-
 	if s != longURL {
-		// err!=nil, statusConflict  ("est!")
 		return s, errors.New("такой есть")
-
 	}
 
 	_, err := i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortURL, longURL)
 	if err != nil {
 		log.Println(err)
 	}
-
-	// err=nil, statusCreated  ("netu!")
 	return "", nil
-
 }
 
 func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
