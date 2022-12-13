@@ -98,7 +98,7 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string
 func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
 	rows, err := i.conn.Query(ctx, "select short_url, long_url from urls where cookies = $1;", cook)
 	if err != nil {
-		//log.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	defer rows.Close()

@@ -41,8 +41,7 @@ func (f *inFileRepository) RepoBatch(ctx context.Context, cook string, batchList
 }
 
 type Consumer struct {
-	File *os.File
-	//Cfg    *config.Config
+	File   *os.File
 	reader *bufio.Reader
 }
 

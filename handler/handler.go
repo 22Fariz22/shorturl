@@ -134,7 +134,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 		w.Write([]byte(h.cfg.BaseURL + "/" + s))
 		return
 	}
-	//log.Println(err)
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
 
