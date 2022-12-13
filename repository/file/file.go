@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"log"
 	"os"
@@ -105,7 +104,7 @@ func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL 
 	f.file.Write(data)
 	f.file.Write([]byte("\n"))
 	f.memoryStorage.Insert(shortID, longURL, cook)
-	return "", errors.New("")
+	return "", nil
 }
 
 func (f *inFileRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {

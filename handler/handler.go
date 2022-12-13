@@ -130,13 +130,13 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
 
 	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(h.cfg.BaseURL + "/" + short))
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(h.cfg.BaseURL + "/" + s))
 		return
 	}
-	w.WriteHeader(http.StatusConflict)
-	w.Write([]byte(h.cfg.BaseURL + "/" + s))
+	log.Println(err)
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(h.cfg.BaseURL + "/" + short))
 
 }
 
