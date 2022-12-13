@@ -134,7 +134,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 		w.Write([]byte(h.cfg.BaseURL + "/" + s))
 		return
 	}
-	log.Println(err)
+	//log.Println(err)
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
 
@@ -255,23 +255,22 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
 	if err != nil {
-
+		resp1 := respURL{
+			Result: h.cfg.BaseURL + "/" + s,
+		}
+		res1, err := json.Marshal(resp1)
+		if err != nil {
+			log.Print(err)
+		}
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		w.Write(res)
+		w.WriteHeader(http.StatusConflict)
+		w.Write(res1)
+
 		return
 	}
-
-	resp1 := respURL{
-		Result: h.cfg.BaseURL + "/" + s,
-	}
-	res1, err := json.Marshal(resp1)
-	if err != nil {
-		log.Print(err)
-	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusConflict)
-	w.Write(res1)
+	w.WriteHeader(http.StatusCreated)
+	w.Write(res)
 
 }
 
