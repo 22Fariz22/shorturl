@@ -136,7 +136,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
-
 }
 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
@@ -164,7 +163,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var batchResp []model.PackReq
@@ -264,13 +263,11 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
 		w.Write(res1)
-
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(res)
-
 }
 
 func (r gzipReader) Close() error {
@@ -278,7 +275,6 @@ func (r gzipReader) Close() error {
 		log.Print(err.Error())
 		return err
 	}
-
 	return nil
 }
 
@@ -296,7 +292,6 @@ func DeCompress(next http.Handler) http.Handler {
 			io.WriteString(writer, err.Error())
 			return
 		}
-
 		defer reader.Close()
 
 		request.Body = gzipReader{

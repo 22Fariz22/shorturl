@@ -61,19 +61,20 @@ func (i *inDBRepository) Init() error {
 
 func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
 	var s string
+	var ErrAlreadyExists = errors.New("this URL already exists")
 	_ = i.conn.QueryRow(ctx, `
 		   				WITH e AS(
 		   				INSERT INTO urls (cookies, short_url, long_url)
 		   					   VALUES ($1, $2, $3)
 		   				ON CONFLICT("long_url") DO NOTHING
 		   				RETURNING long_url
-		   			)
-		   			SELECT long_url FROM e
-		   			Union
-		   			SELECT short_url FROM urls where long_url=$3
+						)
+						SELECT long_url FROM e
+						Union
+						SELECT short_url FROM urls where long_url=$3
 		   ;`, cook, shortURL, longURL).Scan(&s)
 	if s != longURL {
-		return s, errors.New("такой есть")
+		return s, ErrAlreadyExists
 	}
 
 	_, err := i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortURL, longURL)
@@ -117,12 +118,10 @@ func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]
 		aMap := map[string]string{id: longurl}
 
 		list = append(list, aMap)
-
 	}
 	return list, nil
 }
 
 func (i *inDBRepository) Ping(ctx context.Context) error {
-
 	return i.conn.Ping(ctx)
 }
