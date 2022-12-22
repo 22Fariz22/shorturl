@@ -11,15 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/22Fariz22/shorturl/model"
-
-	"github.com/22Fariz22/shorturl/cookies"
-
 	"github.com/22Fariz22/shorturl/config"
+	"github.com/22Fariz22/shorturl/cookies"
+	"github.com/22Fariz22/shorturl/model"
 	"github.com/22Fariz22/shorturl/repository"
-	"github.com/oklog/ulid/v2"
-
 	"github.com/go-chi/chi/v5"
+	"github.com/oklog/ulid/v2"
 )
 
 type HandlerModel struct {
@@ -45,24 +42,32 @@ func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
 	}
 }
 
-func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
+func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
+	if len(r.Cookies()) == 0 {
+		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+	}
 
-	err := h.Repository.Ping(ctx)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+	//payload, err := io.ReadAll(r.Body)
+	//if err != nil {
+	//	log.Println(err)
+	//}
+	//
+	//fmt.Println(string(payload))
+
+	var list []string
+
+	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-}
 
-func GenUlid() string {
-	t := time.Now().UTC()
-	entropy := rand.New(rand.NewSource(t.UnixNano()))
-	id := ulid.MustNew(ulid.Timestamp(t), entropy)
-	moreShorter := id.String()[len(id.String())-7:]
-	return moreShorter
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	h.Repository.Delete(ctx, list)
+
+	w.WriteHeader(http.StatusAccepted)
 }
 
 //
@@ -306,4 +311,24 @@ func DeCompress(next http.Handler) http.Handler {
 type gzipReader struct {
 	*gzip.Reader
 	io.Closer
+}
+
+func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	err := h.Repository.Ping(ctx)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func GenUlid() string {
+	t := time.Now().UTC()
+	entropy := rand.New(rand.NewSource(t.UnixNano()))
+	id := ulid.MustNew(ulid.Timestamp(t), entropy)
+	moreShorter := id.String()[len(id.String())-7:]
+	return moreShorter
 }

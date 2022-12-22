@@ -20,6 +20,10 @@ type inFileRepository struct {
 	reader        *bufio.Reader
 }
 
+func (f *inFileRepository) Delete(ctx context.Context, list []string) error {
+	return nil
+}
+
 func (f *inFileRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
 	// [{1 http://mail.ru 0ATJMCH} {2 http://ya.ru 3DXH7RG} {3 http://google.ru VGGFB0D}]
 	for i := range batchList {

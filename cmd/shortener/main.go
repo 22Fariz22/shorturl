@@ -47,6 +47,7 @@ func main() {
 	r.Get("/api/user/urls", hd.GetAllURL)
 	r.Get("/ping", hd.Ping)
 	r.Post("/api/shorten/batch", hd.Batch)
+	r.Delete("/api/user/urls", hd.DeleteHandler)
 
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
 		log.Fatalf("HTTP server ListenAndServe Error: %v", err)

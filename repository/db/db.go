@@ -50,12 +50,44 @@ func (i *inDBRepository) Init() error {
 	defer cancel()
 
 	_, err = conn.Exec(ctx,
-		"create table if not exists urls(id_pk SERIAL PRIMARY KEY, cookies TEXT, correlation_id TEXT, short_url TEXT, long_url TEXT UNIQUE);")
+		"CREATE TABLE if not exists urls(id_pk SERIAL PRIMARY KEY, cookies TEXT, correlation_id TEXT,"+
+			" short_url TEXT, long_url TEXT UNIQUE, deleted boolean default false);")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
+	return nil
+}
+
+func (i *inDBRepository) Delete(ctx context.Context, list []string) error {
+	tx, err := i.conn.Begin(ctx)
+	if err != nil {
+		log.Println("in begin.", err)
+		return err
+	}
+
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Prepare(ctx, "UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1;")
+	if err != nil {
+		log.Println("in prepare.", err)
+		return err
+	}
+
+	for i := range list {
+		_, err = tx.Exec(ctx, "UPDATE urls SET deleted = true WHERE short_url = $1;", list[i])
+		if err != nil {
+			log.Println("in exec.", err)
+			return err
+		}
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		log.Println("in commit.", err)
+		return err
+	}
 	return nil
 }
 
@@ -90,6 +122,7 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки
+		//	http.NotFound(w, r) ?
 		return "", false
 	}
 	return s, true

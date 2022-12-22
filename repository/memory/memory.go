@@ -12,6 +12,10 @@ type inMemoryRepository struct {
 	memoryStorage storage.MemoryStorage
 }
 
+func (m *inMemoryRepository) Delete(ctx context.Context, list []string) error {
+	return nil
+}
+
 func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
 
 	for i := range batchList {
