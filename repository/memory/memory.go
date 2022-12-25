@@ -12,23 +12,6 @@ type inMemoryRepository struct {
 	memoryStorage storage.MemoryStorage
 }
 
-func (m *inMemoryRepository) Delete(ctx context.Context, list []string) error {
-	return nil
-}
-
-func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
-
-	for i := range batchList {
-		url := &model.URL{
-			ID:      batchList[i].ShortURL,
-			LongURL: batchList[i].OriginalURL,
-		}
-		m.memoryStorage.Insert(url.ID, url.LongURL, cook)
-
-	}
-	return nil
-}
-
 func (m *inMemoryRepository) Init() error {
 	return nil
 }
@@ -45,9 +28,9 @@ func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longUR
 	return "", nil
 }
 
-func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
+func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string) (string, bool, bool) {
 	v, ok := m.memoryStorage.Get(shortID)
-	return v, ok
+	return v, false, ok
 }
 
 func (m *inMemoryRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
@@ -55,5 +38,22 @@ func (m *inMemoryRepository) GetAll(ctx context.Context, cook string) ([]map[str
 }
 
 func (m *inMemoryRepository) Ping(ctx context.Context) error {
+	return nil
+}
+
+func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
+
+	for i := range batchList {
+		url := &model.URL{
+			ID:      batchList[i].ShortURL,
+			LongURL: batchList[i].OriginalURL,
+		}
+		m.memoryStorage.Insert(url.ID, url.LongURL, cook)
+
+	}
+	return nil
+}
+
+func (m *inMemoryRepository) Delete(ctx context.Context, list []string, cookie string) error {
 	return nil
 }

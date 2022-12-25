@@ -21,7 +21,7 @@ import (
 
 type HandlerModel struct {
 	Repository repository.Repository
-	count      int
+	count      int // кажется не нужная штука. проверить и удалить
 	cfg        config.Config
 }
 
@@ -47,13 +47,6 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
 
-	//payload, err := io.ReadAll(r.Body)
-	//if err != nil {
-	//	log.Println(err)
-	//}
-	//
-	//fmt.Println(string(payload))
-
 	var list []string
 
 	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
@@ -65,12 +58,11 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	h.Repository.Delete(ctx, list)
+	h.Repository.Delete(ctx, list, r.Cookies()[0].Value)
 
 	w.WriteHeader(http.StatusAccepted)
 }
 
-//
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
@@ -154,9 +146,13 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	i, ok := h.Repository.GetURL(ctx, vars, r.Cookies()[0].Value)
+	i, del, ok := h.Repository.GetURL(ctx, vars)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if del {
+		w.WriteHeader(http.StatusGone)
 		return
 	}
 	w.Header().Set("Location", i)

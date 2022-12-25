@@ -20,7 +20,7 @@ type inFileRepository struct {
 	reader        *bufio.Reader
 }
 
-func (f *inFileRepository) Delete(ctx context.Context, list []string) error {
+func (f *inFileRepository) Delete(ctx context.Context, list []string, cookie string) error {
 	return nil
 }
 
@@ -110,9 +110,9 @@ func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL 
 	return "", nil
 }
 
-func (f *inFileRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
+func (f *inFileRepository) GetURL(ctx context.Context, shortID string) (string, bool, bool) {
 	v, ok := f.memoryStorage.Get(shortID)
-	return v, ok
+	return v, false, ok
 }
 
 func (f *inFileRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {

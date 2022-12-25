@@ -8,10 +8,10 @@ import (
 
 type Repository interface {
 	SaveURL(context.Context, string, string, string) (string, error)
-	GetURL(context.Context, string, string) (string, bool)
+	GetURL(context.Context, string) (string, bool, bool)
 	GetAll(context.Context, string) ([]map[string]string, error)
 	Init() error
 	Ping(context.Context) error
 	RepoBatch(context.Context, string, []model.PackReq) error
-	Delete(context.Context, []string) error
+	Delete(context.Context, []string, string) error
 }

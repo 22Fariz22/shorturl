@@ -60,32 +60,32 @@ func (i *inDBRepository) Init() error {
 	return nil
 }
 
-func (i *inDBRepository) Delete(ctx context.Context, list []string) error {
+func (i *inDBRepository) Delete(ctx context.Context, list []string, cookie string) error {
 	tx, err := i.conn.Begin(ctx)
 	if err != nil {
-		log.Println("in begin.", err)
+		log.Println(err)
 		return err
 	}
 
 	defer tx.Rollback(ctx)
-
-	_, err = tx.Prepare(ctx, "UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1;")
+	/// добавть куки
+	_, err = tx.Prepare(ctx, "UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies = $2;")
 	if err != nil {
-		log.Println("in prepare.", err)
+		log.Println(err)
 		return err
 	}
 
 	for i := range list {
-		_, err = tx.Exec(ctx, "UPDATE urls SET deleted = true WHERE short_url = $1;", list[i])
+		_, err = tx.Exec(ctx, "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies = $2;", list[i], cookie)
 		if err != nil {
-			log.Println("in exec.", err)
+			log.Println(err)
 			return err
 		}
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		log.Println("in commit.", err)
+		log.Println(err)
 		return err
 	}
 	return nil
@@ -116,16 +116,39 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 	return "", nil
 }
 
-func (i *inDBRepository) GetURL(ctx context.Context, shortID string, cook string) (string, bool) {
-	var s string
-	err := i.conn.QueryRow(ctx, "select long_url from urls where short_url = $1  ;", shortID).Scan(&s)
+// GetURL return long url, deleted status, exist row
+func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (string, bool, bool) {
+	//var s string
+
+	row, err := i.conn.Query(ctx, "select long_url,deleted from urls where short_url = $1  ;", shortID)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки
 		//	http.NotFound(w, r) ?
-		return "", false
+		return "", false, false
 	}
-	return s, true
+	defer row.Close()
+
+	type longAndDeleted struct {
+		long    string
+		deleted bool
+	}
+	rows := make([]longAndDeleted, 1)
+
+	for row.Next() {
+		var s longAndDeleted
+		err := row.Scan(&s.long, &s.deleted)
+		if err != nil {
+			return "", false, false
+		}
+
+		rows = append(rows, s)
+	}
+
+	long := rows[1].long
+	del := rows[1].deleted
+
+	return long, del, true
 }
 
 //example [map[7PJPPAZ:http://ya.ru] map[JRK5X81:http://ya.ru]]

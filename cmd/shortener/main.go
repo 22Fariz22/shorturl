@@ -33,23 +33,25 @@ func main() {
 
 	hd := handler.NewHandler(repo, cfg)
 
-	r := chi.NewRouter()
+	for {
+		r := chi.NewRouter()
 
-	r.Use(handler.DeCompress)
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+		r.Use(handler.DeCompress)
+		r.Use(middleware.RequestID)
+		r.Use(middleware.RealIP)
+		r.Use(middleware.Logger)
+		r.Use(middleware.Recoverer)
 
-	r.Post("/", hd.CreateShortURLHandler)
-	r.Get("/{id}", hd.GetShortURLByIDHandler)
-	r.Post("/api/shorten", hd.CreateShortURLJSON)
-	r.Get("/api/user/urls", hd.GetAllURL)
-	r.Get("/ping", hd.Ping)
-	r.Post("/api/shorten/batch", hd.Batch)
-	r.Delete("/api/user/urls", hd.DeleteHandler)
+		r.Post("/", hd.CreateShortURLHandler)
+		r.Get("/{id}", hd.GetShortURLByIDHandler)
+		r.Post("/api/shorten", hd.CreateShortURLJSON)
+		r.Get("/api/user/urls", hd.GetAllURL)
+		r.Get("/ping", hd.Ping)
+		r.Post("/api/shorten/batch", hd.Batch)
+		go r.Delete("/api/user/urls", hd.DeleteHandler)
 
-	if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
-		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+		if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
+			log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+		}
 	}
 }
