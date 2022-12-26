@@ -70,7 +70,7 @@ func (i *inDBRepository) Delete(ctx context.Context, list []string, cookie strin
 
 	defer tx.Rollback(context.Background())
 
-	_, err = tx.Prepare(context.Background(), "UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies = $2;") //and cookies = $2
+	_, err = tx.Prepare(context.Background(), "UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies = $2;")
 	log.Println("after prepare")
 	if err != nil {
 		log.Println(err)
@@ -79,7 +79,7 @@ func (i *inDBRepository) Delete(ctx context.Context, list []string, cookie strin
 
 	for i := range list {
 		log.Println("before Exec")
-		_, err = tx.Exec(context.Background(), "UPDATE urls SET deleted = true WHERE short_url = $1 ;", list[i], cookie)
+		_, err = tx.Exec(context.Background(), "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies = $2;", list[i], cookie)
 		log.Println("after exec")
 		if err != nil {
 			log.Println(err)
