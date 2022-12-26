@@ -10,7 +10,7 @@ import (
 
 const (
 	DefaultServerAddress   = "localhost:8080"
-	DefaultBaseURL         = "http://localhost:8080" //"http://127.0.0.1:8080"
+	DefaultBaseURL         = "http://localhost:8080"
 	DefaultFileStoragePath = "events.json"
 	DefaultHost            = "127.0.0.1"
 	DefaultPort            = "5432"
@@ -47,7 +47,6 @@ func NewConfig() *Config {
 
 	pflag.Parse()
 
-	//var err error
 	secretKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
 	if err != nil {
 		log.Fatal(err)
