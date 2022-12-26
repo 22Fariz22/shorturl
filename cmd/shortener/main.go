@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log"
-	"net/http"
-
 	"github.com/22Fariz22/shorturl/repository/db"
 	"github.com/22Fariz22/shorturl/repository/file"
 	"github.com/22Fariz22/shorturl/repository/memory"
+	"github.com/22Fariz22/shorturl/worker"
+	"log"
+	"net/http"
 
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/handler"
@@ -31,7 +31,10 @@ func main() {
 
 	repo.Init()
 
-	hd := handler.NewHandler(repo, cfg)
+	workers := worker.NewWorkerPool(repo)
+	workers.RunWorkers(10)
+
+	hd := handler.NewHandler(repo, cfg, workers)
 
 	r := chi.NewRouter()
 
@@ -49,7 +52,16 @@ func main() {
 	r.Post("/api/shorten/batch", hd.Batch)
 	r.Delete("/api/user/urls", hd.DeleteHandler)
 
+	/*
+		// получение сигнала о прерывании
+		signalCh := make(chan os.Signal, 1)
+		signal.Notify(signalCh, os.Interrupt)
+		<-signalCh
+	*/
+
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
 		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
 	}
+
+	workers.Stop()
 }

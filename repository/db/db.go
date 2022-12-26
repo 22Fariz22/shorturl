@@ -61,30 +61,34 @@ func (i *inDBRepository) Init() error {
 }
 
 func (i *inDBRepository) Delete(ctx context.Context, list []string, cookie string) error {
-
-	tx, err := i.conn.Begin(ctx)
+	log.Println("begin Delete")
+	tx, err := i.conn.Begin(context.Background())
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	defer tx.Rollback(ctx)
-	/// добавть куки
-	_, err = tx.Prepare(ctx, "UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies = $2;")
+	defer tx.Rollback(context.Background())
+
+	_, err = tx.Prepare(context.Background(), "UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies = $2;") //and cookies = $2
+	log.Println("after prepare")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
 	for i := range list {
-		_, err = tx.Exec(ctx, "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies = $2;", list[i], cookie)
+		log.Println("before Exec")
+		_, err = tx.Exec(context.Background(), "UPDATE urls SET deleted = true WHERE short_url = $1 ;", list[i], cookie)
+		log.Println("after exec")
 		if err != nil {
 			log.Println(err)
 			return err
 		}
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
+	log.Println("after commit")
 	if err != nil {
 		log.Println(err)
 		return err

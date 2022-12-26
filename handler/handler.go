@@ -15,17 +15,23 @@ import (
 	"github.com/22Fariz22/shorturl/cookies"
 	"github.com/22Fariz22/shorturl/model"
 	"github.com/22Fariz22/shorturl/repository"
+	"github.com/22Fariz22/shorturl/worker"
 	"github.com/go-chi/chi/v5"
 	"github.com/oklog/ulid/v2"
 )
 
-type HandlerModel struct {
+//type HandlerModel struct {
+//	Repository repository.Repository
+//	count      int // кажется не нужная штука. проверить и удалить
+//	cfg        config.Config
+//}
+
+type Handler struct {
 	Repository repository.Repository
 	count      int // кажется не нужная штука. проверить и удалить
 	cfg        config.Config
+	workers    *worker.WorkerPool
 }
-
-type Handler HandlerModel
 
 type reqURL struct {
 	URL string `json:"url"`
@@ -33,12 +39,11 @@ type reqURL struct {
 
 var rURL reqURL
 
-func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
-	count := 0
+func NewHandler(repo repository.Repository, cfg *config.Config, workers *worker.WorkerPool) *Handler {
 	return &Handler{
 		Repository: repo,
-		count:      count,
 		cfg:        *cfg,
+		workers:    workers,
 	}
 }
 
@@ -55,10 +60,11 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	//ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	//defer cancel()
 
-	go h.Repository.Delete(ctx, list, r.Cookies()[0].Value)
+	h.workers.AddJob(list, r.Cookies()[0].Value)
+	//h.Repository.Delete(ctx, list, r.Cookies()[0].Value)
 
 	w.WriteHeader(http.StatusAccepted)
 }
