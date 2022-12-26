@@ -58,7 +58,7 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	h.Repository.Delete(ctx, list, r.Cookies()[0].Value)
+	go h.Repository.Delete(ctx, list, r.Cookies()[0].Value)
 
 	w.WriteHeader(http.StatusAccepted)
 }

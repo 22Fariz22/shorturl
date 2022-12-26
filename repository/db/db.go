@@ -61,6 +61,7 @@ func (i *inDBRepository) Init() error {
 }
 
 func (i *inDBRepository) Delete(ctx context.Context, list []string, cookie string) error {
+
 	tx, err := i.conn.Begin(ctx)
 	if err != nil {
 		log.Println(err)
