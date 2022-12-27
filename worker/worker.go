@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"context"
 	"errors"
 	"github.com/22Fariz22/shorturl/repository"
 	"log"
@@ -47,7 +46,7 @@ func (w *WorkerPool) RunWorkers(count int) {
 					if !ok {
 						return
 					}
-					err := w.repository.Delete(context.Background(), urls.urls, urls.cookie)
+					err := w.repository.Delete(urls.urls, urls.cookie)
 					if err != nil {
 						log.Print(err)
 					}

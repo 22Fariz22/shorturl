@@ -60,7 +60,7 @@ func (i *inDBRepository) Init() error {
 	return nil
 }
 
-func (i *inDBRepository) Delete(ctx context.Context, list []string, cookie string) error {
+func (i *inDBRepository) Delete(list []string, cookie string) error {
 	log.Println("begin Delete")
 	tx, err := i.conn.Begin(context.Background())
 	if err != nil {

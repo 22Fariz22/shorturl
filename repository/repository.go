@@ -13,5 +13,5 @@ type Repository interface {
 	Init() error
 	Ping(context.Context) error
 	RepoBatch(context.Context, string, []model.PackReq) error
-	Delete(context.Context, []string, string) error
+	Delete([]string, string) error
 }

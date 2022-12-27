@@ -49,11 +49,11 @@ func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchLi
 			LongURL: batchList[i].OriginalURL,
 		}
 		m.memoryStorage.Insert(url.ID, url.LongURL, cook)
-
 	}
 	return nil
 }
 
-func (m *inMemoryRepository) Delete(ctx context.Context, list []string, cookie string) error {
+func (m *inMemoryRepository) Delete(list []string, cookie string) error {
+	m.memoryStorage.DeleteStorage(list, cookie)
 	return nil
 }

@@ -20,7 +20,7 @@ type inFileRepository struct {
 	reader        *bufio.Reader
 }
 
-func (f *inFileRepository) Delete(ctx context.Context, list []string, cookie string) error {
+func (f *inFileRepository) Delete(list []string, cookie string) error {
 	return nil
 }
 
