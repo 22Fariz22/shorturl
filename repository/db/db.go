@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -138,9 +137,8 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (model.URL,
 	//	deleted bool
 	//}
 	rows := make([]model.URL, 0)
-	fmt.Println("len rows befor", len(rows))
+
 	for row.Next() {
-		//var s longAndDeleted
 		var s model.URL
 		err := row.Scan(&s.Cookies, &s.LongURL, &s.Deleted)
 		if err != nil {
@@ -149,8 +147,6 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (model.URL,
 
 		rows = append(rows, s)
 	}
-	fmt.Println("len rows after", len(rows))
-	fmt.Println(rows)
 
 	return rows[0], true
 }
