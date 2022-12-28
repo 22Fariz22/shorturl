@@ -33,7 +33,16 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 }
 
 func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
-	return m.storageCookies[cook]
+	list := make([]map[string]string, 1)
+
+	for i, ok := range m.storage { //i = shortURL ok=model.URL
+		if ok.Cookies == cook {
+			mp := make(map[string]string)
+			mp[m.storage[i].ID] = m.storage[i].LongURL
+			list = append(list, mp)
+		}
+	}
+	return list
 }
 
 func (m *memoryStorage) Get(key string) (model.URL, bool) {
