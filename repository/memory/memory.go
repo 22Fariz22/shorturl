@@ -46,7 +46,6 @@ func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchLi
 		url := &model.URL{
 			ID:      batchList[i].ShortURL,
 			LongURL: batchList[i].OriginalURL,
-			//Deleted: false,
 		}
 		m.memoryStorage.Insert(url.ID, url.LongURL, cook, false)
 	}
