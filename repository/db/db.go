@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -70,7 +71,7 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 
 	defer tx.Rollback(context.Background())
 
-	_, err = tx.Prepare(context.Background(), "UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies = $2;")
+	_, err = tx.Prepare(context.Background(), "UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1;")
 	log.Println("after prepare")
 	if err != nil {
 		log.Println(err)
@@ -79,7 +80,7 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 
 	for i := range list {
 		log.Println("before Exec")
-		_, err = tx.Exec(context.Background(), "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies = $2;", list[i], cookie)
+		_, err = tx.Exec(context.Background(), "UPDATE urls SET deleted = true WHERE short_url = $1 ;", list[i])
 		log.Println("after exec")
 		if err != nil {
 			log.Println(err)
@@ -122,38 +123,36 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 }
 
 // GetURL return long url, deleted status, exist row
-func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (string, bool, bool) {
-	//var s string
-
-	row, err := i.conn.Query(ctx, "select long_url,deleted from urls where short_url = $1  ;", shortID)
+func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (model.URL, bool) {
+	row, err := i.conn.Query(ctx, "select cookies,long_url,deleted from urls where short_url = $1;", shortID)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки
 		//	http.NotFound(w, r) ?
-		return "", false, false
+		return model.URL{}, false
 	}
 	defer row.Close()
 
-	type longAndDeleted struct {
-		long    string
-		deleted bool
-	}
-	rows := make([]longAndDeleted, 1)
-
+	//type longAndDeleted struct {
+	//	long    string
+	//	deleted bool
+	//}
+	rows := make([]model.URL, 0)
+	fmt.Println("len rows befor", len(rows))
 	for row.Next() {
-		var s longAndDeleted
-		err := row.Scan(&s.long, &s.deleted)
+		//var s longAndDeleted
+		var s model.URL
+		err := row.Scan(&s.Cookies, &s.LongURL, &s.Deleted)
 		if err != nil {
-			return "", false, false
+			return s, false
 		}
 
 		rows = append(rows, s)
 	}
+	fmt.Println("len rows after", len(rows))
+	fmt.Println(rows)
 
-	long := rows[1].long
-	del := rows[1].deleted
-
-	return long, del, true
+	return rows[0], true
 }
 
 //example [map[7PJPPAZ:http://ya.ru] map[JRK5X81:http://ya.ru]]

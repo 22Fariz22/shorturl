@@ -152,17 +152,18 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	i, del, ok := h.Repository.GetURL(ctx, vars)
+	url, ok := h.Repository.GetURL(ctx, vars)
+
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if del {
+	if url.Deleted {
 		w.WriteHeader(http.StatusGone)
 		return
 	}
-	w.Header().Set("Location", i)
-	http.Redirect(w, r, i, http.StatusTemporaryRedirect)
+	w.Header().Set("Location", url.LongURL)
+	http.Redirect(w, r, url.LongURL, http.StatusTemporaryRedirect)
 }
 
 func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {

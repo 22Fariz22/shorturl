@@ -21,6 +21,7 @@ type inFileRepository struct {
 }
 
 func (f *inFileRepository) Delete(list []string, cookie string) error {
+	f.memoryStorage.DeleteStorage(list, cookie)
 	return nil
 }
 
@@ -39,7 +40,7 @@ func (f *inFileRepository) RepoBatch(ctx context.Context, cook string, batchList
 		}
 		f.file.Write(data)
 		f.file.Write([]byte("\n"))
-		f.memoryStorage.Insert(url.ID, url.LongURL, cook)
+		f.memoryStorage.Insert(url.ID, url.LongURL, cook, false)
 	}
 	return nil
 }
@@ -85,7 +86,7 @@ func (f *inFileRepository) Init() error {
 		if err != nil {
 			return err
 		}
-		f.memoryStorage.Insert(u.ID, u.LongURL, u.Cookies)
+		f.memoryStorage.Insert(u.ID, u.LongURL, u.Cookies, u.Deleted)
 	}
 	if err := scanner.Err(); err != nil {
 		log.Println(err)
@@ -98,6 +99,7 @@ func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL 
 		Cookies: cook,
 		ID:      shortID,
 		LongURL: longURL,
+		Deleted: false,
 	}
 	data, err := json.Marshal(url)
 	if err != nil {
@@ -106,13 +108,13 @@ func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL 
 	}
 	f.file.Write(data)
 	f.file.Write([]byte("\n"))
-	f.memoryStorage.Insert(shortID, longURL, cook)
+	f.memoryStorage.Insert(shortID, longURL, cook, false) // add to inMemory
 	return "", nil
 }
 
-func (f *inFileRepository) GetURL(ctx context.Context, shortID string) (string, bool, bool) {
+func (f *inFileRepository) GetURL(ctx context.Context, shortID string) (model.URL, bool) {
 	v, ok := f.memoryStorage.Get(shortID)
-	return v, false, ok
+	return v, ok
 }
 
 func (f *inFileRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {

@@ -65,3 +65,5 @@ func main() {
 
 	workers.Stop()
 }
+
+//  go run cmd/shortener/main.go -d="postgres://postgres:55555@127.0.0.1:5432/dburl"

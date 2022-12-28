@@ -24,13 +24,13 @@ func New() repository.Repository {
 }
 
 func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) (string, error) {
-	m.memoryStorage.Insert(shortID, longURL, cook)
+	m.memoryStorage.Insert(shortID, longURL, cook, false)
 	return "", nil
 }
 
-func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string) (string, bool, bool) {
+func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string) (model.URL, bool) {
 	v, ok := m.memoryStorage.Get(shortID)
-	return v, false, ok
+	return v, ok
 }
 
 func (m *inMemoryRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
@@ -42,13 +42,13 @@ func (m *inMemoryRepository) Ping(ctx context.Context) error {
 }
 
 func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
-
 	for i := range batchList {
 		url := &model.URL{
 			ID:      batchList[i].ShortURL,
 			LongURL: batchList[i].OriginalURL,
+			Deleted: false,
 		}
-		m.memoryStorage.Insert(url.ID, url.LongURL, cook)
+		m.memoryStorage.Insert(url.ID, url.LongURL, cook, false)
 	}
 	return nil
 }

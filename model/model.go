@@ -5,6 +5,7 @@ type URL struct {
 	ID            string
 	LongURL       string
 	CorrelationID string
+	Deleted       bool
 }
 
 type OwnerID struct {
