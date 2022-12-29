@@ -3,7 +3,10 @@ package handler
 import (
 	"compress/gzip"
 	"context"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"math/rand"
@@ -122,14 +125,18 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//сокращатель
-	short := GenUlid()
+	//short := GenUlid()
+	shr := uuid.New().NodeID()
+	short := hex.EncodeToString(shr)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
+	fmt.Println("out err", s, err)
 
 	if err != nil {
+		fmt.Println("in err", s, err)
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(h.cfg.BaseURL + "/" + s))
 		return
@@ -189,7 +196,9 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	var listResp []model.PackResponse
 
 	for i := range batchResp {
-		short := GenUlid()
+		//short := GenUlid()
+		shr := uuid.New().NodeID()
+		short := hex.EncodeToString(shr)
 
 		req := model.PackReq{
 			CorrelationID: batchResp[i].CorrelationID,
@@ -238,7 +247,9 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short := GenUlid()
+	//short := GenUlid()
+	shr := uuid.New().NodeID()
+	short := hex.EncodeToString(shr)
 
 	type respURL struct {
 		Result string `json:"result"`
@@ -257,7 +268,11 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
+	fmt.Println("out err", s, err)
+
 	if err != nil {
+		fmt.Println("in err", s, err)
+
 		resp1 := respURL{
 			Result: h.cfg.BaseURL + "/" + s,
 		}
