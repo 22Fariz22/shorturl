@@ -23,11 +23,15 @@ type memoryStorage struct {
 }
 
 func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error {
+
 	for _, v := range listShorts {
+		m.mutex.Lock()
 		if url, ok := m.storage[v]; ok {
 			url.Deleted = true
 			m.storage[v] = url
 		}
+		defer m.mutex.RUnlock()
+
 	}
 	return nil
 }
@@ -37,9 +41,12 @@ func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 
 	for i, ok := range m.storage { //i = shortURL ok=model.URL
 		if ok.Cookies == cook {
+			m.mutex.Lock()
 			mp := make(map[string]string)
 			mp[m.storage[i].ID] = m.storage[i].LongURL
 			list = append(list, mp)
+			defer m.mutex.RUnlock()
+
 		}
 	}
 	return list
@@ -47,6 +54,8 @@ func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 
 func (m *memoryStorage) Get(key string) (model.URL, bool) {
 	//m.storage это список
+	m.mutex.Lock()
+	defer m.mutex.RUnlock()
 
 	v, ok := m.storage[key]
 	fmt.Println(v, ok)
@@ -61,7 +70,8 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 	//m.storage[key] = value
 	//aMap := map[string]string{key: value}
 	//m.storageCookies[cook] = append(m.storageCookies[cook], aMap)
-
+	m.mutex.Lock()
+	defer m.mutex.RUnlock()
 	url := model.URL{
 		Cookies: cook,
 		ID:      key,
