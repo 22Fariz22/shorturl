@@ -3,10 +3,8 @@ package handler
 import (
 	"compress/gzip"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"math/rand"
@@ -125,9 +123,9 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//сокращатель
-	//short := GenUlid()
-	shr := uuid.New().NodeID()
-	short := hex.EncodeToString(shr)
+	short := GenUlid()
+	//shr := uuid.New().NodeID()
+	//short := hex.EncodeToString(shr)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
@@ -196,10 +194,10 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	var listResp []model.PackResponse
 
 	for i := range batchResp {
-		//short := GenUlid()
+		short := GenUlid()
 
-		shr := uuid.New().NodeID()
-		short := hex.EncodeToString(shr)
+		//shr := uuid.New().NodeID()
+		//short := hex.EncodeToString(shr)
 
 		req := model.PackReq{
 			CorrelationID: batchResp[i].CorrelationID,
@@ -248,9 +246,9 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//short := GenUlid()
-	shr := uuid.New().NodeID()
-	short := hex.EncodeToString(shr)
+	short := GenUlid()
+	//shr := uuid.New().NodeID()
+	//short := hex.EncodeToString(shr)
 
 	type respURL struct {
 		Result string `json:"result"`
