@@ -21,7 +21,6 @@ type workerData struct {
 }
 
 func (w *WorkerPool) AddJob(arr []string, cookies string) error {
-	log.Println("Add job.")
 	select {
 	case <-w.shutDown:
 		return errors.New("all channels are closed")

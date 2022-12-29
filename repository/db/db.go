@@ -148,6 +148,10 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (model.URL,
 		rows = append(rows, s)
 	}
 
+	if len(rows) == 0 {
+		return model.URL{}, false
+	}
+
 	return rows[0], true
 }
 
