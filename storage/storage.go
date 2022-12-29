@@ -23,29 +23,32 @@ type memoryStorage struct {
 }
 
 func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error {
-
+	m.mutex.Lock()
+	defer m.mutex.RUnlock()
 	for _, v := range listShorts {
-		m.mutex.Lock()
+		//m.mutex.Lock()
 		if url, ok := m.storage[v]; ok {
 			url.Deleted = true
 			m.storage[v] = url
 		}
-		m.mutex.RUnlock()
+		//m.mutex.RUnlock()
 
 	}
 	return nil
 }
 
 func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
+	m.mutex.Lock()
+	defer m.mutex.RUnlock()
 	list := make([]map[string]string, 1)
 
 	for i, ok := range m.storage { //i = shortURL ok=model.URL
 		if ok.Cookies == cook {
-			m.mutex.Lock()
+			//m.mutex.Lock()
 			mp := make(map[string]string)
 			mp[m.storage[i].ID] = m.storage[i].LongURL
 			list = append(list, mp)
-			m.mutex.RUnlock()
+			//m.mutex.RUnlock()
 
 		}
 	}
