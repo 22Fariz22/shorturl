@@ -30,7 +30,7 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 			url.Deleted = true
 			m.storage[v] = url
 		}
-		defer m.mutex.RUnlock()
+		m.mutex.RUnlock()
 
 	}
 	return nil
@@ -45,7 +45,7 @@ func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 			mp := make(map[string]string)
 			mp[m.storage[i].ID] = m.storage[i].LongURL
 			list = append(list, mp)
-			defer m.mutex.RUnlock()
+			m.mutex.RUnlock()
 
 		}
 	}
