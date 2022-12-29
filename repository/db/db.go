@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -99,9 +100,9 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
 	var s string
 	var ErrAlreadyExists = errors.New("this URL already exists")
-	_ = i.conn.QueryRow(ctx, `
+	err := i.conn.QueryRow(ctx, `
 		   				WITH e AS(
-		   				INSERT INTO urls (cookies, short_url, long_url)
+		   				INSERT INTO urls (cookies, long_url, short_url)
 		   					   VALUES ($1, $2, $3)
 		   				ON CONFLICT("long_url") DO NOTHING
 		   				RETURNING long_url
@@ -109,12 +110,15 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 						SELECT long_url FROM e
 						Union
 						SELECT short_url FROM urls where long_url=$3
-		   ;`, cook, shortURL, longURL).Scan(&s)
+		   ;`, cook, longURL, shortURL).Scan(&s)
+	if err != nil {
+		fmt.Println("err in queryrow", err)
+	}
 	if s != longURL {
 		return s, ErrAlreadyExists
 	}
 
-	_, err := i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortURL, longURL)
+	_, err = i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortURL, longURL)
 	if err != nil {
 		log.Println(err)
 	}

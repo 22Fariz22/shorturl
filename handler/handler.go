@@ -348,3 +348,28 @@ func GenUlid() string {
 	moreShorter := id.String()[len(id.String())-7:]
 	return moreShorter
 }
+
+/*
+func (dbs *DBStorage) LoadLong(ctx context.Context, shortlink string) (string, string, error) {
+	var longlink string
+	var exist string
+	rows := dbs.storage.QueryRow(ctx, "SELECT longlink, exist FROM linklisttable WHERE shortlink = $1",
+		shortlink)
+	err := rows.Scan(&longlink, &exist) if err != nil { fmt.Println("Error in LoadLong (DBStorage):", err)
+		return "", "", err
+		}
+		return longlink, exist, nil
+}
+
+func (dbs *DBStorage) Store(ctx context.Context, userID string, longlink string, shortlink string) error {
+	_, err := dbs.storage.Exec(ctx, "INSERT INTO linklisttable (userhexid, longlink, shortlink, exist)"+
+		" VALUES ($1, $2, $3, $4) ",
+		userID, longlink, shortlink, "Yes")
+	if err != nil {
+		fmt.Println("Error in Store (DBStorage):", err)
+		return err
+	}
+	return nil
+}
+
+*/
