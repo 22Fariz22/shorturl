@@ -197,6 +197,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 
 	for i := range batchResp {
 		//short := GenUlid()
+
 		shr := uuid.New().NodeID()
 		short := hex.EncodeToString(shr)
 
