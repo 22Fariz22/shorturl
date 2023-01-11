@@ -93,16 +93,11 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 	if !ok {
 		m.storage[value] = *url
 		return "", nil
-	} else {
-		fmt.Println("long in storage", v.LongURL)
-		fmt.Println("su in storage", v.ID)
-		return v.ID, ErrAlreadyExists
 	}
+	fmt.Println("long in storage", v.LongURL)
+	fmt.Println("su in storage", v.ID)
+	return v.ID, ErrAlreadyExists
 
-	//mp := map[string]model.URL{key: url}
-	//
-	//m.storage = append(m.storage, mp)
-	return "", nil
 }
 
 func New() MemoryStorage {
