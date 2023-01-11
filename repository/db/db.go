@@ -97,12 +97,12 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 	return nil
 }
 
-func (db *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
+func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
 	var ErrAlreadyExists = errors.New("this URL already exists")
 	var id int8
 	fmt.Println("lu", longURL)
 	// проверяем количество строк, если есть то значит такой урл существует
-	row := db.conn.QueryRow(ctx, `select count(*) from urls where long_url = $1 and cookies=$2`,
+	row := i.conn.QueryRow(ctx, `select count(*) from urls where long_url = $1 and cookies=$2`,
 		longURL, cook)
 	err := row.Scan(&id)
 	if err != nil {
@@ -110,7 +110,7 @@ func (db *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL 
 	}
 	if id == 0 {
 		// добавляем новую запись
-		_, err = db.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);",
+		_, err = i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);",
 			cook, shortURL, longURL)
 		if err != nil {
 			log.Println("log in SaveURL(1):", err)
@@ -122,7 +122,7 @@ func (db *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL 
 	// делаем запрос на существующую запись и выдаем шортурл
 	var su string
 
-	err = db.conn.QueryRow(ctx, "select short_url from urls where long_url = $1 and cookies = $2;",
+	err = i.conn.QueryRow(ctx, "select short_url from urls where long_url = $1 and cookies = $2;",
 		longURL, cook).Scan(&su)
 	if err != nil {
 		log.Println("log in SaveURL(2):", err)
