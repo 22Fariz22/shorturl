@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
 	"github.com/22Fariz22/shorturl/model"
 	"sync"
@@ -8,7 +9,7 @@ import (
 
 type MemoryStorage interface {
 	Get(key string) (model.URL, bool)
-	Insert(key, value string, cook string, deleted bool) error
+	Insert(key, value string, cook string, deleted bool) (string, error)
 	GetAllStorageURL(string2 string) []map[string]string
 	DeleteStorage([]string, string) error
 }
@@ -20,6 +21,9 @@ type memoryStorage struct {
 	//storage        map[string]string  //old
 	storageCookies map[string][]map[string]string // like as map([cookies]map[shortURL][longURL]
 	mutex          sync.RWMutex
+}
+
+type storList struct {
 }
 
 func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error {
@@ -69,25 +73,36 @@ func (m *memoryStorage) Get(key string) (model.URL, bool) {
 
 }
 
-func (m *memoryStorage) Insert(key string, value string, cook string, deleted bool) error { //u.ID, u.LongURL, u.Cookies,u.Deleted
+func (m *memoryStorage) Insert(key string, value string, cook string, deleted bool) (string, error) {
 	//m.storage[key] = value
 	//aMap := map[string]string{key: value}
 	//m.storageCookies[cook] = append(m.storageCookies[cook], aMap)
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-	url := model.URL{
+
+	//m.mutex.RLock()
+	//defer m.mutex.RUnlock()
+	var ErrAlreadyExists = errors.New("this URL already exists")
+
+	url := &model.URL{
 		Cookies: cook,
 		ID:      key,
 		LongURL: value,
 		Deleted: deleted,
 	}
-	m.storage[key] = url
+
+	v, ok := m.storage[value]
+	if !ok {
+		m.storage[value] = *url
+		return "", nil
+	} else {
+		fmt.Println("long in storage", v.LongURL)
+		fmt.Println("su in storage", v.ID)
+		return v.ID, ErrAlreadyExists
+	}
 
 	//mp := map[string]model.URL{key: url}
 	//
 	//m.storage = append(m.storage, mp)
-
-	return nil
+	return "", nil
 }
 
 func New() MemoryStorage {

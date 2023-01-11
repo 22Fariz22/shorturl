@@ -52,7 +52,7 @@ func (i *inDBRepository) Init() error {
 
 	_, err = conn.Exec(ctx,
 		"CREATE TABLE if not exists urls(id_pk SERIAL PRIMARY KEY, cookies TEXT, correlation_id TEXT,"+
-			" short_url TEXT, long_url TEXT UNIQUE, deleted boolean default false);")
+			" short_url TEXT, long_url TEXT , deleted boolean default false);")
 	if err != nil {
 		log.Println(err)
 		return err
@@ -97,32 +97,41 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 	return nil
 }
 
-func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
-	var s string
+func (db *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
 	var ErrAlreadyExists = errors.New("this URL already exists")
-	err := i.conn.QueryRow(ctx, `
-		   				WITH e AS(
-		   				INSERT INTO urls (cookies, long_url, short_url)
-		   					   VALUES ($1, $2, $3)
-		   				ON CONFLICT("long_url") DO NOTHING
-		   				RETURNING long_url
-						)
-						SELECT long_url FROM e
-						Union
-						SELECT short_url FROM urls where long_url=$3
-		   ;`, cook, longURL, shortURL).Scan(&s)
+	var id int8
+	fmt.Println("lu", longURL)
+	// проверяем количество строк, если есть то значит такой урл существует
+	row := db.conn.QueryRow(ctx, `select count(*) from urls where long_url = $1 and cookies=$2`,
+		longURL, cook)
+	err := row.Scan(&id)
 	if err != nil {
-		fmt.Println("err in queryrow", err)
+		log.Println("log in SaveURL(0):", err)
 	}
-	if s != longURL {
-		return s, ErrAlreadyExists
+	if id == 0 {
+		// добавляем новую запись
+		_, err = db.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);",
+			cook, shortURL, longURL)
+		if err != nil {
+			log.Println("log in SaveURL(1):", err)
+			return "", err
+		}
+		return "", nil
 	}
 
-	_, err = i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);", cook, shortURL, longURL)
+	// делаем запрос на существующую запись и выдаем шортурл
+	var su string
+
+	err = db.conn.QueryRow(ctx, "select short_url from urls where long_url = $1 and cookies = $2;",
+		longURL, cook).Scan(&su)
 	if err != nil {
-		log.Println(err)
+		log.Println("log in SaveURL(2):", err)
+		return "", err
 	}
-	return "", nil
+
+	fmt.Println("id", id)
+	fmt.Println("short_url:", su)
+	return su, ErrAlreadyExists
 }
 
 // GetURL return long url, deleted status, exist row

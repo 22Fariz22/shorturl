@@ -32,7 +32,7 @@ func NewFields() *Fields {
 	}
 }
 
-func (f Fields) TestHandler_CreateShortURLHandler(t *testing.T) {
+func (f Fields) TestCreateShortURLHandler(t *testing.T) {
 	/* POST
 	вставляем свой урл url
 	ссравниваю статусКод ,нужен 201
@@ -87,7 +87,7 @@ func (f Fields) TestHandler_CreateShortURLHandler(t *testing.T) {
 	}
 }
 
-func (f Fields) TestHandler_GetShortURLByIDHandler(t *testing.T) {
+func (f Fields) TestGetShortURLByIDHandler(t *testing.T) {
 	type want struct {
 		code     int
 		location string // f.
