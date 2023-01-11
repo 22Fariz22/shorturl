@@ -100,7 +100,7 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
 	var ErrAlreadyExists = errors.New("this URL already exists")
 	var id int8
-	fmt.Println("lu", longURL)
+	fmt.Println("lu in db SaveURL", longURL)
 	// проверяем количество строк, если есть то значит такой урл существует
 	row := i.conn.QueryRow(ctx, `select count(*) from urls where long_url = $1 and cookies=$2`,
 		longURL, cook)

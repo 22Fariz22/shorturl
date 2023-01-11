@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/22Fariz22/shorturl/model"
+	"log"
 
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/22Fariz22/shorturl/storage"
@@ -56,6 +57,7 @@ func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchLi
 }
 
 func (m *inMemoryRepository) Delete(list []string, cookie string) error {
+	log.Print("del in mem")
 	m.memoryStorage.DeleteStorage(list, cookie)
 	return nil
 }

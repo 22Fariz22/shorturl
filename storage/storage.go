@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/22Fariz22/shorturl/model"
+	"log"
 	"sync"
 )
 
@@ -27,6 +28,7 @@ type storList struct {
 }
 
 func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error {
+	log.Print("del in stor")
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	for _, v := range listShorts {
