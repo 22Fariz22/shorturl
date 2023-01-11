@@ -97,7 +97,6 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 	fmt.Println("long in storage", v.LongURL)
 	fmt.Println("su in storage", v.ID)
 	return v.ID, ErrAlreadyExists
-
 }
 
 func New() MemoryStorage {
