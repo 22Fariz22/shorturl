@@ -64,12 +64,20 @@ func (m *memoryStorage) Get(key string) (model.URL, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	v, ok := m.storage[key]
-	fmt.Println(v, ok)
-	if !ok {
-		return v, false
+	//v, ok := m.storage[key]
+	//fmt.Println(v, ok)
+	//if !ok {
+	//	return v, false
+	//}
+	//return v, ok
+
+	for _, x := range m.storage {
+		if x.ID == key {
+			fmt.Println("get x in storage", x)
+			return x, true
+		}
 	}
-	return v, ok
+	return model.URL{}, false
 
 }
 
