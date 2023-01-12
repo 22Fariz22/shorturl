@@ -33,17 +33,12 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 	//defer m.mutex.RUnlock()
 
 	for _, v := range listShorts {
-		//m.mutex.Lock()
-		//if url, ok := m.storage[v]; ok {
-		//	fmt.Println("in stor Del v in range:", url, ok)
-		//	url.Deleted = true
-		//	m.storage[v] = url
-		//}
 		fmt.Println("v", v)
 		for k := range m.storage {
 			if m.storage[k].ID == v && m.storage[k].Cookies == cookies {
 				//delete(m.storage, k)
-				m.mutex.RLock()
+
+				//m.mutex.RLock()
 				m.storage[k] = model.URL{
 					Cookies:       cookies,
 					ID:            v,
@@ -51,7 +46,7 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 					CorrelationID: m.storage[k].CorrelationID,
 					Deleted:       true,
 				}
-				m.mutex.RUnlock()
+				//m.mutex.RUnlock()
 			}
 		}
 		//m.mutex.RUnlock()
