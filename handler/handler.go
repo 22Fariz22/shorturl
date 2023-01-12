@@ -62,6 +62,9 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
 	h.workers.AddJob(list, r.Cookies()[0].Value)
 	//h.Repository.Delete(ctx, list, r.Cookies()[0].Value)
 
