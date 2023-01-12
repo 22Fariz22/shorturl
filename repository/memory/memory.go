@@ -29,11 +29,11 @@ func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longUR
 	s, err := m.memoryStorage.Insert(shortID, longURL, cook, false)
 	fmt.Println("su in memory", s)
 	return s, err
-
 }
 
 func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string) (model.URL, bool) {
 	v, ok := m.memoryStorage.Get(shortID)
+	fmt.Println("ok in mem Geturl:", ok)
 	return v, ok
 }
 

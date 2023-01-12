@@ -20,8 +20,8 @@ type memoryStorage struct {
 	storage     map[string]model.URL // список мап sortURL:model.URL
 	storageList []map[string]model.URL
 	//storage        map[string]string  //old
-	storageCookies map[string][]map[string]string // like as map([cookies]map[shortURL][longURL]
-	mutex          sync.RWMutex
+	//storageCookies map[string][]map[string]string // like as map([cookies]map[shortURL][longURL]
+	mutex sync.RWMutex
 }
 
 type storList struct {
@@ -31,11 +31,21 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 	log.Print("del in stor")
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
+
 	for _, v := range listShorts {
 		//m.mutex.Lock()
-		if url, ok := m.storage[v]; ok {
-			url.Deleted = true
-			m.storage[v] = url
+		//if url, ok := m.storage[v]; ok {
+		//	fmt.Println("in stor Del v in range:", url, ok)
+		//	url.Deleted = true
+		//	m.storage[v] = url
+		//}
+		fmt.Println(v)
+		for k := range m.storage {
+			if m.storage[k].ID == v && m.storage[k].Cookies == cookies {
+				delete(m.storage, k)
+
+				//m.storage[k].Deleted = true
+			}
 		}
 		//m.mutex.RUnlock()
 
@@ -62,7 +72,7 @@ func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 }
 
 func (m *memoryStorage) Get(key string) (model.URL, bool) {
-	//m.storage это список
+	//m.storage это мапа
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
@@ -88,8 +98,6 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 	//aMap := map[string]string{key: value}
 	//m.storageCookies[cook] = append(m.storageCookies[cook], aMap)
 
-	//m.mutex.RLock()
-	//defer m.mutex.RUnlock()
 	var ErrAlreadyExists = errors.New("this URL already exists")
 
 	url := &model.URL{
@@ -98,7 +106,8 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 		LongURL: value,
 		Deleted: deleted,
 	}
-
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 	v, ok := m.storage[value]
 	if !ok {
 		m.storage[value] = *url
@@ -113,6 +122,6 @@ func New() MemoryStorage {
 	return &memoryStorage{
 		storage: map[string]model.URL{},
 		//storage:        make(map[string]string),
-		storageCookies: make(map[string][]map[string]string),
+		//storageCookies: make(map[string][]map[string]string),
 	}
 }
