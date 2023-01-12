@@ -38,7 +38,6 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 			if m.storage[k].ID == v && m.storage[k].Cookies == cookies {
 				//delete(m.storage, k)
 
-				//m.mutex.RLock()
 				m.storage[k] = model.URL{
 					Cookies:       cookies,
 					ID:            v,
@@ -46,11 +45,8 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 					CorrelationID: m.storage[k].CorrelationID,
 					Deleted:       true,
 				}
-				//m.mutex.RUnlock()
 			}
 		}
-		//m.mutex.RUnlock()
-
 	}
 	return nil
 }
