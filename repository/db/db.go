@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"time"
 
@@ -16,21 +17,10 @@ import (
 
 type inDBRepository struct {
 	conn        *pgx.Conn
+	pool        *pgxpool.Conn
 	databaseDSN string
 	buffer      []model.PackResponse
 	ctx         context.Context
-}
-
-func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
-	for b := range batchList {
-		_, err := i.conn.Exec(ctx, "insert into urls (cookies,correlation_id, short_url, long_url) values($1,$2,$3,$4);",
-			cook, batchList[b].CorrelationID, batchList[b].ShortURL, batchList[b].OriginalURL)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-	}
-	return nil
 }
 
 func New(cfg *config.Config) repository.Repository {
@@ -41,14 +31,14 @@ func New(cfg *config.Config) repository.Repository {
 }
 
 func (i *inDBRepository) Init() error {
-	conn, err := pgx.Connect(context.Background(), i.databaseDSN)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	conn, err := pgx.Connect(ctx, i.databaseDSN)
 	if err != nil {
 		return err
 	}
 	i.conn = conn
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
 	_, err = conn.Exec(ctx,
 		"CREATE TABLE if not exists urls(id_pk SERIAL PRIMARY KEY, cookies TEXT, correlation_id TEXT,"+
@@ -57,13 +47,13 @@ func (i *inDBRepository) Init() error {
 		log.Println(err)
 		return err
 	}
-
 	return nil
 }
 
 func (i *inDBRepository) Delete(list []string, cookie string) error {
 	fmt.Println("cookie in db del", cookie)
 	log.Println("begin Delete")
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -79,7 +69,7 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 		"UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies=$2;")
 	log.Println("after prepare")
 	if err != nil {
-		log.Println(err)
+		log.Println("log in db del(2):", err)
 		return err
 	}
 
@@ -139,6 +129,18 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 	fmt.Println("id", id)
 	fmt.Println("short_url:", su)
 	return su, ErrAlreadyExists
+}
+
+func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
+	for b := range batchList {
+		_, err := i.conn.Exec(ctx, "insert into urls (cookies,correlation_id, short_url, long_url) values($1,$2,$3,$4);",
+			cook, batchList[b].CorrelationID, batchList[b].ShortURL, batchList[b].OriginalURL)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+	}
+	return nil
 }
 
 // GetURL return long url, deleted status, exist row
