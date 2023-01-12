@@ -64,15 +64,18 @@ func (i *inDBRepository) Init() error {
 func (i *inDBRepository) Delete(list []string, cookie string) error {
 	fmt.Println("cookie in db del", cookie)
 	log.Println("begin Delete")
-	tx, err := i.conn.Begin(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	tx, err := i.conn.Begin(ctx)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	defer tx.Rollback(context.Background())
+	defer tx.Rollback(ctx)
 
-	_, err = tx.Prepare(context.Background(),
+	_, err = tx.Prepare(ctx,
 		"UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies=$2;")
 	log.Println("after prepare")
 	if err != nil {
@@ -82,7 +85,7 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 
 	for i := range list {
 		log.Println("before Exec")
-		_, err = tx.Exec(context.Background(),
+		_, err = tx.Exec(ctx,
 			"UPDATE urls SET deleted = true WHERE short_url = $1 and cookies=$2;",
 			list[i], cookie)
 		log.Println("after exec")
@@ -92,7 +95,7 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 		}
 	}
 
-	err = tx.Commit(context.Background())
+	err = tx.Commit(ctx)
 	log.Println("after commit")
 	if err != nil {
 		log.Println(err)
