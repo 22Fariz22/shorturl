@@ -39,14 +39,19 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 		//	url.Deleted = true
 		//	m.storage[v] = url
 		//}
-		fmt.Println(v)
+		fmt.Println("v", v)
 		for k := range m.storage {
 			if m.storage[k].ID == v && m.storage[k].Cookies == cookies {
+				//delete(m.storage, k)
 				m.mutex.RLock()
-				delete(m.storage, k)
+				m.storage[k] = model.URL{
+					Cookies:       cookies,
+					ID:            v,
+					LongURL:       k,
+					CorrelationID: m.storage[k].CorrelationID,
+					Deleted:       true,
+				}
 				m.mutex.RUnlock()
-
-				//m.storage[k].Deleted = true
 			}
 		}
 		//m.mutex.RUnlock()
