@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -11,24 +12,27 @@ import (
 	"strings"
 	"time"
 
-	"github.com/22Fariz22/shorturl/model"
-
-	"github.com/22Fariz22/shorturl/cookies"
-
 	"github.com/22Fariz22/shorturl/config"
+	"github.com/22Fariz22/shorturl/cookies"
+	"github.com/22Fariz22/shorturl/model"
 	"github.com/22Fariz22/shorturl/repository"
-	"github.com/oklog/ulid/v2"
-
+	"github.com/22Fariz22/shorturl/worker"
 	"github.com/go-chi/chi/v5"
+	"github.com/oklog/ulid/v2"
 )
 
-type HandlerModel struct {
-	Repository repository.Repository
-	count      int
-	cfg        config.Config
-}
+//type HandlerModel struct {
+//	Repository repository.Repository
+//	count      int // кажется не нужная штука. проверить и удалить
+//	cfg        config.Config
+//}
 
-type Handler HandlerModel
+type Handler struct {
+	Repository repository.Repository
+	count      int // кажется не нужная штука. проверить и удалить
+	cfg        config.Config
+	workers    *worker.WorkerPool
+}
 
 type reqURL struct {
 	URL string `json:"url"`
@@ -36,36 +40,37 @@ type reqURL struct {
 
 var rURL reqURL
 
-func NewHandler(repo repository.Repository, cfg *config.Config) *Handler {
-	count := 0
+func NewHandler(repo repository.Repository, cfg *config.Config, workers *worker.WorkerPool) *Handler {
 	return &Handler{
 		Repository: repo,
-		count:      count,
 		cfg:        *cfg,
+		workers:    workers,
 	}
 }
 
-func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
+func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
+	if len(r.Cookies()) == 0 {
+		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+	}
 
-	err := h.Repository.Ping(ctx)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+	fmt.Println("cookie in del handler", r.Cookies()[0].Value)
+	var list []string
+
+	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+
+	_, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	h.workers.AddJob(list, r.Cookies()[0].Value)
+	//h.Repository.Delete(ctx, list, r.Cookies()[0].Value)
+
+	w.WriteHeader(http.StatusAccepted)
 }
 
-func GenUlid() string {
-	t := time.Now().UTC()
-	entropy := rand.New(rand.NewSource(t.UnixNano()))
-	id := ulid.MustNew(ulid.Timestamp(t), entropy)
-	moreShorter := id.String()[len(id.String())-7:]
-	return moreShorter
-}
-
-//
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
@@ -115,6 +120,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
+	fmt.Println("cookie in create handler", r.Cookies()[0].Value)
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -123,20 +129,23 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	//сокращатель
 	short := GenUlid()
+	//shr := uuid.New().NodeID()
+	//short := hex.EncodeToString(shr)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
+	fmt.Println("su in handler(0)", s, err)
 
 	if err != nil {
+		fmt.Println("print in handler(1)", s, err)
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(h.cfg.BaseURL + "/" + s))
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
-
 }
 
 //GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
@@ -150,13 +159,18 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	i, ok := h.Repository.GetURL(ctx, vars, r.Cookies()[0].Value)
+	url, ok := h.Repository.GetURL(ctx, vars)
+
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Location", i)
-	http.Redirect(w, r, i, http.StatusTemporaryRedirect)
+	if url.Deleted {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
+	w.Header().Set("Location", url.LongURL)
+	http.Redirect(w, r, url.LongURL, http.StatusTemporaryRedirect)
 }
 
 func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
@@ -164,7 +178,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var batchResp []model.PackReq
@@ -186,6 +200,9 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 
 	for i := range batchResp {
 		short := GenUlid()
+
+		//shr := uuid.New().NodeID()
+		//short := hex.EncodeToString(shr)
 
 		req := model.PackReq{
 			CorrelationID: batchResp[i].CorrelationID,
@@ -235,6 +252,8 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	short := GenUlid()
+	//shr := uuid.New().NodeID()
+	//short := hex.EncodeToString(shr)
 
 	type respURL struct {
 		Result string `json:"result"`
@@ -253,7 +272,11 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
+	fmt.Println("out err", s, err)
+
 	if err != nil {
+		fmt.Println("in err", s, err)
+
 		resp1 := respURL{
 			Result: h.cfg.BaseURL + "/" + s,
 		}
@@ -264,13 +287,11 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
 		w.Write(res1)
-
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(res)
-
 }
 
 func (r gzipReader) Close() error {
@@ -278,7 +299,6 @@ func (r gzipReader) Close() error {
 		log.Print(err.Error())
 		return err
 	}
-
 	return nil
 }
 
@@ -296,7 +316,6 @@ func DeCompress(next http.Handler) http.Handler {
 			io.WriteString(writer, err.Error())
 			return
 		}
-
 		defer reader.Close()
 
 		request.Body = gzipReader{
@@ -312,3 +331,48 @@ type gzipReader struct {
 	*gzip.Reader
 	io.Closer
 }
+
+func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	err := h.Repository.Ping(ctx)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func GenUlid() string {
+	t := time.Now().UTC()
+	entropy := rand.New(rand.NewSource(t.UnixNano()))
+	id := ulid.MustNew(ulid.Timestamp(t), entropy)
+	moreShorter := id.String()[len(id.String())-7:]
+	return moreShorter
+}
+
+/*
+func (dbs *DBStorage) LoadLong(ctx context.Context, shortlink string) (string, string, error) {
+	var longlink string
+	var exist string
+	rows := dbs.storage.QueryRow(ctx, "SELECT longlink, exist FROM linklisttable WHERE shortlink = $1",
+		shortlink)
+	err := rows.Scan(&longlink, &exist) if err != nil { fmt.Println("Error in LoadLong (DBStorage):", err)
+		return "", "", err
+		}
+		return longlink, exist, nil
+}
+
+func (dbs *DBStorage) Store(ctx context.Context, userID string, longlink string, shortlink string) error {
+	_, err := dbs.storage.Exec(ctx, "INSERT INTO linklisttable (userhexid, longlink, shortlink, exist)"+
+		" VALUES ($1, $2, $3, $4) ",
+		userID, longlink, shortlink, "Yes")
+	if err != nil {
+		fmt.Println("Error in Store (DBStorage):", err)
+		return err
+	}
+	return nil
+}
+
+*/
