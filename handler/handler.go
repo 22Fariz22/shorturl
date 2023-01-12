@@ -53,6 +53,7 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
 
+	fmt.Println("cookie in del handler", r.Cookies()[0].Value)
 	var list []string
 
 	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
@@ -116,6 +117,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
 	}
+	fmt.Println("cookie in create handler", r.Cookies()[0].Value)
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {

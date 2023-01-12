@@ -62,6 +62,7 @@ func (i *inDBRepository) Init() error {
 }
 
 func (i *inDBRepository) Delete(list []string, cookie string) error {
+	fmt.Println("cookie in db del", cookie)
 	log.Println("begin Delete")
 	tx, err := i.conn.Begin(context.Background())
 	if err != nil {
@@ -71,7 +72,8 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 
 	defer tx.Rollback(context.Background())
 
-	_, err = tx.Prepare(context.Background(), "UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1;")
+	_, err = tx.Prepare(context.Background(),
+		"UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies=$2;")
 	log.Println("after prepare")
 	if err != nil {
 		log.Println(err)
@@ -80,7 +82,9 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 
 	for i := range list {
 		log.Println("before Exec")
-		_, err = tx.Exec(context.Background(), "UPDATE urls SET deleted = true WHERE short_url = $1 ;", list[i])
+		_, err = tx.Exec(context.Background(),
+			"UPDATE urls SET deleted = true WHERE short_url = $1 and cookies=$2;",
+			list[i], cookie)
 		log.Println("after exec")
 		if err != nil {
 			log.Println(err)
@@ -100,20 +104,21 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
 	var ErrAlreadyExists = errors.New("this URL already exists")
 	var id int8
+	fmt.Println("cookie in db saveurl", cook)
 	fmt.Println("lu in db SaveURL", longURL)
 	// проверяем количество строк, если есть то значит такой урл существует
 	row := i.conn.QueryRow(ctx, `select count(*) from urls where long_url = $1 and cookies=$2`,
 		longURL, cook)
 	err := row.Scan(&id)
 	if err != nil {
-		log.Println("log in SaveURL(0):", err)
+		log.Println("log in db SaveURL(0):", err)
 	}
 	if id == 0 {
 		// добавляем новую запись
 		_, err = i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);",
 			cook, shortURL, longURL)
 		if err != nil {
-			log.Println("log in SaveURL(1):", err)
+			log.Println("log in db SaveURL(1):", err)
 			return "", err
 		}
 		return "", nil
