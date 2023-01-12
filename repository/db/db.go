@@ -12,21 +12,20 @@ import (
 
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/repository"
-	"github.com/jackc/pgx/v5"
 )
 
 type inDBRepository struct {
-	conn        *pgx.Conn
-	pool        *pgxpool.Conn
+	//conn        *pgx.Conn
+	pool        *pgxpool.Pool
 	databaseDSN string
-	buffer      []model.PackResponse
-	ctx         context.Context
+	//buffer      []model.PackResponse
+	//ctx         context.Context
 }
 
 func New(cfg *config.Config) repository.Repository {
 	return &inDBRepository{
 		databaseDSN: cfg.DatabaseDSN,
-		buffer:      make([]model.PackResponse, 0, 1000),
+		//buffer:      make([]model.PackResponse, 0, 1000),
 	}
 }
 
@@ -34,17 +33,25 @@ func (i *inDBRepository) Init() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	conn, err := pgx.Connect(ctx, i.databaseDSN)
+	//conn, err := pgx.Connect(ctx, i.databaseDSN)
+	//if err != nil {
+	//	return err
+	//}
+	//i.conn = conn
+
+	db, err := pgxpool.New(ctx, i.databaseDSN)
 	if err != nil {
+		log.Printf("Unable to create connection pool: %v\n", err)
 		return err
 	}
-	i.conn = conn
+	i.pool = db
+	//defer db.Close()
 
-	_, err = conn.Exec(ctx,
+	_, err = db.Exec(ctx,
 		"CREATE TABLE if not exists urls(id_pk SERIAL PRIMARY KEY, cookies TEXT, correlation_id TEXT,"+
 			" short_url TEXT, long_url TEXT , deleted boolean default false);")
 	if err != nil {
-		log.Println(err)
+		log.Printf("Unable to create table: %v\n", err)
 		return err
 	}
 	return nil
@@ -57,7 +64,7 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	tx, err := i.conn.Begin(ctx)
+	tx, err := i.pool.Begin(ctx)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -100,7 +107,7 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 	fmt.Println("cookie in db saveurl", cook)
 	fmt.Println("lu in db SaveURL", longURL)
 	// проверяем количество строк, если есть то значит такой урл существует
-	row := i.conn.QueryRow(ctx, `select count(*) from urls where long_url = $1 and cookies=$2`,
+	row := i.pool.QueryRow(ctx, `select count(*) from urls where long_url = $1 and cookies=$2`,
 		longURL, cook)
 	err := row.Scan(&id)
 	if err != nil {
@@ -108,7 +115,7 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 	}
 	if id == 0 {
 		// добавляем новую запись
-		_, err = i.conn.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);",
+		_, err = i.pool.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);",
 			cook, shortURL, longURL)
 		if err != nil {
 			log.Println("log in db SaveURL(1):", err)
@@ -120,7 +127,7 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 	// делаем запрос на существующую запись и выдаем шортурл
 	var su string
 
-	err = i.conn.QueryRow(ctx, "select short_url from urls where long_url = $1 and cookies = $2;",
+	err = i.pool.QueryRow(ctx, "select short_url from urls where long_url = $1 and cookies = $2;",
 		longURL, cook).Scan(&su)
 	if err != nil {
 		log.Println("log in SaveURL(2):", err)
@@ -133,7 +140,7 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 
 func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
 	for b := range batchList {
-		_, err := i.conn.Exec(ctx, "insert into urls (cookies,correlation_id, short_url, long_url) values($1,$2,$3,$4);",
+		_, err := i.pool.Exec(ctx, "insert into urls (cookies,correlation_id, short_url, long_url) values($1,$2,$3,$4);",
 			cook, batchList[b].CorrelationID, batchList[b].ShortURL, batchList[b].OriginalURL)
 		if err != nil {
 			log.Println(err)
@@ -145,7 +152,7 @@ func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList [
 
 // GetURL return long url, deleted status, exist row
 func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (model.URL, bool) {
-	row, err := i.conn.Query(ctx, "select cookies,long_url,deleted from urls where short_url = $1;", shortID)
+	row, err := i.pool.Query(ctx, "select cookies,long_url,deleted from urls where short_url = $1;", shortID)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки
@@ -179,7 +186,7 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (model.URL,
 
 //example [map[7PJPPAZ:http://ya.ru] map[JRK5X81:http://ya.ru]]
 func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
-	rows, err := i.conn.Query(ctx, "select short_url, long_url from urls where cookies = $1;", cook)
+	rows, err := i.pool.Query(ctx, "select short_url, long_url from urls where cookies = $1;", cook)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -205,5 +212,5 @@ func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]
 }
 
 func (i *inDBRepository) Ping(ctx context.Context) error {
-	return i.conn.Ping(ctx)
+	return i.pool.Ping(ctx)
 }
