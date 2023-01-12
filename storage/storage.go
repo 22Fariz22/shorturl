@@ -29,8 +29,8 @@ type storList struct {
 
 func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error {
 	log.Print("del in stor")
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
+	//m.mutex.RLock()
+	//defer m.mutex.RUnlock()
 
 	for _, v := range listShorts {
 		//m.mutex.Lock()
@@ -42,7 +42,9 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 		fmt.Println(v)
 		for k := range m.storage {
 			if m.storage[k].ID == v && m.storage[k].Cookies == cookies {
+				m.mutex.RLock()
 				delete(m.storage, k)
+				m.mutex.RUnlock()
 
 				//m.storage[k].Deleted = true
 			}
