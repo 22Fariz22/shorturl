@@ -1,12 +1,13 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/22Fariz22/shorturl/repository/db"
 	"github.com/22Fariz22/shorturl/repository/file"
 	"github.com/22Fariz22/shorturl/repository/memory"
 	"github.com/22Fariz22/shorturl/worker"
-	"log"
-	"net/http"
 
 	"github.com/22Fariz22/shorturl/config"
 	"github.com/22Fariz22/shorturl/handler"

@@ -3,9 +3,10 @@ package storage
 import (
 	"errors"
 	"fmt"
-	"github.com/22Fariz22/shorturl/model"
 	"log"
 	"sync"
+
+	"github.com/22Fariz22/shorturl/model"
 )
 
 type MemoryStorage interface {
@@ -17,27 +18,17 @@ type MemoryStorage interface {
 
 ///переделать в нормальную структуру
 type memoryStorage struct {
-	storage     map[string]model.URL // список мап sortURL:model.URL
-	storageList []map[string]model.URL
-	//storage        map[string]string  //old
-	//storageCookies map[string][]map[string]string // like as map([cookies]map[shortURL][longURL]
-	mutex sync.RWMutex
-}
-
-type storList struct {
+	storage map[string]model.URL // список мап sortURL:model.URL
+	mutex   sync.RWMutex
 }
 
 func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error {
 	log.Print("del in stor")
-	//m.mutex.RLock()
-	//defer m.mutex.RUnlock()
 
 	for _, v := range listShorts {
 		fmt.Println("v", v)
 		for k := range m.storage {
 			if m.storage[k].ID == v && m.storage[k].Cookies == cookies {
-				//delete(m.storage, k)
-
 				m.storage[k] = model.URL{
 					Cookies:       cookies,
 					ID:            v,
@@ -58,28 +49,17 @@ func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 
 	for i, ok := range m.storage { //i = shortURL ok=model.URL
 		if ok.Cookies == cook {
-			//m.mutex.Lock()
 			mp := make(map[string]string)
 			mp[m.storage[i].ID] = m.storage[i].LongURL
 			list = append(list, mp)
-			//m.mutex.RUnlock()
-
 		}
 	}
 	return list
 }
 
 func (m *memoryStorage) Get(key string) (model.URL, bool) {
-	//m.storage это мапа
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-
-	//v, ok := m.storage[key]
-	//fmt.Println(v, ok)
-	//if !ok {
-	//	return v, false
-	//}
-	//return v, ok
 
 	for _, x := range m.storage {
 		if x.ID == key {
@@ -92,10 +72,6 @@ func (m *memoryStorage) Get(key string) (model.URL, bool) {
 }
 
 func (m *memoryStorage) Insert(key string, value string, cook string, deleted bool) (string, error) {
-	//m.storage[key] = value
-	//aMap := map[string]string{key: value}
-	//m.storageCookies[cook] = append(m.storageCookies[cook], aMap)
-
 	var ErrAlreadyExists = errors.New("this URL already exists")
 
 	url := &model.URL{
@@ -119,7 +95,5 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 func New() MemoryStorage {
 	return &memoryStorage{
 		storage: map[string]model.URL{},
-		//storage:        make(map[string]string),
-		//storageCookies: make(map[string][]map[string]string),
 	}
 }

@@ -21,15 +21,8 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-//type HandlerModel struct {
-//	Repository repository.Repository
-//	count      int // кажется не нужная штука. проверить и удалить
-//	cfg        config.Config
-//}
-
 type Handler struct {
 	Repository repository.Repository
-	count      int // кажется не нужная штука. проверить и удалить
 	cfg        config.Config
 	workers    *worker.WorkerPool
 }
@@ -65,7 +58,6 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	h.workers.AddJob(list, r.Cookies()[0].Value)
-	//h.Repository.Delete(ctx, list, r.Cookies()[0].Value)
 
 	w.WriteHeader(http.StatusAccepted)
 }
@@ -127,8 +119,6 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	//сокращатель
 	short := GenUlid()
-	//shr := uuid.New().NodeID()
-	//short := hex.EncodeToString(shr)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
@@ -199,9 +189,6 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	for i := range batchResp {
 		short := GenUlid()
 
-		//shr := uuid.New().NodeID()
-		//short := hex.EncodeToString(shr)
-
 		req := model.PackReq{
 			CorrelationID: batchResp[i].CorrelationID,
 			OriginalURL:   batchResp[i].OriginalURL,
@@ -250,8 +237,6 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	short := GenUlid()
-	//shr := uuid.New().NodeID()
-	//short := hex.EncodeToString(shr)
 
 	type respURL struct {
 		Result string `json:"result"`
@@ -349,28 +334,3 @@ func GenUlid() string {
 	moreShorter := id.String()[len(id.String())-7:]
 	return moreShorter
 }
-
-/*
-func (dbs *DBStorage) LoadLong(ctx context.Context, shortlink string) (string, string, error) {
-	var longlink string
-	var exist string
-	rows := dbs.storage.QueryRow(ctx, "SELECT longlink, exist FROM linklisttable WHERE shortlink = $1",
-		shortlink)
-	err := rows.Scan(&longlink, &exist) if err != nil { fmt.Println("Error in LoadLong (DBStorage):", err)
-		return "", "", err
-		}
-		return longlink, exist, nil
-}
-
-func (dbs *DBStorage) Store(ctx context.Context, userID string, longlink string, shortlink string) error {
-	_, err := dbs.storage.Exec(ctx, "INSERT INTO linklisttable (userhexid, longlink, shortlink, exist)"+
-		" VALUES ($1, $2, $3, $4) ",
-		userID, longlink, shortlink, "Yes")
-	if err != nil {
-		fmt.Println("Error in Store (DBStorage):", err)
-		return err
-	}
-	return nil
-}
-
-*/

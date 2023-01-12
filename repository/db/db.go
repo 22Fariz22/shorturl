@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/22Fariz22/shorturl/model"
 
@@ -15,17 +16,13 @@ import (
 )
 
 type inDBRepository struct {
-	//conn        *pgx.Conn
 	pool        *pgxpool.Pool
 	databaseDSN string
-	//buffer      []model.PackResponse
-	//ctx         context.Context
 }
 
 func New(cfg *config.Config) repository.Repository {
 	return &inDBRepository{
 		databaseDSN: cfg.DatabaseDSN,
-		//buffer:      make([]model.PackResponse, 0, 1000),
 	}
 }
 
@@ -33,19 +30,12 @@ func (i *inDBRepository) Init() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	//conn, err := pgx.Connect(ctx, i.databaseDSN)
-	//if err != nil {
-	//	return err
-	//}
-	//i.conn = conn
-
 	db, err := pgxpool.New(ctx, i.databaseDSN)
 	if err != nil {
 		log.Printf("Unable to create connection pool: %v\n", err)
 		return err
 	}
 	i.pool = db
-	//defer db.Close()
 
 	_, err = db.Exec(ctx,
 		"CREATE TABLE if not exists urls(id_pk SERIAL PRIMARY KEY, cookies TEXT, correlation_id TEXT,"+
@@ -69,7 +59,6 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 		log.Println(err)
 		return err
 	}
-
 	defer tx.Rollback(ctx)
 
 	_, err = tx.Prepare(ctx,
@@ -161,10 +150,6 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (model.URL,
 	}
 	defer row.Close()
 
-	//type longAndDeleted struct {
-	//	long    string
-	//	deleted bool
-	//}
 	rows := make([]model.URL, 0)
 
 	for row.Next() {
@@ -173,14 +158,12 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (model.URL,
 		if err != nil {
 			return s, false
 		}
-
 		rows = append(rows, s)
 	}
 
 	if len(rows) == 0 {
 		return model.URL{}, false
 	}
-
 	return rows[0], true
 }
 

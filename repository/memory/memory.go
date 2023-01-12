@@ -3,8 +3,9 @@ package memory
 import (
 	"context"
 	"fmt"
-	"github.com/22Fariz22/shorturl/model"
 	"log"
+
+	"github.com/22Fariz22/shorturl/model"
 
 	"github.com/22Fariz22/shorturl/repository"
 	"github.com/22Fariz22/shorturl/storage"
