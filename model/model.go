@@ -8,10 +8,6 @@ type URL struct {
 	Deleted       bool
 }
 
-type OwnerID struct {
-	ownerID map[string][]string
-}
-
 type PackReq struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`

@@ -47,7 +47,7 @@ func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 	defer m.mutex.RUnlock()
 	list := make([]map[string]string, 1)
 
-	for i, ok := range m.storage { //i = shortURL ok=model.URL
+	for i, ok := range m.storage {
 		if ok.Cookies == cook {
 			mp := make(map[string]string)
 			mp[m.storage[i].ID] = m.storage[i].LongURL
@@ -68,7 +68,6 @@ func (m *memoryStorage) Get(key string) (model.URL, bool) {
 		}
 	}
 	return model.URL{}, false
-
 }
 
 func (m *memoryStorage) Insert(key string, value string, cook string, deleted bool) (string, error) {

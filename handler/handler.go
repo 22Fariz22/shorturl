@@ -24,7 +24,7 @@ import (
 type Handler struct {
 	Repository repository.Repository
 	cfg        config.Config
-	workers    *worker.WorkerPool
+	workers    *worker.Pool
 }
 
 type reqURL struct {
@@ -33,7 +33,7 @@ type reqURL struct {
 
 var rURL reqURL
 
-func NewHandler(repo repository.Repository, cfg *config.Config, workers *worker.WorkerPool) *Handler {
+func NewHandler(repo repository.Repository, cfg *config.Config, workers *worker.Pool) *Handler {
 	return &Handler{
 		Repository: repo,
 		cfg:        *cfg,

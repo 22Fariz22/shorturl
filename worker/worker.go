@@ -8,7 +8,7 @@ import (
 	"github.com/22Fariz22/shorturl/repository"
 )
 
-type WorkerPool struct {
+type Pool struct {
 	wg         sync.WaitGroup
 	once       sync.Once
 	shutDown   chan struct{}
@@ -21,7 +21,7 @@ type workerData struct {
 	cookie string
 }
 
-func (w *WorkerPool) AddJob(arr []string, cookies string) error {
+func (w *Pool) AddJob(arr []string, cookies string) error {
 	select {
 	case <-w.shutDown:
 		return errors.New("all channels are closed")
@@ -33,7 +33,7 @@ func (w *WorkerPool) AddJob(arr []string, cookies string) error {
 	}
 }
 
-func (w *WorkerPool) RunWorkers(count int) {
+func (w *Pool) RunWorkers(count int) {
 	for i := 0; i < count; i++ {
 		w.wg.Add(1)
 		go func() {
@@ -57,7 +57,7 @@ func (w *WorkerPool) RunWorkers(count int) {
 	}
 }
 
-func (w *WorkerPool) Stop() {
+func (w *Pool) Stop() {
 	w.once.Do(func() {
 		close(w.shutDown)
 		close(w.mainCh)
@@ -65,8 +65,8 @@ func (w *WorkerPool) Stop() {
 	w.wg.Wait()
 }
 
-func NewWorkerPool(repo repository.Repository) *WorkerPool {
-	return &WorkerPool{
+func NewWorkerPool(repo repository.Repository) *Pool {
+	return &Pool{
 		wg:         sync.WaitGroup{},
 		once:       sync.Once{},
 		shutDown:   make(chan struct{}),
