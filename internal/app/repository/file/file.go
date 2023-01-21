@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"github.com/22Fariz22/shorturl/internal/app/config"
+	"github.com/22Fariz22/shorturl/internal/app/repository"
+	"github.com/22Fariz22/shorturl/internal/app/storage"
 	"io"
 	"log"
 	"os"
 
-	"github.com/22Fariz22/shorturl/config"
-	"github.com/22Fariz22/shorturl/model"
-	"github.com/22Fariz22/shorturl/repository"
-	"github.com/22Fariz22/shorturl/storage"
+	"github.com/22Fariz22/shorturl/internal/app/model"
 )
 
 type inFileRepository struct {

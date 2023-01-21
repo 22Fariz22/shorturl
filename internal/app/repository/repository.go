@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/22Fariz22/shorturl/model"
+	"github.com/22Fariz22/shorturl/internal/app/model"
 )
 
 type Repository interface {

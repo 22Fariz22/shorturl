@@ -1,17 +1,17 @@
 package main
 
 import (
+	"github.com/22Fariz22/shorturl/internal/app/config"
+	"github.com/22Fariz22/shorturl/internal/app/handler"
+	"github.com/22Fariz22/shorturl/internal/app/repository"
+	"github.com/22Fariz22/shorturl/internal/app/repository/db"
+	"github.com/22Fariz22/shorturl/internal/app/repository/file"
+	"github.com/22Fariz22/shorturl/internal/app/repository/memory"
 	"log"
 	"net/http"
 
-	"github.com/22Fariz22/shorturl/repository/db"
-	"github.com/22Fariz22/shorturl/repository/file"
-	"github.com/22Fariz22/shorturl/repository/memory"
-	"github.com/22Fariz22/shorturl/worker"
+	"github.com/22Fariz22/shorturl/internal/app/worker"
 
-	"github.com/22Fariz22/shorturl/config"
-	"github.com/22Fariz22/shorturl/handler"
-	"github.com/22Fariz22/shorturl/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )

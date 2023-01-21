@@ -2,10 +2,9 @@ package worker
 
 import (
 	"errors"
+	"github.com/22Fariz22/shorturl/internal/app/repository"
 	"log"
 	"sync"
-
-	"github.com/22Fariz22/shorturl/repository"
 )
 
 type Pool struct {
