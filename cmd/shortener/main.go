@@ -14,4 +14,4 @@ func main() {
 // go run cmd/shortener/main.go -f=" log.json"
 
 // разобраться с куками
-// сделать транзакции в insert db
+// транзакции в insert db
