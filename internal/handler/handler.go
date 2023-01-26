@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/cookies"
-	"github.com/22Fariz22/shorturl/internal/repository"
+	"github.com/22Fariz22/shorturl/internal/usecase"
 	"io"
 	"log"
 	"math/rand"
@@ -15,14 +15,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/22Fariz22/shorturl/internal/model"
+	"github.com/22Fariz22/shorturl/internal/entity"
 	"github.com/22Fariz22/shorturl/internal/worker"
 	"github.com/go-chi/chi/v5"
 	"github.com/oklog/ulid/v2"
 )
 
 type Handler struct {
-	Repository repository.Repository
+	Repository usecase.Repository
 	cfg        config.Config
 	workers    *worker.Pool
 }
@@ -33,7 +33,7 @@ type reqURL struct {
 
 var rURL reqURL
 
-func NewHandler(repo repository.Repository, cfg *config.Config, workers *worker.Pool) *Handler {
+func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Pool) *Handler {
 	return &Handler{
 		Repository: repo,
 		cfg:        *cfg,
@@ -169,7 +169,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var batchResp []model.PackReq
+	var batchResp []entity.PackReq
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -182,20 +182,20 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var listReq []model.PackReq
+	var listReq []entity.PackReq
 
-	var listResp []model.PackResponse
+	var listResp []entity.PackResponse
 
 	for i := range batchResp {
 		short := GenUlid()
 
-		req := model.PackReq{
+		req := entity.PackReq{
 			CorrelationID: batchResp[i].CorrelationID,
 			OriginalURL:   batchResp[i].OriginalURL,
 			ShortURL:      short,
 		}
 
-		resp := model.PackResponse{
+		resp := entity.PackResponse{
 			CorrelationID: batchResp[i].CorrelationID,
 			ShortURL:      h.cfg.BaseURL + "/" + short,
 		}

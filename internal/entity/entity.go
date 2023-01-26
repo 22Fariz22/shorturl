@@ -1,4 +1,4 @@
-package model
+package entity
 
 type URL struct {
 	Cookies       string

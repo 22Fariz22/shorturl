@@ -5,13 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/22Fariz22/shorturl/internal/config"
-	"github.com/22Fariz22/shorturl/internal/repository"
 	"github.com/22Fariz22/shorturl/internal/storage"
+	"github.com/22Fariz22/shorturl/internal/usecase"
 	"io"
 	"log"
 	"os"
 
-	"github.com/22Fariz22/shorturl/internal/model"
+	"github.com/22Fariz22/shorturl/internal/entity"
 )
 
 type inFileRepository struct {
@@ -25,10 +25,10 @@ func (f *inFileRepository) Delete(list []string, cookie string) error {
 	return nil
 }
 
-func (f *inFileRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
+func (f *inFileRepository) RepoBatch(ctx context.Context, cook string, batchList []entity.PackReq) error {
 	// [{1 http://mail.ru 0ATJMCH} {2 http://ya.ru 3DXH7RG} {3 http://google.ru VGGFB0D}]
 	for i := range batchList {
-		url := &model.URL{
+		url := &entity.URL{
 			Cookies: cook,
 			ID:      batchList[i].ShortURL,
 			LongURL: batchList[i].OriginalURL,
@@ -61,7 +61,7 @@ func NewConsumer(cfg config.Config) (*Consumer, error) {
 	}, nil
 }
 
-func New(cfg *config.Config) repository.Repository {
+func New(cfg *config.Config) usecase.Repository {
 	st := storage.New()
 
 	consumer, err := NewConsumer(*cfg)
@@ -81,7 +81,7 @@ func (f *inFileRepository) Init() error {
 
 	for scanner.Scan() {
 		txt := scanner.Text()
-		var u model.URL
+		var u entity.URL
 		err := json.Unmarshal([]byte(txt), &u)
 		if err != nil {
 			return err
@@ -95,7 +95,7 @@ func (f *inFileRepository) Init() error {
 }
 
 func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) (string, error) {
-	url := &model.URL{
+	url := &entity.URL{
 		Cookies: cook,
 		ID:      shortID,
 		LongURL: longURL,
@@ -112,7 +112,7 @@ func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL 
 	return "", nil
 }
 
-func (f *inFileRepository) GetURL(ctx context.Context, shortID string) (model.URL, bool) {
+func (f *inFileRepository) GetURL(ctx context.Context, shortID string) (entity.URL, bool) {
 	v, ok := f.memoryStorage.Get(shortID)
 	return v, ok
 }

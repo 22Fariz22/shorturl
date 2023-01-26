@@ -3,10 +3,10 @@ package app
 import (
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/handler"
-	"github.com/22Fariz22/shorturl/internal/repository"
-	"github.com/22Fariz22/shorturl/internal/repository/db"
-	"github.com/22Fariz22/shorturl/internal/repository/file"
-	"github.com/22Fariz22/shorturl/internal/repository/memory"
+	"github.com/22Fariz22/shorturl/internal/usecase"
+	"github.com/22Fariz22/shorturl/internal/usecase/db"
+	"github.com/22Fariz22/shorturl/internal/usecase/file"
+	"github.com/22Fariz22/shorturl/internal/usecase/memory"
 	"github.com/22Fariz22/shorturl/internal/worker"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -15,7 +15,7 @@ import (
 )
 
 func Run(cfg *config.Config) {
-	var repo repository.Repository
+	var repo usecase.Repository
 
 	if cfg.DatabaseDSN != "" {
 		repo = db.New(cfg)
@@ -30,6 +30,7 @@ func Run(cfg *config.Config) {
 	workers := worker.NewWorkerPool(repo)
 	workers.RunWorkers(10)
 
+	// http.NewRouter(cfg,repo,workers)
 	hd := handler.NewHandler(repo, cfg, workers)
 
 	r := chi.NewRouter()

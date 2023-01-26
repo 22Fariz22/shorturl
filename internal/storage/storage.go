@@ -6,11 +6,11 @@ import (
 	"log"
 	"sync"
 
-	"github.com/22Fariz22/shorturl/internal/model"
+	"github.com/22Fariz22/shorturl/internal/entity"
 )
 
 type MemoryStorage interface {
-	Get(key string) (model.URL, bool)
+	Get(key string) (entity.URL, bool)
 	Insert(key, value string, cook string, deleted bool) (string, error)
 	GetAllStorageURL(string2 string) []map[string]string
 	DeleteStorage([]string, string) error
@@ -18,7 +18,7 @@ type MemoryStorage interface {
 
 ///переделать в нормальную структуру
 type memoryStorage struct {
-	storage map[string]model.URL // список мап sortURL:model.URL
+	storage map[string]entity.URL // список мап sortURL:entity.URL
 	mutex   sync.RWMutex
 }
 
@@ -29,7 +29,7 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 		fmt.Println("v", v)
 		for k := range m.storage {
 			if m.storage[k].ID == v && m.storage[k].Cookies == cookies {
-				m.storage[k] = model.URL{
+				m.storage[k] = entity.URL{
 					Cookies:       cookies,
 					ID:            v,
 					LongURL:       k,
@@ -57,7 +57,7 @@ func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 	return list
 }
 
-func (m *memoryStorage) Get(key string) (model.URL, bool) {
+func (m *memoryStorage) Get(key string) (entity.URL, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
@@ -67,13 +67,13 @@ func (m *memoryStorage) Get(key string) (model.URL, bool) {
 			return x, true
 		}
 	}
-	return model.URL{}, false
+	return entity.URL{}, false
 }
 
 func (m *memoryStorage) Insert(key string, value string, cook string, deleted bool) (string, error) {
 	var ErrAlreadyExists = errors.New("this URL already exists")
 
-	url := &model.URL{
+	url := &entity.URL{
 		Cookies: cook,
 		ID:      key,
 		LongURL: value,
@@ -93,6 +93,6 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 
 func New() MemoryStorage {
 	return &memoryStorage{
-		storage: map[string]model.URL{},
+		storage: map[string]entity.URL{},
 	}
 }

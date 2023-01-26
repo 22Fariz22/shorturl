@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/22Fariz22/shorturl/internal/config"
-	"github.com/22Fariz22/shorturl/internal/repository"
+	"github.com/22Fariz22/shorturl/internal/usecase"
 	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/22Fariz22/shorturl/internal/model"
+	"github.com/22Fariz22/shorturl/internal/entity"
 )
 
 type inDBRepository struct {
@@ -19,7 +19,7 @@ type inDBRepository struct {
 	databaseDSN string
 }
 
-func New(cfg *config.Config) repository.Repository {
+func New(cfg *config.Config) usecase.Repository {
 	return &inDBRepository{
 		databaseDSN: cfg.DatabaseDSN,
 	}
@@ -126,7 +126,7 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 	return su, ErrAlreadyExists
 }
 
-func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []model.PackReq) error {
+func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []entity.PackReq) error {
 	for b := range batchList {
 		_, err := i.pool.Exec(ctx, "insert into urls (cookies,correlation_id, short_url, long_url) values($1,$2,$3,$4);",
 			cook, batchList[b].CorrelationID, batchList[b].ShortURL, batchList[b].OriginalURL)
@@ -139,20 +139,20 @@ func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList [
 }
 
 // GetURL return long url, deleted status, exist row
-func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (model.URL, bool) {
+func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (entity.URL, bool) {
 	row, err := i.pool.Query(ctx, "select cookies,long_url,deleted from urls where short_url = $1;", shortID)
 	if err != nil {
 		log.Println(err)
 		//TODO сделать возврат ошибки
 		//	http.NotFound(w, r) ?
-		return model.URL{}, false
+		return entity.URL{}, false
 	}
 	defer row.Close()
 
-	rows := make([]model.URL, 0)
+	rows := make([]entity.URL, 0)
 
 	for row.Next() {
-		var s model.URL
+		var s entity.URL
 		err := row.Scan(&s.Cookies, &s.LongURL, &s.Deleted)
 		if err != nil {
 			return s, false
@@ -161,7 +161,7 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (model.URL,
 	}
 
 	if len(rows) == 0 {
-		return model.URL{}, false
+		return entity.URL{}, false
 	}
 	return rows[0], true
 }

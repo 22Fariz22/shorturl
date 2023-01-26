@@ -2,7 +2,7 @@ package worker
 
 import (
 	"errors"
-	"github.com/22Fariz22/shorturl/internal/repository"
+	"github.com/22Fariz22/shorturl/internal/usecase"
 	"log"
 	"sync"
 )
@@ -12,7 +12,7 @@ type Pool struct {
 	once       sync.Once
 	shutDown   chan struct{}
 	mainCh     chan workerData
-	repository repository.Repository
+	repository usecase.Repository
 }
 
 type workerData struct {
@@ -64,7 +64,7 @@ func (w *Pool) Stop() {
 	w.wg.Wait()
 }
 
-func NewWorkerPool(repo repository.Repository) *Pool {
+func NewWorkerPool(repo usecase.Repository) *Pool {
 	return &Pool{
 		wg:         sync.WaitGroup{},
 		once:       sync.Once{},
