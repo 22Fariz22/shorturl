@@ -2,7 +2,7 @@ package worker
 
 import (
 	"errors"
-	"github.com/22Fariz22/shorturl/internal/app/repository"
+	"github.com/22Fariz22/shorturl/internal/repository"
 	"log"
 	"sync"
 )

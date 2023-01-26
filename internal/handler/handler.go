@@ -5,9 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/22Fariz22/shorturl/internal/app/config"
-	"github.com/22Fariz22/shorturl/internal/app/cookies"
-	"github.com/22Fariz22/shorturl/internal/app/repository"
+	"github.com/22Fariz22/shorturl/internal/config"
+	"github.com/22Fariz22/shorturl/internal/cookies"
+	"github.com/22Fariz22/shorturl/internal/repository"
 	"io"
 	"log"
 	"math/rand"
@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/22Fariz22/shorturl/internal/app/model"
-	"github.com/22Fariz22/shorturl/internal/app/worker"
+	"github.com/22Fariz22/shorturl/internal/model"
+	"github.com/22Fariz22/shorturl/internal/worker"
 	"github.com/go-chi/chi/v5"
 	"github.com/oklog/ulid/v2"
 )

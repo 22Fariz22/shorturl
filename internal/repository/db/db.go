@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/22Fariz22/shorturl/internal/app/config"
-	"github.com/22Fariz22/shorturl/internal/app/repository"
+	"github.com/22Fariz22/shorturl/internal/config"
+	"github.com/22Fariz22/shorturl/internal/repository"
 	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/22Fariz22/shorturl/internal/app/model"
+	"github.com/22Fariz22/shorturl/internal/model"
 )
 
 type inDBRepository struct {

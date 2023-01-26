@@ -3,11 +3,11 @@ package memory
 import (
 	"context"
 	"fmt"
-	"github.com/22Fariz22/shorturl/internal/app/repository"
-	"github.com/22Fariz22/shorturl/internal/app/storage"
+	"github.com/22Fariz22/shorturl/internal/repository"
+	"github.com/22Fariz22/shorturl/internal/storage"
 	"log"
 
-	"github.com/22Fariz22/shorturl/internal/app/model"
+	"github.com/22Fariz22/shorturl/internal/model"
 )
 
 type inMemoryRepository struct {

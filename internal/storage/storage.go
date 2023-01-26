@@ -6,7 +6,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/22Fariz22/shorturl/internal/app/model"
+	"github.com/22Fariz22/shorturl/internal/model"
 )
 
 type MemoryStorage interface {
