@@ -166,7 +166,6 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (entity.URL
 	return rows[0], true
 }
 
-//example [map[7PJPPAZ:http://ya.ru] map[JRK5X81:http://ya.ru]]
 func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
 	rows, err := i.pool.Query(ctx, "select short_url, long_url from urls where cookies = $1;", cook)
 	if err != nil {

@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"context"
 	"errors"
 	"github.com/22Fariz22/shorturl/internal/usecase"
 	"log"
@@ -20,7 +21,7 @@ type workerData struct {
 	cookie string
 }
 
-func (w *Pool) AddJob(arr []string, cookies string) error {
+func (w *Pool) AddJob(ctx context.Context, arr []string, cookies string) error {
 	select {
 	case <-w.shutDown:
 		return errors.New("all channels are closed")

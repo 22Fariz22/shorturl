@@ -29,11 +29,11 @@ func Run(cfg *config.Config) {
 
 	workers := worker.NewWorkerPool(repo)
 	workers.RunWorkers(10)
-
-	// http.NewRouter(cfg,repo,workers)
-	hd := handler.NewHandler(repo, cfg, workers)
+	defer workers.Stop()
 
 	r := chi.NewRouter()
+	// http.NewRouter(cfg,repo,workers)
+	hd := handler.NewHandler(repo, cfg, workers)
 
 	r.Use(handler.DeCompress)
 	r.Use(middleware.RequestID)
@@ -53,5 +53,4 @@ func Run(cfg *config.Config) {
 		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
 	}
 
-	workers.Stop()
 }
