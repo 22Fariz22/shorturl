@@ -1,14 +1,11 @@
-package model
+package entity
 
 type URL struct {
 	Cookies       string
 	ID            string
 	LongURL       string
 	CorrelationID string
-}
-
-type OwnerID struct {
-	ownerID map[string][]string
+	Deleted       bool
 }
 
 type PackReq struct {
