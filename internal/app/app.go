@@ -42,7 +42,7 @@ func Run(cfg *config.Config) {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Mount("/debug", middleware.Profiler())
+	//r.Mount("/debug", middleware.Profiler())
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)

@@ -11,7 +11,7 @@ import (
 const (
 	DefaultServerAddress      = "localhost:8080"
 	DefaultBaseURL            = "http://localhost:8080"
-	DefaultPprofServerAddress = "localhost:8081"
+	DefaultPprofServerAddress = "http://localhost:8081"
 
 	DefaultDatabaseDSN = "" //"postgres://postgres:55555@127.0.0.1:5432/dburl"
 )
@@ -20,7 +20,7 @@ type Config struct {
 	ServerAddress      string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL            string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStoragePath    string `env:"FILE_STORAGE_PATH"  `
-	PprofServerAddress string `env:"PPROF_SERVER_ADDRESS" envDefault:"http://localhost:8081"`
+	PprofServerAddress string `env:"PPROF_SERVER_ADDRESS" envDefault:"localhost:8081"`
 	SecretKey          []byte
 
 	DatabaseDSN string `env:"DATABASE_DSN" ` //envDefault:"postgres://postgres:55555@127.0.0.1:5432/dburl"
