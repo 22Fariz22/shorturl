@@ -3,9 +3,10 @@ package memory
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/22Fariz22/shorturl/internal/storage"
 	"github.com/22Fariz22/shorturl/internal/usecase"
-	"log"
 
 	"github.com/22Fariz22/shorturl/internal/entity"
 )

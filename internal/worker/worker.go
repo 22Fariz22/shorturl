@@ -3,9 +3,10 @@ package worker
 import (
 	"context"
 	"errors"
-	"github.com/22Fariz22/shorturl/internal/usecase"
 	"log"
 	"sync"
+
+	"github.com/22Fariz22/shorturl/internal/usecase"
 )
 
 type Pool struct {

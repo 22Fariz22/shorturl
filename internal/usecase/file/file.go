@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"github.com/22Fariz22/shorturl/internal/config"
-	"github.com/22Fariz22/shorturl/internal/storage"
-	"github.com/22Fariz22/shorturl/internal/usecase"
 	"io"
 	"log"
 	"os"
+
+	"github.com/22Fariz22/shorturl/internal/config"
+	"github.com/22Fariz22/shorturl/internal/storage"
+	"github.com/22Fariz22/shorturl/internal/usecase"
 
 	"github.com/22Fariz22/shorturl/internal/entity"
 )

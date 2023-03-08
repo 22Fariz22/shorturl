@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/22Fariz22/shorturl/internal/config"
-	"github.com/22Fariz22/shorturl/internal/usecase"
 	"log"
 	"time"
+
+	"github.com/22Fariz22/shorturl/internal/config"
+	"github.com/22Fariz22/shorturl/internal/usecase"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
