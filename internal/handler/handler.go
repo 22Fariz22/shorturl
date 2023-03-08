@@ -331,7 +331,7 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 }
 
 func GenUlid() string {
-	time.Sleep(1 * time.Second)
+	//time.Sleep(1 * time.Second)
 
 	t := time.Now().UTC()
 	entropy := rand.New(rand.NewSource(t.UnixNano()))
