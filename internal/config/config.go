@@ -11,7 +11,7 @@ import (
 const (
 	DefaultServerAddress      = "localhost:8080"
 	DefaultBaseURL            = "http://localhost:8080"
-	DefaultPprofServerAddress = "http://localhost:8081"
+	DefaultPprofServerAddress = "localhost:8081"
 
 	DefaultDatabaseDSN = "" //"postgres://postgres:55555@127.0.0.1:5432/dburl"
 )
@@ -46,10 +46,11 @@ func NewConfig() *Config {
 	}
 
 	return &Config{
-		ServerAddress:   cfg.ServerAddress,
-		BaseURL:         cfg.BaseURL,
-		FileStoragePath: cfg.FileStoragePath,
-		SecretKey:       secretKey,
-		DatabaseDSN:     cfg.DatabaseDSN,
+		ServerAddress:      cfg.ServerAddress,
+		BaseURL:            cfg.BaseURL,
+		FileStoragePath:    cfg.FileStoragePath,
+		SecretKey:          secretKey,
+		DatabaseDSN:        cfg.DatabaseDSN,
+		PprofServerAddress: cfg.PprofServerAddress,
 	}
 }
