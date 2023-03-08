@@ -1,11 +1,20 @@
 package handler
 
 import (
+	"encoding/hex"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
+
+func BenchmarkGenerateShortLink(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		short := GenUlid()
+		shortURL := hex.EncodeToString([]byte(short))
+		b.Logf("Short URL is %s \n", shortURL)
+	}
+}
 
 type Fields struct {
 	urls map[string]string
