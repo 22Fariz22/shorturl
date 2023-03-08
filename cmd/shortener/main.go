@@ -12,6 +12,3 @@ func main() {
 
 //  go run cmd/shortener/main.go -d="postgres://postgres:55555@127.0.0.1:5432/dburl"
 // go run cmd/shortener/main.go -f=" log.json"
-
-// разобраться с куками
-//транзакции в insert db

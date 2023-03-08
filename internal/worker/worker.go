@@ -16,11 +16,22 @@ type Pool struct {
 	repository usecase.Repository
 }
 
+func NewWorkerPool(repo usecase.Repository) *Pool {
+	return &Pool{
+		wg:         sync.WaitGroup{},
+		once:       sync.Once{},
+		shutDown:   make(chan struct{}),
+		mainCh:     make(chan workerData, 10),
+		repository: repo,
+	}
+}
+
 type workerData struct {
 	urls   []string
 	cookie string
 }
 
+//запуск в handler
 func (w *Pool) AddJob(ctx context.Context, arr []string, cookies string) error {
 	select {
 	case <-w.shutDown:
@@ -33,6 +44,7 @@ func (w *Pool) AddJob(ctx context.Context, arr []string, cookies string) error {
 	}
 }
 
+//запуск в App
 func (w *Pool) RunWorkers(count int) {
 	for i := 0; i < count; i++ {
 		w.wg.Add(1)
@@ -63,14 +75,4 @@ func (w *Pool) Stop() {
 		close(w.mainCh)
 	})
 	w.wg.Wait()
-}
-
-func NewWorkerPool(repo usecase.Repository) *Pool {
-	return &Pool{
-		wg:         sync.WaitGroup{},
-		once:       sync.Once{},
-		shutDown:   make(chan struct{}),
-		mainCh:     make(chan workerData, 10),
-		repository: repo,
-	}
 }

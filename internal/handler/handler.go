@@ -5,15 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/22Fariz22/shorturl/internal/config"
-	"github.com/22Fariz22/shorturl/internal/cookies"
-	"github.com/22Fariz22/shorturl/internal/usecase"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/22Fariz22/shorturl/internal/config"
+	"github.com/22Fariz22/shorturl/internal/cookies"
+	"github.com/22Fariz22/shorturl/internal/usecase"
 
 	"github.com/22Fariz22/shorturl/internal/entity"
 	"github.com/22Fariz22/shorturl/internal/worker"
@@ -330,6 +331,7 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 }
 
 func GenUlid() string {
+	//time.Sleep(1 * time.Second)
 	t := time.Now().UTC()
 	entropy := rand.New(rand.NewSource(t.UnixNano()))
 	id := ulid.MustNew(ulid.Timestamp(t), entropy)
