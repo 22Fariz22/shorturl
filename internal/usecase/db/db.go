@@ -97,6 +97,7 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 
 //SaveURL сохранение записи в дб
 func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
+	// ErrAlreadyExists вывод ошибки если такой урл уже существует
 	var ErrAlreadyExists = errors.New("this URL already exists")
 	var id int8
 	fmt.Println("cookie in db saveurl", cook)

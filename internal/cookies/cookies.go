@@ -42,6 +42,7 @@ func SetCookieHandler(w http.ResponseWriter, r *http.Request, secretKey []byte) 
 	//w.Write([]byte("cookie set!"))
 }
 
+//GetCookieHandler получить куку от посетителя
 func GetCookieHandler(w http.ResponseWriter, r *http.Request, secretKey []byte) {
 	value, err := readEncrypted(r, "exampleCookie", secretKey)
 	if err != nil {
