@@ -351,7 +351,7 @@ func GenUlid() string {
 	return moreShorter
 }
 
-func Example_GenUlid() {
+func ExampleGenUlid() {
 	short := GenUlid()
 	shortURL := hex.EncodeToString([]byte(short))
 	log.Printf("Short URL is %s \n", shortURL)
