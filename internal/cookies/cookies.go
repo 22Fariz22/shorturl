@@ -1,3 +1,4 @@
+// Package cookies для создания куков
 package cookies
 
 import (
@@ -13,11 +14,13 @@ import (
 	"strings"
 )
 
+// переменные для вывода ошибок
 var (
 	ErrValueTooLong = errors.New("cookie value too long")
 	ErrInvalidValue = errors.New("invalid cookie value")
 )
 
+//SetCookieHandler установка куков
 func SetCookieHandler(w http.ResponseWriter, r *http.Request, secretKey []byte) {
 	cookie := http.Cookie{
 		Name:     "exampleCookie",
@@ -58,6 +61,7 @@ func GetCookieHandler(w http.ResponseWriter, r *http.Request, secretKey []byte) 
 
 }
 
+// Write выдача куков
 func Write(w http.ResponseWriter, cookie http.Cookie, r *http.Request) error {
 	// Encode the cookie value using base64.
 	cookie.Value = base64.URLEncoding.EncodeToString([]byte(cookie.Value))
@@ -74,6 +78,7 @@ func Write(w http.ResponseWriter, cookie http.Cookie, r *http.Request) error {
 	return nil
 }
 
+//read чтение куков
 func read(r *http.Request, name string) (string, error) {
 	// Read the cookie as normal.
 	cookie, err := r.Cookie(name)
@@ -93,6 +98,7 @@ func read(r *http.Request, name string) (string, error) {
 	return string(value), nil
 }
 
+//writeEncrypted шифрование
 func writeEncrypted(w http.ResponseWriter, cookie http.Cookie, secretKey []byte, r *http.Request) error {
 	// Create a new AES cipher block from the secret key.
 	block, err := aes.NewCipher(secretKey)
@@ -133,6 +139,7 @@ func writeEncrypted(w http.ResponseWriter, cookie http.Cookie, secretKey []byte,
 	return Write(w, cookie, r)
 }
 
+// readEncrypted чтение шифрлвания
 func readEncrypted(r *http.Request, name string, secretKey []byte) (string, error) {
 	// Read the encrypted value from the cookie as normal.
 	encryptedValue, err := read(r, name)

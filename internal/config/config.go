@@ -1,3 +1,4 @@
+// Package config конфигуратор переменных окружения
 package config
 
 import (
@@ -8,14 +9,16 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// переменные окружения по умолчанию
 const (
-	DefaultServerAddress      = "localhost:8080"
-	DefaultBaseURL            = "http://localhost:8080"
-	DefaultPprofServerAddress = "http://localhost:8081"
+	DefaultServerAddress      = "localhost:8080"        // адрес сервера
+	DefaultBaseURL            = "http://localhost:8080" // базовый адрес
+	DefaultPprofServerAddress = "http://localhost:8081" // адрес сервера для профилирования
 
 	DefaultDatabaseDSN = "" //"postgres://postgres:55555@127.0.0.1:5432/dburl"
 )
 
+// Config структура конфига
 type Config struct {
 	ServerAddress      string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL            string `env:"BASE_URL" envDefault:"http://localhost:8080"`
@@ -26,6 +29,7 @@ type Config struct {
 	DatabaseDSN string `env:"DATABASE_DSN" ` //envDefault:"postgres://postgres:55555@127.0.0.1:5432/dburl"
 }
 
+//NewConfig создание конфига
 func NewConfig() *Config {
 	cfg := &Config{}
 	pflag.StringVarP(&cfg.ServerAddress, "server", "a", DefaultServerAddress, "server address")

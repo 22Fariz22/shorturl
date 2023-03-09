@@ -95,7 +95,7 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 	return nil
 }
 
-//Delete сохранение записи в дб
+//SaveURL сохранение записи в дб
 func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
 	var ErrAlreadyExists = errors.New("this URL already exists")
 	var id int8

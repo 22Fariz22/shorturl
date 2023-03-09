@@ -77,6 +77,7 @@ func (m *memoryStorage) Get(key string) (entity.URL, bool) {
 
 //Insert вставить запись
 func (m *memoryStorage) Insert(key string, value string, cook string, deleted bool) (string, error) {
+	//ErrAlreadyExists вывод ошибки существования
 	var ErrAlreadyExists = errors.New("this URL already exists")
 
 	url := &entity.URL{
