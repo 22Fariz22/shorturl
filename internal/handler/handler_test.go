@@ -4,17 +4,16 @@ package handler
 import (
 	"encoding/hex"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func ExampleGenUlid() {
-	short := GenUlid()
-	shortURL := hex.EncodeToString([]byte(short))
-	log.Printf("Short URL is %s \n", shortURL)
-}
+//func Example_GenUlid() {
+//	short := GenUlid()
+//	shortURL := hex.EncodeToString([]byte(short))
+//	log.Printf("Short URL is %s \n", shortURL)
+//}
 
 //BenchmarkGenerateShortLink бенчмарк генератора шортурлов
 func BenchmarkGenerateShortLink(b *testing.B) {
