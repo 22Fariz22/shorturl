@@ -1,3 +1,4 @@
+// Package handler принимает и отправляет
 package handler
 
 import (
@@ -24,6 +25,7 @@ import (
 
 const ctxTimeOut = 5 * time.Second
 
+// Handler структура хэндлер
 type Handler struct {
 	Repository usecase.Repository
 	cfg        config.Config
@@ -36,6 +38,7 @@ type reqURL struct {
 
 var rURL reqURL
 
+// NewHandler создает хэндлер
 func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Pool) *Handler {
 	return &Handler{
 		Repository: repo,
@@ -44,6 +47,7 @@ func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Poo
 	}
 }
 
+// DeleteHandler удаляет запись
 func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
@@ -65,6 +69,7 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
+//GetAllURL получить все записи
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
@@ -139,7 +144,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	w.Write([]byte(h.cfg.BaseURL + "/" + short))
 }
 
-//GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
+//GetShortURLByIDHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
@@ -164,6 +169,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	http.Redirect(w, r, url.LongURL, http.StatusTemporaryRedirect)
 }
 
+//Batch создает записи конвеером
 func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
@@ -223,6 +229,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
+//CreateShortURLJSON создает запись из тела json
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
@@ -280,6 +287,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
+//Close закрывает соединение
 func (r gzipReader) Close() error {
 	if err := r.Closer.Close(); err != nil {
 		log.Print(err.Error())
@@ -313,11 +321,13 @@ func DeCompress(next http.Handler) http.Handler {
 	})
 }
 
+// структура для сжатия
 type gzipReader struct {
 	*gzip.Reader
 	io.Closer
 }
 
+//Ping проверка соединения
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
 	defer cancel()
@@ -330,6 +340,7 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+//GenUlid генератор шортурлов
 func GenUlid() string {
 	//time.Sleep(1 * time.Second)
 	t := time.Now().UTC()

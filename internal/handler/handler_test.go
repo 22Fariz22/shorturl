@@ -1,3 +1,4 @@
+// тестирование
 package handler
 
 import (
@@ -8,6 +9,16 @@ import (
 	"testing"
 )
 
+//
+func ExampleHandler_CreateShortURLHandler() {
+
+}
+
+func ExampleGenUlid() {
+
+}
+
+//BenchmarkGenerateShortLink бенчмарк генератора шортурлов
 func BenchmarkGenerateShortLink(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		short := GenUlid()
@@ -16,16 +27,19 @@ func BenchmarkGenerateShortLink(b *testing.B) {
 	}
 }
 
+//Fields структура для тестирования
 type Fields struct {
 	urls map[string]string
 }
 
+// NewFields создание структуры
 func NewFields() *Fields {
 	return &Fields{
 		urls: make(map[string]string),
 	}
 }
 
+//TestCreateShortURLHandler тестирование
 func (f Fields) TestCreateShortURLHandler(t *testing.T) {
 	/* POST
 	вставляем свой урл url
@@ -81,6 +95,7 @@ func (f Fields) TestCreateShortURLHandler(t *testing.T) {
 	}
 }
 
+//TestGetShortURLByIDHandler тестирование
 func (f Fields) TestGetShortURLByIDHandler(t *testing.T) {
 	type want struct {
 		code     int

@@ -1,3 +1,4 @@
+// Package storage юзекейс для мемори сторада
 package storage
 
 import (
@@ -9,6 +10,7 @@ import (
 	"github.com/22Fariz22/shorturl/internal/entity"
 )
 
+//MemoryStorage интерфейс для стоража инмемори
 type MemoryStorage interface {
 	Get(key string) (entity.URL, bool)
 	Insert(key, value string, cook string, deleted bool) (string, error)
@@ -16,12 +18,13 @@ type MemoryStorage interface {
 	DeleteStorage([]string, string) error
 }
 
-///переделать в нормальную структуру
+///memoryStorage структура для стоража инмемори
 type memoryStorage struct {
 	storage map[string]entity.URL // список мап sortURL:entity.URL
 	mutex   sync.RWMutex
 }
 
+// DeleteStorage удаление записи
 func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error {
 	log.Print("del in stor")
 
@@ -42,6 +45,7 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 	return nil
 }
 
+//GetAllStorageURL получить все записи
 func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -57,6 +61,7 @@ func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 	return list
 }
 
+//Get получить запись
 func (m *memoryStorage) Get(key string) (entity.URL, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -70,6 +75,7 @@ func (m *memoryStorage) Get(key string) (entity.URL, bool) {
 	return entity.URL{}, false
 }
 
+//Insert вставить запись
 func (m *memoryStorage) Insert(key string, value string, cook string, deleted bool) (string, error) {
 	var ErrAlreadyExists = errors.New("this URL already exists")
 
@@ -91,6 +97,7 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 	return v.ID, ErrAlreadyExists
 }
 
+//New создание структуры для инмемори типа
 func New() MemoryStorage {
 	return &memoryStorage{
 		storage: map[string]entity.URL{},

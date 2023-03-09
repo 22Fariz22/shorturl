@@ -1,3 +1,4 @@
+// Package app модуль app запускает репозиторий  с учетом конфигурации, воркер и роутер
 package app
 
 import (
@@ -16,6 +17,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+// Run запускает приложение с учетом конфигурации из main и роутеры
 func Run(cfg *config.Config) {
 	var repo usecase.Repository
 

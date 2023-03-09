@@ -1,3 +1,4 @@
+// Package worker пакет для работы воркера
 package worker
 
 import (
@@ -9,6 +10,7 @@ import (
 	"github.com/22Fariz22/shorturl/internal/usecase"
 )
 
+//Pool структура для воркера
 type Pool struct {
 	wg         sync.WaitGroup
 	once       sync.Once
@@ -17,6 +19,7 @@ type Pool struct {
 	repository usecase.Repository
 }
 
+//NewWorkerPool создание воркера
 func NewWorkerPool(repo usecase.Repository) *Pool {
 	return &Pool{
 		wg:         sync.WaitGroup{},
@@ -27,12 +30,13 @@ func NewWorkerPool(repo usecase.Repository) *Pool {
 	}
 }
 
+//workerData структура содержания воркера
 type workerData struct {
 	urls   []string
 	cookie string
 }
 
-//запуск в handler
+//AddJob запуск в handler
 func (w *Pool) AddJob(ctx context.Context, arr []string, cookies string) error {
 	select {
 	case <-w.shutDown:
@@ -45,7 +49,7 @@ func (w *Pool) AddJob(ctx context.Context, arr []string, cookies string) error {
 	}
 }
 
-//запуск в App
+//RunWorkers запуск в App
 func (w *Pool) RunWorkers(count int) {
 	for i := 0; i < count; i++ {
 		w.wg.Add(1)
@@ -70,6 +74,7 @@ func (w *Pool) RunWorkers(count int) {
 	}
 }
 
+//Stop остановка воркера
 func (w *Pool) Stop() {
 	w.once.Do(func() {
 		close(w.shutDown)

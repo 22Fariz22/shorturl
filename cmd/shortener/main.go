@@ -1,3 +1,4 @@
+// Package main точка запуска всего приложения и конфигурации
 package main
 
 import (
@@ -5,8 +6,12 @@ import (
 	"github.com/22Fariz22/shorturl/internal/config"
 )
 
+//main точка запуска приложения
 func main() {
+	//cfg запускает конфигурацию
 	cfg := config.NewConfig()
+
+	// запускает приложение с учетом конфигурации
 	app.Run(cfg)
 }
 
