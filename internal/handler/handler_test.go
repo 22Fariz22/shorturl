@@ -10,14 +10,14 @@ import (
 	"testing"
 )
 
-//func Example_GenUlid() {
-//	short := GenUlid()
-//	shortURL := hex.EncodeToString([]byte(short))
-//	log.Printf("Short URL is %s \n", shortURL)
-//}
+func ExampleGenUlid() {
+	short := GenUlid()
+	shortURL := hex.EncodeToString([]byte(short))
+	log.Printf("Short URL is %s \n", shortURL)
+}
 
-// example_test тестирование
-func example_test() {
+// exampleTest тестирование
+func exampleTest() {
 	short := GenUlid()
 	shortURL := hex.EncodeToString([]byte(short))
 	log.Printf("Short URL is %s \n", shortURL)
