@@ -49,7 +49,7 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	list := make([]map[string]string, 1)
+	list := make([]map[string]string, 0)
 
 	for i, ok := range m.storage {
 		if ok.Cookies == cook {
@@ -95,7 +95,7 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 	}
 	fmt.Println("long in storage", v.LongURL)
 	fmt.Println("su in storage", v.ID)
-	return v.ID, ErrAlreadyExists
+	return v.ID, ErrAlreadyExists // если такого еще нет в мапе,то ничего не вернет. а если есть, то вернет shorturl.
 }
 
 //New создание структуры для инмемори типа
