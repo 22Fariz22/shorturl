@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func _TestInDBRepository_GetURL(t *testing.T) {
+func _TestInDBRepositoryGetURL(t *testing.T) {
 	ctl := gomock.NewController(t)
 	ctl.Finish()
 

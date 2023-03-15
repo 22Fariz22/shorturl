@@ -2,16 +2,9 @@
 package handler_test
 
 import (
-	"bytes"
 	"encoding/hex"
-	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/handler"
-	"github.com/22Fariz22/shorturl/internal/usecase/memory"
-	"github.com/stretchr/testify/require"
-	"io"
 	"log"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -31,43 +24,43 @@ func BenchmarkGenerateShortLink(b *testing.B) {
 	}
 }
 
-func _TestHandler_CreateShortURLJSON(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name string
-		in   []byte
-		want string
-	}{
-		{
-			name: "create json",
-			in:   []byte(`{"url":"https://google.ru"}`),
-			want: `{"result":"http://localhost:8080/"}`,
-		},
-	}
-
-	for i := range tests {
-		test := tests[i]
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			cfg := config.NewConfig()
-
-			repo := memory.New()
-
-			req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(test.in))
-			req.Header.Add("Content-Type", "application/json")
-			w := httptest.NewRecorder()
-
-			handler.NewHandler(repo, cfg, nil).CreateShortURLJSON(w, req)
-
-			_, err := io.ReadAll(w.Result().Body)
-
-			require.NoError(t, err)
-			//require.JSONEq(t, string(response), string(response)) // как вставить  want геренрирующий
-		})
-	}
-}
+//func _TestHandlerCreateShortURLJSON(t *testing.T) {
+//	t.Parallel()
+//
+//	tests := []struct {
+//		name string
+//		in   []byte
+//		want string
+//	}{
+//		{
+//			name: "create json",
+//			in:   []byte(`{"url":"https://google.ru"}`),
+//			want: `{"result":"http://localhost:8080/"}`,
+//		},
+//	}
+//
+//	for i := range tests {
+//		test := tests[i]
+//		t.Run(test.name, func(t *testing.T) {
+//			t.Parallel()
+//
+//			cfg := config.NewConfig()
+//
+//			repo := memory.New()
+//
+//			req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(test.in))
+//			req.Header.Add("Content-Type", "application/json")
+//			w := httptest.NewRecorder()
+//
+//			handler.NewHandler(repo, cfg, nil).CreateShortURLJSON(w, req)
+//
+//			_, err := io.ReadAll(w.Result().Body)
+//
+//			require.NoError(t, err)
+//			//require.JSONEq(t, string(response), string(response)) // как вставить  want геренрирующий
+//		})
+//	}
+//}
 
 //TestHandler_CreateShortURLHandler тест хэндлера из эндпойнта r.Post("/", hd.CreateShortURLHandler)
 //func TestHandler_GetShortURLByIDHandler(t *testing.T) {

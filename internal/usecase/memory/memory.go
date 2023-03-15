@@ -40,7 +40,8 @@ func (m *inMemoryRepository) SaveURL(ctx context.Context, shortID string, longUR
 //GetURL получить запись из инмемори
 func (m *inMemoryRepository) GetURL(ctx context.Context, shortID string) (entity.URL, bool) {
 	v, ok := m.memoryStorage.Get(shortID)
-	fmt.Println("ok in mem Geturl:", ok)
+	fmt.Println("v in mem Geturl: ", v)
+	fmt.Println("ok in mem Geturl: ", ok)
 	return v, ok
 }
 

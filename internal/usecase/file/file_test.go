@@ -5,10 +5,13 @@ import (
 	"context"
 	"github.com/22Fariz22/shorturl/internal/storage"
 	"io"
+	"os"
 	"testing"
 )
 
-func Test_inFileRepository_SaveURL(t *testing.T) {
+//Test_inFileRepository_SaveURL
+//сигнатура: SaveURL(ctx context.Context, shortID string, longURL string, cook string) (string, error)
+func _Test_inFileRepository_SaveURL(t *testing.T) {
 	type fields struct {
 		file          io.ReadWriteCloser
 		memoryStorage storage.MemoryStorage
@@ -27,7 +30,22 @@ func Test_inFileRepository_SaveURL(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "сохраняем в файл",
+			fields: fields{
+				file:          &os.File{},
+				memoryStorage: storage.New(),
+				reader:        new(bufio.Reader),
+			},
+			args: args{
+				ctx:     nil,
+				shortID: "some_short_url",
+				longURL: "https://ya.ru",
+				cook:    "123456",
+			},
+			want:    "",
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
