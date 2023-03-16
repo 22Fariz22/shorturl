@@ -28,8 +28,8 @@ const ctxTimeOut = 5 * time.Second
 // Handler структура хэндлер
 type Handler struct {
 	Repository usecase.Repository
-	cfg        config.Config
-	workers    *worker.Pool
+	Cfg        config.Config
+	Workers    *worker.Pool
 }
 
 type reqURL struct {
@@ -42,15 +42,15 @@ var rURL reqURL
 func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Pool) *Handler {
 	return &Handler{
 		Repository: repo,
-		cfg:        *cfg,
-		workers:    workers,
+		Cfg:        *cfg,
+		Workers:    workers,
 	}
 }
 
 // DeleteHandler удаляет запись
 func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	var list []string
@@ -64,7 +64,7 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
 	defer cancel()
 
-	h.workers.AddJob(ctx, list, r.Cookies()[0].Value)
+	h.Workers.AddJob(ctx, list, r.Cookies()[0].Value)
 
 	w.WriteHeader(http.StatusAccepted)
 }
@@ -72,7 +72,7 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 //GetAllURL получить все записи
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	type resp struct {
@@ -93,7 +93,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	for i := range list {
 		for k, v := range list[i] {
 			res = append(res, resp{
-				ShortURL:    h.cfg.BaseURL + "/" + k,
+				ShortURL:    h.Cfg.BaseURL + "/" + k,
 				OriginalURL: v,
 			})
 		}
@@ -117,7 +117,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 //CreateShortUrlHandler эндпоинт POST / принимает в теле запроса строку URL для сокращения
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	payload, err := io.ReadAll(r.Body)
@@ -137,17 +137,17 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		fmt.Println("print in handler(1)", s, err)
 		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte(h.cfg.BaseURL + "/" + s))
+		w.Write([]byte(h.Cfg.BaseURL + "/" + s))
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(h.cfg.BaseURL + "/" + short))
+	w.Write([]byte(h.Cfg.BaseURL + "/" + short))
 }
 
 //GetShortURLByIDHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	vars := chi.URLParam(r, "id")
@@ -172,7 +172,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 //Batch создает записи конвеером
 func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
@@ -206,7 +206,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 
 		resp := entity.PackResponse{
 			CorrelationID: resp.CorrelationID,
-			ShortURL:      h.cfg.BaseURL + "/" + short,
+			ShortURL:      h.Cfg.BaseURL + "/" + short,
 		}
 
 		listReq = append(listReq, req)
@@ -232,7 +232,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 //CreateShortURLJSON создает запись из тела json
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	payload, err := io.ReadAll(r.Body)
@@ -253,7 +253,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := respURL{
-		Result: h.cfg.BaseURL + "/" + short,
+		Result: h.Cfg.BaseURL + "/" + short,
 	}
 
 	res, err := json.Marshal(resp)
@@ -271,7 +271,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("in err", s, err)
 
 		resp1 := respURL{
-			Result: h.cfg.BaseURL + "/" + s,
+			Result: h.Cfg.BaseURL + "/" + s,
 		}
 		res1, err := json.Marshal(resp1)
 		if err != nil {

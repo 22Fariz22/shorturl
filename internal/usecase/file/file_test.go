@@ -38,7 +38,7 @@ func _Test_inFileRepository_SaveURL(t *testing.T) {
 				reader:        new(bufio.Reader),
 			},
 			args: args{
-				ctx:     nil,
+				ctx:     context.Background(),
 				shortID: "some_short_url",
 				longURL: "https://ya.ru",
 				cook:    "123456",
