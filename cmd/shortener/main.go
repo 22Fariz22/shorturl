@@ -8,6 +8,7 @@ import (
 
 //main точка запуска приложения
 func main() {
+	//flag.Parse()
 	//cfg запускает конфигурацию
 	cfg := config.NewConfig()
 

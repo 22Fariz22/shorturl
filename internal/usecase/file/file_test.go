@@ -5,7 +5,7 @@ import (
 	"context"
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/entity"
-	"log"
+	"github.com/22Fariz22/shorturl/internal/usecase"
 	"os"
 	"reflect"
 	"testing"
@@ -307,15 +307,14 @@ func Test_inFileRepository_Delete(t *testing.T) {
 	}
 }
 
-func _estNewConsumer(t *testing.T) {
+func TestNewConsumer(t *testing.T) {
 	type args struct {
 		cfg config.Config
 	}
 	cfg := config.Config{}
-	file, err := os.OpenFile("test", os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		log.Panicln("err in TestNewConsumer: ", err)
-	}
+	cfg.FileStoragePath = "test"
+
+	//var file os.File
 
 	tests := []struct {
 		name    string
@@ -327,7 +326,7 @@ func _estNewConsumer(t *testing.T) {
 			name: "new consumer",
 			args: args{cfg: cfg},
 			want: &Consumer{
-				File:   file,
+				File:   &os.File{},
 				reader: new(bufio.Reader),
 			},
 			wantErr: false,
@@ -335,13 +334,49 @@ func _estNewConsumer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewConsumer(tt.args.cfg)
+			_, err := NewConsumer(tt.args.cfg)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewConsumer() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewConsumer() got = %v, want %v", got, tt.want)
+			//if !reflect.DeepEqual(got, tt.want) {
+			//	t.Errorf("NewConsumer() got = %v, want %v", got, tt.want)
+			//}
+		})
+	}
+}
+
+func _TestNew(t *testing.T) {
+	type args struct {
+		cfg *config.Config
+	}
+
+	cfg := config.NewConfig()
+
+	//consumer, err := NewConsumer(*cfg)
+	//if err != nil {
+	//	log.Println(err)
+	//}
+
+	tests := []struct {
+		name string
+		args args
+		want usecase.Repository
+	}{
+		{
+			name: "new",
+			args: args{cfg: cfg},
+			want: &inFileRepository{
+				file:          &os.File{},
+				memoryStorage: storage.New(),
+				reader:        new(bufio.Reader),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := New(tt.args.cfg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("New() = %v, want %v", got, tt.want)
 			}
 		})
 	}

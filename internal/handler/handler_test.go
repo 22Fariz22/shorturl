@@ -53,6 +53,7 @@ func TestHandlerCreateShortURLJSON(t *testing.T) {
 			want: `{"result":"http://localhost:8080/`,
 		},
 	}
+
 	cfg := config.NewConfig()
 
 	for i := range tests {
@@ -74,6 +75,45 @@ func TestHandlerCreateShortURLJSON(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.JSONEq(t, test.want+uulid+``, string(response)) // как вставить  want геренрирующий
+		})
+	}
+}
+
+func TestHandler_Batch(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		in   []byte
+		want string
+	}{
+		{
+			name: "batch",
+			in:   []byte(`[{"correlation_id": "1", "original_url": "<URL для сокращения>"}]`),
+			want: `[{"correlation_id": "1", "short_url": "<результирующий сокращённый URL>"}]`,
+		},
+	}
+	cfg := config.NewConfig()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := memory.New()
+
+			workers := worker.NewWorkerPool(repo)
+			workers.RunWorkers(10)
+			defer workers.Stop()
+
+			req := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", bytes.NewReader(tt.in))
+			req.Header.Add("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+
+			handler.NewHandler(repo, cfg, workers).Batch(w, req)
+
+			response, err := io.ReadAll(w.Result().Body)
+			require.NoError(t, err)
+
+			uulid := string(response)[33:]
+			fmt.Println("uulid: ", uulid)
+			fmt.Println("exept: ", tt.want+uulid+`"}`)
 		})
 	}
 }
@@ -128,6 +168,7 @@ func TestHandler_DeleteHandler(t *testing.T) {
 		cfg        config.Config
 		workers    *worker.Pool
 	}
+
 	type args struct {
 		w http.ResponseWriter
 		r *http.Request
@@ -142,11 +183,15 @@ func TestHandler_DeleteHandler(t *testing.T) {
 	defer workers.Stop()
 
 	//bodyReader := strings.NewReader("['some_short_url']")
+	type want struct {
+		statusCode int
+	}
 
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
+		want   want
 	}{
 		{
 			name: "test delete",
@@ -159,6 +204,7 @@ func TestHandler_DeleteHandler(t *testing.T) {
 				w: httptest.NewRecorder(),
 				r: httptest.NewRequest(http.MethodDelete, "/api/user/urls", nil),
 			},
+			want: want{statusCode: 201},
 		},
 	}
 	for _, tt := range tests {
@@ -169,6 +215,7 @@ func TestHandler_DeleteHandler(t *testing.T) {
 				Workers:    tt.fields.workers,
 			}
 			h.DeleteHandler(tt.args.w, tt.args.r)
+
 		})
 	}
 }
@@ -317,37 +364,49 @@ func _TestHandler_CreateShortURLHandler(t *testing.T) {
 	}
 }
 
-func _TestHandler_Batch(t *testing.T) {
-	t.Parallel()
+func TestHandler_Ping(t *testing.T) {
+	type fields struct {
+		Repository usecase.Repository
+		Cfg        config.Config
+		Workers    *worker.Pool
+	}
+	type args struct {
+		w http.ResponseWriter
+		r *http.Request
+	}
+
+	repo := memory.New()
+
+	//workers := worker.NewWorkerPool(repo)
+	//workers.RunWorkers(10)
+	//defer workers.Stop()
+
 	tests := []struct {
-		name string
-		in   []byte
-		want string
+		name   string
+		fields fields
+		args   args
 	}{
 		{
-			name: "batch",
-			in:   []byte(`[{"correlation_id": "1", "original_url": "<URL для сокращения>"}]`),
-			want: `[{"correlation_id": "1", "short_url": "<результирующий сокращённый URL>"}]`,
+			name: "ping",
+			fields: fields{
+				Repository: repo,
+				Cfg:        config.Config{},
+				Workers:    nil,
+			},
+			args: args{
+				w: httptest.NewRecorder(),
+				r: httptest.NewRequest(http.MethodGet, "/ping", nil),
+			},
 		},
 	}
-	cfg := config.NewConfig()
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			repo := memory.New()
-
-			req := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", bytes.NewReader(tt.in))
-			req.Header.Add("Content-Type", "application/json")
-			w := httptest.NewRecorder()
-
-			handler.NewHandler(repo, cfg, nil).Batch(w, req)
-
-			response, err := io.ReadAll(w.Result().Body)
-			require.NoError(t, err)
-
-			fmt.Println("resp batsch: ", string(response))
-			require.JSONEq(t, string(response), string(response))
+			h := &handler.Handler{
+				Repository: tt.fields.Repository,
+				Cfg:        tt.fields.Cfg,
+				Workers:    tt.fields.Workers,
+			}
+			h.Ping(tt.args.w, tt.args.r)
 
 		})
 	}
