@@ -65,6 +65,8 @@ func TestHandlerCreateShortURLJSON(t *testing.T) {
 			handler.NewHandler(repo, cfg, nil).CreateShortURLJSON(w, req)
 
 			response, err := io.ReadAll(w.Result().Body)
+			defer w.Result().Body.Close()
+
 			uulid := string(response)[33:]
 
 			require.NoError(t, err)
