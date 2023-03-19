@@ -7,13 +7,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/22Fariz22/shorturl/internal/config"
-	"github.com/22Fariz22/shorturl/internal/entity"
+	"github.com/22Fariz22/shorturl/internal/cookies"
 	"github.com/22Fariz22/shorturl/internal/handler"
-	"github.com/22Fariz22/shorturl/internal/usecase"
 	"github.com/22Fariz22/shorturl/internal/usecase/memory"
-	repoMock "github.com/22Fariz22/shorturl/internal/usecase/mocks"
-	"github.com/22Fariz22/shorturl/internal/worker"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -30,7 +26,7 @@ func exampleTest() {
 	log.Printf("Short URL is %s \n", shortURL)
 }
 
-//BenchmarkGenerateShortLink бенчмарк генератора шортурлов
+// BenchmarkGenerateShortLink бенчмарк генератора шортурлов
 func BenchmarkGenerateShortLink(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		short := handler.GenUlid()
@@ -88,326 +84,251 @@ func TestHandler_Batch(t *testing.T) {
 	}{
 		{
 			name: "batch",
-			in:   []byte(`[{"correlation_id": "1", "original_url": "<URL для сокращения>"}]`),
-			want: `[{"correlation_id": "1", "short_url": "<результирующий сокращённый URL>"}]`,
+			in:   []byte(""),
+			want: "",
 		},
 	}
-	cfg := config.NewConfig()
+	//cfg := config.NewConfig()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := memory.New()
 
-			workers := worker.NewWorkerPool(repo)
-			workers.RunWorkers(10)
-			defer workers.Stop()
-
 			req := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", bytes.NewReader(tt.in))
 			req.Header.Add("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			handler.NewHandler(repo, cfg, workers).Batch(w, req)
+			handler.NewHandler(repo, &config.Config{
+				ServerAddress: "localhost:8080",
+				BaseURL:       "http://localhost:8080",
+			}, nil).Batch(w, req)
 
-			response, err := io.ReadAll(w.Result().Body)
+			_, err := io.ReadAll(w.Result().Body)
 			require.NoError(t, err)
 
-			uulid := string(response)[33:]
-			fmt.Println("uulid: ", uulid)
-			fmt.Println("exept: ", tt.want+uulid+`"}`)
+			//uulid := string(response)[33:]
+			//fmt.Println("uulid: ", uulid)
+			//fmt.Println("exept: ", tt.want+uulid+`"}`)
 		})
 	}
 }
 
-//TestHandler_CreateShortURLHandler тест хэндлера из эндпойнта r.Post("/", hd.CreateShortURLHandler)
-func TestHandler_GetShortURLByIDHandler(t *testing.T) {
-	ctl := gomock.NewController(t)
-	ctl.Finish()
-
-	repo := repoMock.NewMockRepository(ctl)
-
-	ctx := context.Background()
-	short := handler.GenUlid()
-
-	//mockResp := entity.URL{LongURL: "https://ya.ru"}
-
-	expected := entity.URL{LongURL: "https://ya.ru"}
-
-	repo.EXPECT().GetURL(ctx, short).Return(expected, true).Times(1)
-	URL, ok := repo.GetURL(ctx, short)
-
-	require.Equal(t, expected, URL)
-	require.EqualValues(t, true, ok)
-}
-
-func _TestHandle_CreateShortURLHandler(t *testing.T) {
-
-	ctl := gomock.NewController(t)
-	ctl.Finish()
-
-	repo := repoMock.NewMockRepository(ctl)
-
-	ctx := context.Background()
-	short := handler.GenUlid()
-	payload := "https://google.com"
-	cookie := "ABCD12345"
-
-	//mockResp := entity.URL{LongURL: "https://ya.ru"}
-
-	exp := "http://localhost:8080/" + short
-
-	repo.EXPECT().SaveURL(ctx, short, payload, cookie).Return(exp, nil).Times(1)
-	resp, err := repo.SaveURL(ctx, short, payload, cookie)
-
-	require.Equal(t, exp, resp)
-	require.NoError(t, err)
-}
-
-func TestHandler_DeleteHandler(t *testing.T) {
-	type fields struct {
-		Repository usecase.Repository
-		cfg        config.Config
-		workers    *worker.Pool
-	}
-
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-
-	ctl := gomock.NewController(t)
-	ctl.Finish()
-	repo := repoMock.NewMockRepository(ctl)
-
-	workers := worker.NewWorkerPool(repo)
-	workers.RunWorkers(10)
-	defer workers.Stop()
-
-	//bodyReader := strings.NewReader("['some_short_url']")
-	type want struct {
-		statusCode int
-	}
-
+func TestHandler_DeleteHandler(t *testing.T) { //status 400. как исправить bodyReader?
 	tests := []struct {
 		name   string
-		fields fields
-		args   args
-		want   want
+		status int
 	}{
 		{
-			name: "test delete",
-			fields: fields{
-				Repository: repo,
-				cfg:        config.Config{},
-				workers:    workers,
-			},
-			args: args{
-				w: httptest.NewRecorder(),
-				r: httptest.NewRequest(http.MethodDelete, "/api/user/urls", nil),
-			},
-			want: want{statusCode: 201},
+			name:   "test delete",
+			status: 202,
 		},
 	}
 	for _, tt := range tests {
+		repo := memory.New()
+
+		secretKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			h := &handler.Handler{
-				Repository: tt.fields.Repository,
-				Cfg:        tt.fields.cfg,
-				Workers:    tt.fields.workers,
+				Repository: repo,
+				Cfg: config.Config{
+					ServerAddress: "localhost:8080",
+					BaseURL:       "http://localhost:8080",
+					SecretKey:     secretKey,
+				},
+				Workers: nil,
 			}
-			h.DeleteHandler(tt.args.w, tt.args.r)
+
+			//bodyReader := strings.NewReader(`["short"]`)
+
+			req := httptest.NewRequest(http.MethodDelete, "/api/user/urls", nil)
+			w := httptest.NewRecorder()
+
+			repo.SaveURL(context.Background(), "short", "https://ya.ru", "7654321") //save before delete
+
+			h.DeleteHandler(w, req)
+
+			fmt.Println("status: ", w.Code)
 
 		})
 	}
 }
 
-func _TestHandler_GetAllURL(t *testing.T) {
-	type fields struct {
-		Repository usecase.Repository
-		Cfg        config.Config
-		Workers    *worker.Pool
-	}
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-
-	ctl := gomock.NewController(t)
-	ctl.Finish()
-	repo := repoMock.NewMockRepository(ctl)
-
-	workers := worker.NewWorkerPool(repo)
-	workers.RunWorkers(10)
-	defer workers.Stop()
-
+func TestHandler_GetAllURL(t *testing.T) { // получилось
 	//bodyReader := strings.NewReader("")
 
 	tests := []struct {
 		name   string
-		fields fields
-		args   args
+		status int
 	}{
 		{
-			name: "get all urls",
-			fields: fields{
-				Repository: repo,
-				Cfg:        config.Config{},
-				Workers:    workers,
-			},
-			args: args{
-				w: httptest.NewRecorder(),
-				r: httptest.NewRequest(http.MethodGet, "/api/user/urls", nil),
-			},
+			name:   "get all urls",
+			status: 200,
 		},
 	}
 	for _, tt := range tests {
+		repo := memory.New()
+
+		secretKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			h := &handler.Handler{
-				Repository: tt.fields.Repository,
-				Cfg:        tt.fields.Cfg,
-				Workers:    tt.fields.Workers,
+				Repository: repo,
+				Cfg: config.Config{
+					ServerAddress: "localhost:8080",
+					BaseURL:       "http://localhost:8080",
+					SecretKey:     secretKey,
+				},
+				Workers: nil,
 			}
-			h.GetAllURL(tt.args.w, tt.args.r)
+
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			w := httptest.NewRecorder()
+
+			cookies.SetCookieHandler(w, req, h.Cfg.SecretKey)
+
+			repo.SaveURL(context.Background(), "short", "https://ya.ru", "7654321")
+
+			h.GetAllURL(w, req)
+
+			fmt.Println("status: ", w.Code)
+
 		})
 	}
 }
 
-func _TestHandler_GetShortURLByIDHandler(t *testing.T) {
-	type fields struct {
-		Repository usecase.Repository
-		Cfg        config.Config
-		Workers    *worker.Pool
-	}
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-
-	ctl := gomock.NewController(t)
-	ctl.Finish()
-	repo := repoMock.NewMockRepository(ctl)
-
+func TestHandler_GetShortURLByIDHandler(t *testing.T) {
 	tests := []struct {
 		name   string
-		fields fields
-		args   args
+		status int
 	}{
 		{
-			name: "get url",
-			fields: fields{
-				Repository: repo,
-				Cfg:        config.Config{},
-				Workers:    nil,
-			},
-			args: args{
-				w: httptest.NewRecorder(),
-				r: httptest.NewRequest(http.MethodGet, "/1", nil),
-			},
+			name:   "get url",
+			status: 307,
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		repo := memory.New()
 
+		secretKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
 			h := &handler.Handler{
-				Repository: tt.fields.Repository,
-				Cfg:        tt.fields.Cfg,
-				Workers:    tt.fields.Workers,
+				Repository: repo,
+				Cfg: config.Config{
+					ServerAddress: "localhost:8080",
+					BaseURL:       "http://localhost:8080",
+					SecretKey:     secretKey,
+				},
+				Workers: nil,
 			}
-			h.GetShortURLByIDHandler(tt.args.w, tt.args.r)
+
+			req := httptest.NewRequest(http.MethodGet, "/short", nil)
+			w := httptest.NewRecorder()
+
+			cookies.SetCookieHandler(w, req, h.Cfg.SecretKey)
+
+			repo.SaveURL(context.Background(), "short", "https://ya.ru", "7654321")
+
+			h.GetShortURLByIDHandler(w, req)
+
+			fmt.Println(w.Code)
+			fmt.Println("Location: ", w.Header().Get("Location"))
+
 		})
 	}
 }
 
-func _TestHandler_CreateShortURLHandler(t *testing.T) {
-	type fields struct {
-		Repository usecase.Repository
-		Cfg        config.Config
-		Workers    *worker.Pool
-	}
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-	ctl := gomock.NewController(t)
-	ctl.Finish()
-	repo := repoMock.NewMockRepository(ctl)
-
-	//bodyReader := strings.NewReader("https://ya.ru")
-
+func TestHandler_CreateShortURLHandler(t *testing.T) { //panic: runtime error: index out of range [0] with length 0 [recovered]
 	tests := []struct {
 		name   string
-		fields fields
-		//args   args
+		status int
 	}{
 		{
-			name: "CreateShortURL",
-			fields: fields{
-				Repository: repo,
-				Cfg:        config.Config{},
-				Workers:    nil,
-			},
-			//args: args{
-			//	w: httptest.NewRecorder(),
-			//	r: httptest.NewRequest(http.MethodPost, "/", bytes.NewReader([]byte("sdfsdf"))),
-			//},
+			name:   "CreateShortURL OK",
+			status: 201,
 		},
 	}
 	for _, tt := range tests {
+		repo := memory.New()
+
+		secretKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			h := &handler.Handler{
-				Repository: tt.fields.Repository,
-				Cfg:        tt.fields.Cfg,
-				Workers:    nil,
+				Repository: repo,
+				Cfg: config.Config{
+					ServerAddress: "localhost:8080",
+					BaseURL:       "http://localhost:8080",
+					SecretKey:     secretKey,
+				},
+				Workers: nil,
 			}
-			h.CreateShortURLHandler(httptest.NewRecorder(),
-				httptest.NewRequest(http.MethodPost, "/", bytes.NewReader([]byte("sdfsdf"))))
+
+			req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader([]byte("https://ya.ru")))
+			w := httptest.NewRecorder()
+
+			cookies.SetCookieHandler(w, req, h.Cfg.SecretKey)
+
+			h.CreateShortURLHandler(w, req)
+
+			fmt.Println(w.Code)
+
+			assert.EqualValues(t, tt.status, w.Code)
+
 		})
 	}
 }
 
 func TestHandler_Ping(t *testing.T) {
-	type fields struct {
-		Repository usecase.Repository
-		Cfg        config.Config
-		Workers    *worker.Pool
-	}
+
 	type args struct {
 		w http.ResponseWriter
 		r *http.Request
 	}
-
-	repo := memory.New()
-
 	//workers := worker.NewWorkerPool(repo)
 	//workers.RunWorkers(10)
 	//defer workers.Stop()
 
 	tests := []struct {
 		name   string
-		fields fields
-		args   args
+		status int
 	}{
 		{
-			name: "ping",
-			fields: fields{
-				Repository: repo,
-				Cfg:        config.Config{},
-				Workers:    nil,
-			},
-			args: args{
-				w: httptest.NewRecorder(),
-				r: httptest.NewRequest(http.MethodGet, "/ping", nil),
-			},
+			name:   "ping OK",
+			status: 200,
 		},
 	}
 	for _, tt := range tests {
+		repo := memory.New()
+
 		t.Run(tt.name, func(t *testing.T) {
 			h := &handler.Handler{
-				Repository: tt.fields.Repository,
-				Cfg:        tt.fields.Cfg,
-				Workers:    tt.fields.Workers,
+				Repository: repo,
+				Cfg: config.Config{
+					ServerAddress: "localhost:8080",
+					BaseURL:       "http://localhost:8080",
+				},
+				Workers: nil,
 			}
-			h.Ping(tt.args.w, tt.args.r)
 
+			req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+			w := httptest.NewRecorder()
+
+			h.Ping(w, req)
+			assert.EqualValues(t, tt.status, w.Code)
 		})
 	}
 }

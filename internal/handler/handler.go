@@ -57,7 +57,7 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest) //status 400
 		return
 	}
 
@@ -66,10 +66,10 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.Workers.AddJob(ctx, list, r.Cookies()[0].Value)
 
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusAccepted) //status 202
 }
 
-//GetAllURL получить все записи
+// GetAllURL получить все записи
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
@@ -87,7 +87,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	list, err := h.Repository.GetAll(ctx, r.Cookies()[0].Value)
 	if err != nil {
 		log.Println(err)
-		w.WriteHeader(http.StatusNoContent)
+		w.WriteHeader(http.StatusNoContent) //status 204
 	}
 
 	for i := range list {
@@ -106,15 +106,15 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if len(res) == 0 {
-		w.WriteHeader(http.StatusNoContent)
+		w.WriteHeader(http.StatusNoContent) //status 204
 	} else {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusOK) //status 200
 	}
 
 	w.Write(res1)
 }
 
-//CreateShortUrlHandler эндпоинт POST / принимает в теле запроса строку URL для сокращения
+// CreateShortUrlHandler эндпоинт POST / принимает в теле запроса строку URL для сокращения
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
@@ -136,15 +136,15 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	if err != nil {
 		fmt.Println("print in handler(1)", s, err)
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusConflict) //status 409
 		w.Write([]byte(h.Cfg.BaseURL + "/" + s))
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusCreated) //status 201
 	w.Write([]byte(h.Cfg.BaseURL + "/" + short))
 }
 
-//GetShortURLByIDHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
+// GetShortURLByIDHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
@@ -158,18 +158,18 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	url, ok := h.Repository.GetURL(ctx, vars)
 	log.Print("in handler Get url,ok:", url, ok)
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest) //status 400
 		return
 	}
 	if url.Deleted {
-		w.WriteHeader(http.StatusGone)
+		w.WriteHeader(http.StatusGone) //status 401
 		return
 	}
 	w.Header().Set("Location", url.LongURL)
-	http.Redirect(w, r, url.LongURL, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, url.LongURL, http.StatusTemporaryRedirect) //status 307
 }
 
-//Batch создает записи конвеером
+// Batch создает записи конвеером
 func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
@@ -229,7 +229,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-//CreateShortURLJSON создает запись из тела json
+// CreateShortURLJSON создает запись из тела json
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
 		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
@@ -287,7 +287,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-//Close закрывает соединение
+// Close закрывает соединение
 func (r gzipReader) Close() error {
 	if err := r.Closer.Close(); err != nil {
 		log.Print(err.Error())
@@ -327,7 +327,7 @@ type gzipReader struct {
 	io.Closer
 }
 
-//Ping проверка соединения
+// Ping проверка соединения
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
 	defer cancel()
@@ -340,7 +340,7 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-//GenUlid генератор шортурлов
+// GenUlid генератор шортурлов
 func GenUlid() string {
 	//time.Sleep(1 * time.Second)
 	t := time.Now().UTC()
