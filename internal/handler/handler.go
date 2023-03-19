@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -57,7 +56,8 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest) //status 400
+		//status 400
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -66,7 +66,8 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.Workers.AddJob(ctx, list, r.Cookies()[0].Value)
 
-	w.WriteHeader(http.StatusAccepted) //status 202
+	//status 202
+	w.WriteHeader(http.StatusAccepted)
 }
 
 // GetAllURL получить все записи
@@ -85,9 +86,10 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	list, err := h.Repository.GetAll(ctx, r.Cookies()[0].Value)
+	//status 204
 	if err != nil {
 		log.Println(err)
-		w.WriteHeader(http.StatusNoContent) //status 204
+		w.WriteHeader(http.StatusNoContent)
 	}
 
 	for i := range list {
@@ -105,10 +107,12 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+	//status 204
 	if len(res) == 0 {
-		w.WriteHeader(http.StatusNoContent) //status 204
+		w.WriteHeader(http.StatusNoContent)
 	} else {
-		w.WriteHeader(http.StatusOK) //status 200
+		//status 200
+		w.WriteHeader(http.StatusOK)
 	}
 
 	w.Write(res1)
@@ -132,15 +136,16 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
-	fmt.Println("su in handler(0)", s, err)
 
+	//status 409
 	if err != nil {
-		fmt.Println("print in handler(1)", s, err)
-		w.WriteHeader(http.StatusConflict) //status 409
+		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(h.Cfg.BaseURL + "/" + s))
 		return
 	}
-	w.WriteHeader(http.StatusCreated) //status 201
+
+	//status 201
+	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(h.Cfg.BaseURL + "/" + short))
 }
 
@@ -156,17 +161,21 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	defer cancel()
 
 	url, ok := h.Repository.GetURL(ctx, vars)
-	log.Print("in handler Get url,ok:", url, ok)
+
+	//status 400
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest) //status 400
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	//status 401
 	if url.Deleted {
-		w.WriteHeader(http.StatusGone) //status 401
+		w.WriteHeader(http.StatusGone)
 		return
 	}
 	w.Header().Set("Location", url.LongURL)
-	http.Redirect(w, r, url.LongURL, http.StatusTemporaryRedirect) //status 307
+
+	//status 307
+	http.Redirect(w, r, url.LongURL, http.StatusTemporaryRedirect)
 }
 
 // Batch создает записи конвеером
@@ -186,7 +195,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", 500)
 		return
 	}
-	if err := json.Unmarshal(payload, &batchResp); err != nil { // [{1 mail.ru} {2 ya.ru} {3 google.ru}]
+	if err := json.Unmarshal(payload, &batchResp); err != nil {
 		log.Print(err)
 		return
 	}
@@ -225,6 +234,8 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 	}
 	w.Header().Set("Content-Type", "application/json")
+
+	//status 201
 	w.WriteHeader(http.StatusCreated)
 	w.Write(res)
 }
@@ -265,11 +276,8 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
-	fmt.Println("out err", s, err)
 
 	if err != nil {
-		fmt.Println("in err", s, err)
-
 		resp1 := respURL{
 			Result: h.Cfg.BaseURL + "/" + s,
 		}

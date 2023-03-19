@@ -4,7 +4,6 @@ package db
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -16,20 +15,20 @@ import (
 	"github.com/22Fariz22/shorturl/internal/entity"
 )
 
-//inDBRepository структура для репо дб
+// inDBRepository структура для репо дб
 type inDBRepository struct {
 	pool        *pgxpool.Pool
 	databaseDSN string
 }
 
-//New создание структуры для дб
+// New создание структуры для дб
 func New(cfg *config.Config) usecase.Repository {
 	return &inDBRepository{
 		databaseDSN: cfg.DatabaseDSN,
 	}
 }
 
-//Init инициализация дб связки
+// Init инициализация дб связки
 func (i *inDBRepository) Init() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -51,11 +50,8 @@ func (i *inDBRepository) Init() error {
 	return nil
 }
 
-//Delete удаление записи из дб
+// Delete удаление записи из дб
 func (i *inDBRepository) Delete(list []string, cookie string) error {
-	fmt.Println("cookie in db del", cookie)
-	log.Println("begin Delete")
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -95,13 +91,12 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 	return nil
 }
 
-//SaveURL сохранение записи в дб
+// SaveURL сохранение записи в дб
 func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
 	// ErrAlreadyExists вывод ошибки если такой урл уже существует
 	var ErrAlreadyExists = errors.New("this URL already exists")
 	var id int8
-	fmt.Println("cookie in db saveurl", cook)
-	fmt.Println("lu in db SaveURL", longURL)
+
 	// проверяем количество строк, если есть то значит такой урл существует
 	row := i.pool.QueryRow(ctx, `select count(*) from urls where long_url = $1 and cookies=$2`,
 		longURL, cook)
@@ -129,12 +124,10 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 		log.Println("log in SaveURL(2):", err)
 		return "", err
 	}
-	fmt.Println("id", id)
-	fmt.Println("short_url:", su)
 	return su, ErrAlreadyExists
 }
 
-//RepoBatch создание записей из списка в дб
+// RepoBatch создание записей из списка в дб
 func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []entity.PackReq) error {
 	for b := range batchList {
 		_, err := i.pool.Exec(ctx, "insert into urls (cookies,correlation_id, short_url, long_url) values($1,$2,$3,$4);",
@@ -175,7 +168,7 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (entity.URL
 	return rows[0], true
 }
 
-//GetAll получить все записи в дб
+// GetAll получить все записи в дб
 func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
 	rows, err := i.pool.Query(ctx, "select short_url, long_url from urls where cookies = $1;", cook)
 	if err != nil {
@@ -202,7 +195,7 @@ func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]
 	return list, nil
 }
 
-//Ping проверка связи с дб
+// Ping проверка связи с дб
 func (i *inDBRepository) Ping(ctx context.Context) error {
 	return i.pool.Ping(ctx)
 }

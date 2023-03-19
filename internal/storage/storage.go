@@ -3,14 +3,13 @@ package storage
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"sync"
 
 	"github.com/22Fariz22/shorturl/internal/entity"
 )
 
-//MemoryStorage интерфейс для стоража инмемори
+// MemoryStorage интерфейс для стоража инмемори
 type MemoryStorage interface {
 	Get(key string) (entity.URL, bool)
 	Insert(key, value string, cook string, deleted bool) (string, error)
@@ -18,7 +17,7 @@ type MemoryStorage interface {
 	DeleteStorage([]string, string) error
 }
 
-///memoryStorage структура для стоража инмемори
+// /memoryStorage структура для стоража инмемори
 type memoryStorage struct {
 	storage map[string]entity.URL // список мап sortURL:entity.URL
 	mutex   sync.RWMutex
@@ -29,7 +28,6 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 	log.Print("del in stor")
 
 	for _, v := range listShorts {
-		fmt.Println("v", v)
 		for k := range m.storage {
 			if m.storage[k].ID == v && m.storage[k].Cookies == cookies {
 				m.storage[k] = entity.URL{
@@ -45,7 +43,7 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 	return nil
 }
 
-//GetAllStorageURL получить все записи
+// GetAllStorageURL получить все записи
 func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -61,21 +59,20 @@ func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 	return list
 }
 
-//Get получить запись
+// Get получить запись
 func (m *memoryStorage) Get(key string) (entity.URL, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
 	for _, x := range m.storage {
 		if x.ID == key {
-			fmt.Println("get x in storage", x)
 			return x, true
 		}
 	}
 	return entity.URL{}, false
 }
 
-//Insert вставить запись
+// Insert вставить запись
 func (m *memoryStorage) Insert(key string, value string, cook string, deleted bool) (string, error) {
 	//ErrAlreadyExists вывод ошибки существования
 	var ErrAlreadyExists = errors.New("this URL already exists")
@@ -93,12 +90,10 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 		m.storage[value] = *url
 		return "", nil
 	}
-	fmt.Println("long in storage", v.LongURL)
-	fmt.Println("su in storage", v.ID)
 	return v.ID, ErrAlreadyExists // если такого еще нет в мапе,то ничего не вернет. а если есть, то вернет shorturl.
 }
 
-//New создание структуры для инмемори типа
+// New создание структуры для инмемори типа
 func New() MemoryStorage {
 	return &memoryStorage{
 		storage: map[string]entity.URL{},

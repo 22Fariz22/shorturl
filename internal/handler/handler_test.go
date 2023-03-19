@@ -66,8 +66,6 @@ func TestHandlerCreateShortURLJSON(t *testing.T) {
 
 			response, err := io.ReadAll(w.Result().Body)
 			uulid := string(response)[33:]
-			fmt.Println("uulid: ", uulid)
-			fmt.Println("exept: ", test.want+uulid+`"}`)
 
 			require.NoError(t, err)
 			assert.JSONEq(t, test.want+uulid+``, string(response)) // как вставить  want геренрирующий
@@ -76,39 +74,52 @@ func TestHandlerCreateShortURLJSON(t *testing.T) {
 }
 
 func TestHandler_Batch(t *testing.T) {
-	t.Parallel()
 	tests := []struct {
-		name string
-		in   []byte
-		want string
+		name   string
+		status int
+		in     string
 	}{
 		{
-			name: "batch",
-			in:   []byte(""),
-			want: "",
-		},
+			name:   "batch",
+			status: 201,
+			in: `[
+		{
+			"correlation_id": "<строковый идентификатор>",
+			"original_url": "<URL для сокращения>"
+		}
+		]`},
 	}
-	//cfg := config.NewConfig()
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repo := memory.New()
+		repo := memory.New()
 
-			req := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", bytes.NewReader(tt.in))
-			req.Header.Add("Content-Type", "application/json")
+		secretKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			h := &handler.Handler{
+				Repository: repo,
+				Cfg: config.Config{
+					ServerAddress: "localhost:8080",
+					BaseURL:       "http://localhost:8080",
+					SecretKey:     secretKey,
+				},
+				Workers: nil,
+			}
+
+			//body, _ := json.Marshal(tt.in)
+
+			req := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", bytes.NewReader([]byte(tt.in)))
 			w := httptest.NewRecorder()
 
-			handler.NewHandler(repo, &config.Config{
-				ServerAddress: "localhost:8080",
-				BaseURL:       "http://localhost:8080",
-			}, nil).Batch(w, req)
+			cookies.SetCookieHandler(w, req, h.Cfg.SecretKey)
 
-			_, err := io.ReadAll(w.Result().Body)
-			require.NoError(t, err)
+			h.Batch(w, req)
 
-			//uulid := string(response)[33:]
-			//fmt.Println("uulid: ", uulid)
-			//fmt.Println("exept: ", tt.want+uulid+`"}`)
+			fmt.Println("status: ", w.Code)
+
 		})
 	}
 }
@@ -248,7 +259,7 @@ func TestHandler_GetShortURLByIDHandler(t *testing.T) {
 	}
 }
 
-func TestHandler_CreateShortURLHandler(t *testing.T) { //panic: runtime error: index out of range [0] with length 0 [recovered]
+func TestHandler_CreateShortURLHandler(t *testing.T) {
 	tests := []struct {
 		name   string
 		status int
@@ -293,15 +304,6 @@ func TestHandler_CreateShortURLHandler(t *testing.T) { //panic: runtime error: i
 }
 
 func TestHandler_Ping(t *testing.T) {
-
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-	//workers := worker.NewWorkerPool(repo)
-	//workers.RunWorkers(10)
-	//defer workers.Stop()
-
 	tests := []struct {
 		name   string
 		status int
