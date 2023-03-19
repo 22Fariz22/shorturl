@@ -1,19 +1,18 @@
 package storage
 
 import (
-	"fmt"
 	"github.com/22Fariz22/shorturl/internal/entity"
 	"reflect"
-	"sync"
 	"testing"
 )
 
-//Test_memoryStorage_Insert тестируем стораж инмемори и случай когда такой урл не существует в мапе
+// Test_memoryStorage_Insert тестируем стораж инмемори и случай когда такой урл не существует в мапе
+//
 //	Insert(key, value string, cook string, deleted bool) (string, error)
 func Test_memoryStorage_Insert(t *testing.T) {
 	type fields struct {
 		storage map[string]entity.URL
-		mutex   sync.RWMutex
+		//mutex   sync.RWMutex
 	}
 
 	type args struct {
@@ -33,7 +32,7 @@ func Test_memoryStorage_Insert(t *testing.T) {
 			name: "long url not exist in map",
 			fields: fields{
 				storage: make(map[string]entity.URL, 1),
-				mutex:   sync.RWMutex{},
+				//mutex:   sync.RWMutex{},
 			},
 			args: args{
 				key:     "some-shorturl",
@@ -49,7 +48,7 @@ func Test_memoryStorage_Insert(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &memoryStorage{
 				storage: tt.fields.storage,
-				mutex:   tt.fields.mutex,
+				//mutex:   tt.fields.mutex,
 			}
 
 			got, err := m.Insert(tt.args.key, tt.args.value, tt.args.cook, tt.args.deleted)
@@ -64,11 +63,11 @@ func Test_memoryStorage_Insert(t *testing.T) {
 	}
 }
 
-//Test_memoryStorage_InsertIfExist тестируем стораж инмемори и случай когда такой урл уже существует
+// Test_memoryStorage_InsertIfExist тестируем стораж инмемори и случай когда такой урл уже существует
 func Test_memoryStorage_InsertExist(t *testing.T) {
 	type fields struct {
 		storage map[string]entity.URL
-		mutex   sync.RWMutex
+		//mutex   sync.RWMutex
 	}
 
 	type args struct {
@@ -88,7 +87,7 @@ func Test_memoryStorage_InsertExist(t *testing.T) {
 			name: "long url exist in map",
 			fields: fields{
 				storage: make(map[string]entity.URL, 1),
-				mutex:   sync.RWMutex{},
+				//mutex:   sync.RWMutex{},
 			},
 			args: args{
 				key:     "some-shorturl",
@@ -104,7 +103,7 @@ func Test_memoryStorage_InsertExist(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &memoryStorage{
 				storage: tt.fields.storage,
-				mutex:   tt.fields.mutex,
+				//mutex:   tt.fields.mutex,
 			}
 			m.storage["https://ya.ru"] = entity.URL{
 				Cookies:       "123456789",
@@ -126,12 +125,12 @@ func Test_memoryStorage_InsertExist(t *testing.T) {
 	}
 }
 
-//Test_memoryStorage_Get  сигнатура:Get(key string) (entity.URL, bool)
-//// когда вводим существующий шортурл
+// Test_memoryStorage_Get  сигнатура:Get(key string) (entity.URL, bool)
+// // когда вводим существующий шортурл
 func Test_memoryStorage_Get(t *testing.T) {
 	type fields struct {
 		storage map[string]entity.URL
-		mutex   sync.RWMutex
+		//mutex   sync.RWMutex
 	}
 	type args struct {
 		key string //shortID
@@ -147,7 +146,7 @@ func Test_memoryStorage_Get(t *testing.T) {
 			name: "получаем существующий лонг урл",
 			fields: fields{
 				storage: make(map[string]entity.URL),
-				mutex:   sync.RWMutex{},
+				//mutex:   sync.RWMutex{},
 			},
 			args: args{"some-short-url"},
 			want: entity.URL{
@@ -164,7 +163,7 @@ func Test_memoryStorage_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &memoryStorage{
 				storage: tt.fields.storage,
-				mutex:   tt.fields.mutex,
+				//mutex:   tt.fields.mutex,
 			}
 			m.storage["https://ya.ru"] = entity.URL{
 				Cookies:       "123456",
@@ -184,12 +183,12 @@ func Test_memoryStorage_Get(t *testing.T) {
 	}
 }
 
-//Test_memoryStorage_GetNotExist  сигнатура:Get(key string) (entity.URL, bool)
+// Test_memoryStorage_GetNotExist  сигнатура:Get(key string) (entity.URL, bool)
 // когда вводим не существующий шортурл
 func Test_memoryStorage_GetNotExist(t *testing.T) {
 	type fields struct {
 		storage map[string]entity.URL
-		mutex   sync.RWMutex
+		//mutex   sync.RWMutex
 	}
 	type args struct {
 		key string //shortID
@@ -205,7 +204,7 @@ func Test_memoryStorage_GetNotExist(t *testing.T) {
 			name: "попытка ввести не существующий шортурл",
 			fields: fields{
 				storage: make(map[string]entity.URL),
-				mutex:   sync.RWMutex{},
+				//mutex:   sync.RWMutex{},
 			},
 			args:  args{"some-short-url"},
 			want:  entity.URL{},
@@ -216,7 +215,7 @@ func Test_memoryStorage_GetNotExist(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &memoryStorage{
 				storage: tt.fields.storage,
-				mutex:   tt.fields.mutex,
+				//mutex:   tt.fields.mutex,
 			}
 			m.storage["https://google.com"] = entity.URL{
 				Cookies:       "123456",
@@ -236,11 +235,11 @@ func Test_memoryStorage_GetNotExist(t *testing.T) {
 	}
 }
 
-//Test_memoryStorage_GetAllStorageURL сигнатура: GetAllStorageURL(cook string) []map[string]string
+// Test_memoryStorage_GetAllStorageURL сигнатура: GetAllStorageURL(cook string) []map[string]string
 func Test_memoryStorage_GetAllStorageURL(t *testing.T) {
 	type fields struct {
 		storage map[string]entity.URL
-		mutex   sync.RWMutex
+		//mutex   sync.RWMutex
 	}
 	type args struct {
 		cook string
@@ -255,7 +254,7 @@ func Test_memoryStorage_GetAllStorageURL(t *testing.T) {
 			name: "получаем список своих урлов",
 			fields: fields{
 				storage: make(map[string]entity.URL, 0),
-				mutex:   sync.RWMutex{},
+				//mutex:   sync.RWMutex{},
 			},
 			args: args{cook: "123456"},
 			want: nil,
@@ -265,7 +264,7 @@ func Test_memoryStorage_GetAllStorageURL(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &memoryStorage{
 				storage: tt.fields.storage,
-				mutex:   tt.fields.mutex,
+				//mutex:   tt.fields.mutex,
 			}
 
 			tt.want = append(tt.want, map[string]string{"another-short-url": "https://yahoo.com"})
@@ -285,7 +284,6 @@ func Test_memoryStorage_GetAllStorageURL(t *testing.T) {
 				CorrelationID: "",
 				Deleted:       false,
 			}
-			fmt.Println("m.storage: ", m.storage)
 			if got := m.GetAllStorageURL(tt.args.cook); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetAllStorageURL() = %v, want %v", got, tt.want)
 			}
@@ -293,11 +291,11 @@ func Test_memoryStorage_GetAllStorageURL(t *testing.T) {
 	}
 }
 
-//Test_memoryStorage_DeleteStorage сигнатура:DeleteStorage(listShorts []string, cookies string) error
+// Test_memoryStorage_DeleteStorage сигнатура:DeleteStorage(listShorts []string, cookies string) error
 func Test_memoryStorage_DeleteStorage(t *testing.T) {
 	type fields struct {
 		storage map[string]entity.URL
-		mutex   sync.RWMutex
+		//mutex   sync.RWMutex
 	}
 	type args struct {
 		listShorts []string
@@ -313,7 +311,7 @@ func Test_memoryStorage_DeleteStorage(t *testing.T) {
 			name: "удаляем без ошибки",
 			fields: fields{
 				storage: map[string]entity.URL{},
-				mutex:   sync.RWMutex{},
+				//mutex:   sync.RWMutex{},
 			},
 			args: args{
 				listShorts: []string{"some_short_url", "another_short_url"},
@@ -326,7 +324,7 @@ func Test_memoryStorage_DeleteStorage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &memoryStorage{
 				storage: tt.fields.storage,
-				mutex:   tt.fields.mutex,
+				//mutex:   tt.fields.mutex,
 			}
 
 			m.storage["ya.ru"] = entity.URL{
