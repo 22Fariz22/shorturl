@@ -1,6 +1,11 @@
+// Package app модуль app запускает репозиторий  с учетом конфигурации, воркер и роутер
 package app
 
 import (
+	"log"
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/handler"
 	"github.com/22Fariz22/shorturl/internal/usecase"
@@ -10,10 +15,9 @@ import (
 	"github.com/22Fariz22/shorturl/internal/worker"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"log"
-	"net/http"
 )
 
+// Run запускает приложение с учетом конфигурации из main и роутеры
 func Run(cfg *config.Config) {
 	var repo usecase.Repository
 
@@ -32,7 +36,7 @@ func Run(cfg *config.Config) {
 	defer workers.Stop()
 
 	r := chi.NewRouter()
-	// http.NewRouter(cfg,repo,workers)
+
 	hd := handler.NewHandler(repo, cfg, workers)
 
 	r.Use(handler.DeCompress)
@@ -40,6 +44,7 @@ func Run(cfg *config.Config) {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	//r.Mount("/debug", middleware.Profiler())
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
@@ -49,8 +54,18 @@ func Run(cfg *config.Config) {
 	r.Post("/api/shorten/batch", hd.Batch)
 	r.Delete("/api/user/urls", hd.DeleteHandler)
 
+	go func() {
+		if cfg.PprofServerAddress == "" {
+			log.Println("pprof server address is empty, skipping")
+			return
+		}
+		err := http.ListenAndServe(cfg.PprofServerAddress, nil)
+		if err != nil {
+			log.Printf("pprof server error: %s\n", err)
+		}
+	}()
+
 	if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
 		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
 	}
-
 }

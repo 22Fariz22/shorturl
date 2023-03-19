@@ -1,19 +1,20 @@
+// Package handler принимает и отправляет
 package handler
 
 import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/22Fariz22/shorturl/internal/config"
-	"github.com/22Fariz22/shorturl/internal/cookies"
-	"github.com/22Fariz22/shorturl/internal/usecase"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/22Fariz22/shorturl/internal/config"
+	"github.com/22Fariz22/shorturl/internal/cookies"
+	"github.com/22Fariz22/shorturl/internal/usecase"
 
 	"github.com/22Fariz22/shorturl/internal/entity"
 	"github.com/22Fariz22/shorturl/internal/worker"
@@ -23,10 +24,11 @@ import (
 
 const ctxTimeOut = 5 * time.Second
 
+// Handler структура хэндлер
 type Handler struct {
 	Repository usecase.Repository
-	cfg        config.Config
-	workers    *worker.Pool
+	Cfg        config.Config
+	Workers    *worker.Pool
 }
 
 type reqURL struct {
@@ -35,23 +37,26 @@ type reqURL struct {
 
 var rURL reqURL
 
+// NewHandler создает хэндлер
 func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Pool) *Handler {
 	return &Handler{
 		Repository: repo,
-		cfg:        *cfg,
-		workers:    workers,
+		Cfg:        *cfg,
+		Workers:    workers,
 	}
 }
 
+// DeleteHandler удаляет запись
 func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	var list []string
 
 	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
 		log.Println(err)
+		//status 400
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -59,14 +64,16 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
 	defer cancel()
 
-	h.workers.AddJob(ctx, list, r.Cookies()[0].Value)
+	h.Workers.AddJob(ctx, list, r.Cookies()[0].Value)
 
+	//status 202
 	w.WriteHeader(http.StatusAccepted)
 }
 
+// GetAllURL получить все записи
 func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	type resp struct {
@@ -79,6 +86,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	list, err := h.Repository.GetAll(ctx, r.Cookies()[0].Value)
+	//status 204
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusNoContent)
@@ -87,7 +95,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	for i := range list {
 		for k, v := range list[i] {
 			res = append(res, resp{
-				ShortURL:    h.cfg.BaseURL + "/" + k,
+				ShortURL:    h.Cfg.BaseURL + "/" + k,
 				OriginalURL: v,
 			})
 		}
@@ -99,19 +107,21 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+	//status 204
 	if len(res) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 	} else {
+		//status 200
 		w.WriteHeader(http.StatusOK)
 	}
 
 	w.Write(res1)
 }
 
-//CreateShortUrlHandler эндпоинт POST / принимает в теле запроса строку URL для сокращения
+// CreateShortUrlHandler эндпоинт POST / принимает в теле запроса строку URL для сокращения
 func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	payload, err := io.ReadAll(r.Body)
@@ -126,22 +136,23 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
-	fmt.Println("su in handler(0)", s, err)
 
+	//status 409
 	if err != nil {
-		fmt.Println("print in handler(1)", s, err)
 		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte(h.cfg.BaseURL + "/" + s))
+		w.Write([]byte(h.Cfg.BaseURL + "/" + s))
 		return
 	}
+
+	//status 201
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(h.cfg.BaseURL + "/" + short))
+	w.Write([]byte(h.Cfg.BaseURL + "/" + short))
 }
 
-//GetShortUrlByIdHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
+// GetShortURLByIDHandler Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
 func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	vars := chi.URLParam(r, "id")
@@ -150,22 +161,27 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 	defer cancel()
 
 	url, ok := h.Repository.GetURL(ctx, vars)
-	log.Print("in handler Get url,ok:", url, ok)
+
+	//status 400
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	//status 401
 	if url.Deleted {
 		w.WriteHeader(http.StatusGone)
 		return
 	}
 	w.Header().Set("Location", url.LongURL)
+
+	//status 307
 	http.Redirect(w, r, url.LongURL, http.StatusTemporaryRedirect)
 }
 
+// Batch создает записи конвеером
 func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
@@ -179,7 +195,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", 500)
 		return
 	}
-	if err := json.Unmarshal(payload, &batchResp); err != nil { // [{1 mail.ru} {2 ya.ru} {3 google.ru}]
+	if err := json.Unmarshal(payload, &batchResp); err != nil {
 		log.Print(err)
 		return
 	}
@@ -199,7 +215,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 
 		resp := entity.PackResponse{
 			CorrelationID: resp.CorrelationID,
-			ShortURL:      h.cfg.BaseURL + "/" + short,
+			ShortURL:      h.Cfg.BaseURL + "/" + short,
 		}
 
 		listReq = append(listReq, req)
@@ -218,13 +234,16 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 	}
 	w.Header().Set("Content-Type", "application/json")
+
+	//status 201
 	w.WriteHeader(http.StatusCreated)
 	w.Write(res)
 }
 
+// CreateShortURLJSON создает запись из тела json
 func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	if len(r.Cookies()) == 0 {
-		cookies.SetCookieHandler(w, r, h.cfg.SecretKey)
+		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
 	payload, err := io.ReadAll(r.Body)
@@ -245,7 +264,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := respURL{
-		Result: h.cfg.BaseURL + "/" + short,
+		Result: h.Cfg.BaseURL + "/" + short,
 	}
 
 	res, err := json.Marshal(resp)
@@ -257,13 +276,10 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
-	fmt.Println("out err", s, err)
 
 	if err != nil {
-		fmt.Println("in err", s, err)
-
 		resp1 := respURL{
-			Result: h.cfg.BaseURL + "/" + s,
+			Result: h.Cfg.BaseURL + "/" + s,
 		}
 		res1, err := json.Marshal(resp1)
 		if err != nil {
@@ -279,6 +295,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
+// Close закрывает соединение
 func (r gzipReader) Close() error {
 	if err := r.Closer.Close(); err != nil {
 		log.Print(err.Error())
@@ -312,11 +329,13 @@ func DeCompress(next http.Handler) http.Handler {
 	})
 }
 
+// структура для сжатия
 type gzipReader struct {
 	*gzip.Reader
 	io.Closer
 }
 
+// Ping проверка соединения
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
 	defer cancel()
@@ -329,7 +348,9 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// GenUlid генератор шортурлов
 func GenUlid() string {
+	//time.Sleep(1 * time.Second)
 	t := time.Now().UTC()
 	entropy := rand.New(rand.NewSource(t.UnixNano()))
 	id := ulid.MustNew(ulid.Timestamp(t), entropy)

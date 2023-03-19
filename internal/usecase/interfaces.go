@@ -1,3 +1,4 @@
+// Package usecase интерфейс
 package usecase
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/22Fariz22/shorturl/internal/entity"
 )
 
+//Repository интерфейс для всех методов
 type Repository interface {
 	SaveURL(context.Context, string, string, string) (string, error)
 	GetURL(context.Context, string) (entity.URL, bool)
