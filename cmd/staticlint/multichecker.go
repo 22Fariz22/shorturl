@@ -1,3 +1,4 @@
+// Package staticlint Static analyzer.
 package staticlint
 
 import (

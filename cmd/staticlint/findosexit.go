@@ -1,3 +1,4 @@
+// Package staticlint find 'os.exit'
 package staticlint
 
 import (
