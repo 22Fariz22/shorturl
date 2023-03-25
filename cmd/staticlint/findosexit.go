@@ -4,9 +4,11 @@ package staticlint
 import (
 	"go/ast"
 	"go/types"
+
 	"golang.org/x/tools/go/analysis"
 )
 
+// ErrCheckAnalyzer структура ErrCheckAnalyzer
 var ErrCheckAnalyzer = &analysis.Analyzer{
 	Name: "findOsExit",
 	Doc:  "find os exit",
