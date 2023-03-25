@@ -6,7 +6,7 @@ import (
 	"github.com/22Fariz22/shorturl/internal/config"
 )
 
-//main точка запуска приложения
+// main точка запуска приложения
 func main() {
 	//flag.Parse()
 	//cfg запускает конфигурацию
@@ -16,4 +16,4 @@ func main() {
 	app.Run(cfg)
 }
 
-//  go run cmd/shortener/main.go -d="postgres://postgres:55555@127.0.0.1:5432/dburl"
+//  go run cmd/shortener/multichecker.go -d="postgres://postgres:55555@127.0.0.1:5432/dburl"
