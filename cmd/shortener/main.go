@@ -4,11 +4,22 @@ package main
 import (
 	"github.com/22Fariz22/shorturl/internal/app"
 	"github.com/22Fariz22/shorturl/internal/config"
+	"log"
+)
+
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
 )
 
 // main точка запуска приложения
 func main() {
-	//flag.Parse()
+
+	log.Printf("Build version: %s", buildVersion)
+	log.Printf("Build date: %s", buildDate)
+	log.Printf("Build commit: %s", buildCommit)
+
 	//cfg запускает конфигурацию
 	cfg := config.NewConfig()
 
