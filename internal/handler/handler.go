@@ -24,6 +24,8 @@ import (
 
 const ctxTimeOut = 5 * time.Second
 
+//go:generate make total
+
 // Handler структура хэндлер
 type Handler struct {
 	Repository usecase.Repository
@@ -286,6 +288,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 			log.Print(err)
 		}
 		w.Header().Set("Content-Type", "application/json")
+		//status 409
 		w.WriteHeader(http.StatusConflict)
 		w.Write(res1)
 		return

@@ -3,7 +3,6 @@ package storage
 
 import (
 	"errors"
-	"log"
 	"sync"
 
 	"github.com/22Fariz22/shorturl/internal/entity"
@@ -25,8 +24,6 @@ type memoryStorage struct {
 
 // DeleteStorage удаление записи
 func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error {
-	log.Print("del in stor")
-
 	for _, v := range listShorts {
 		for k := range m.storage {
 			if m.storage[k].ID == v && m.storage[k].Cookies == cookies {

@@ -4,11 +4,22 @@ package main
 import (
 	"github.com/22Fariz22/shorturl/internal/app"
 	"github.com/22Fariz22/shorturl/internal/config"
+	"log"
 )
 
-//main точка запуска приложения
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
+)
+
+// main точка запуска приложения
 func main() {
-	//flag.Parse()
+
+	log.Printf("Build version: %s", buildVersion)
+	log.Printf("Build date: %s", buildDate)
+	log.Printf("Build commit: %s", buildCommit)
+
 	//cfg запускает конфигурацию
 	cfg := config.NewConfig()
 
@@ -16,4 +27,4 @@ func main() {
 	app.Run(cfg)
 }
 
-//  go run cmd/shortener/main.go -d="postgres://postgres:55555@127.0.0.1:5432/dburl"
+//  go run cmd/shortener/multichecker.go -d="postgres://postgres:55555@127.0.0.1:5432/dburl"
