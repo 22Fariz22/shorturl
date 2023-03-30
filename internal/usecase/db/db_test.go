@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func _Test_inDBRepository_SaveURL(t *testing.T) {
+func Test_inDBRepository_SaveURLvarFirst(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -57,7 +57,7 @@ func _Test_inDBRepository_SaveURL(t *testing.T) {
 	//}
 }
 
-func _Test_inDBRepository_SaveURsL(t *testing.T) {
+func Test_inDBRepository_SaveURLvarSecond(t *testing.T) {
 	type mockBehavior func(s *mock_usecase.MockRepositoryMockRecorder)
 
 	testTable := []struct {
