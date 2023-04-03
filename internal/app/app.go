@@ -2,6 +2,7 @@
 package app
 
 import (
+	"context"
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/handler"
 	"github.com/22Fariz22/shorturl/internal/usecase"
@@ -15,6 +16,10 @@ import (
 	"log"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 // Run запускает приложение с учетом конфигурации из main и роутеры
@@ -75,36 +80,27 @@ func Run(cfg *config.Config) {
 		TLSConfig: manager.TLSConfig(),
 	}
 
-	if cfg.EnableHTTPS {
-		log.Println("start https server.")
-		server.ListenAndServeTLS("", "")
+	go func() {
+		if cfg.EnableHTTPS {
+			log.Println("start https server.")
+			server.ListenAndServeTLS("", "")
 
-	} else {
-		if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
-			log.Println("start http server.")
-			log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+		} else {
+			if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
+				log.Println("start http server.")
+				log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+			}
 		}
-	}
+	}()
 
-	//for i := range os.Args {
-	//	if strings.HasPrefix(os.Args[i], "-s") {
-	//		log.Println("start http server.")
-	//		server.ListenAndServeTLS("", "")
-	//	} else {
-	//		if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
-	//			log.Println("start https server.")
-	//			log.Fatalf("HTTP server ListenAndServe Error: %v", err)
-	//		}
-	//	}
-	//}
+	//gracefull shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
-	//for i := range os.Args {
-	//	if strings.HasPrefix(os.Args[i], "-s") {
-	//		fmt.Println("has -s")
-	//	}
-	//}
+	<-quit
 
-	//if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
-	//	log.Fatalf("HTTP server ListenAndServe Error: %v", err)
-	//}
+	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdown()
+
+	server.Shutdown(ctx)
 }
