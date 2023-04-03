@@ -2,11 +2,6 @@
 package app
 
 import (
-	"golang.org/x/crypto/acme/autocert"
-	"log"
-	"net/http"
-	_ "net/http/pprof"
-
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/handler"
 	"github.com/22Fariz22/shorturl/internal/usecase"
@@ -16,6 +11,10 @@ import (
 	"github.com/22Fariz22/shorturl/internal/worker"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"golang.org/x/crypto/acme/autocert"
+	"log"
+	"net/http"
+	_ "net/http/pprof"
 )
 
 // Run запускает приложение с учетом конфигурации из main и роутеры
@@ -77,13 +76,33 @@ func Run(cfg *config.Config) {
 	}
 
 	if cfg.EnableHTTPS {
+		log.Println("start https server.")
 		server.ListenAndServeTLS("", "")
 
 	} else {
 		if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
+			log.Println("start http server.")
 			log.Fatalf("HTTP server ListenAndServe Error: %v", err)
 		}
 	}
+
+	//for i := range os.Args {
+	//	if strings.HasPrefix(os.Args[i], "-s") {
+	//		log.Println("start http server.")
+	//		server.ListenAndServeTLS("", "")
+	//	} else {
+	//		if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
+	//			log.Println("start https server.")
+	//			log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+	//		}
+	//	}
+	//}
+
+	//for i := range os.Args {
+	//	if strings.HasPrefix(os.Args[i], "-s") {
+	//		fmt.Println("has -s")
+	//	}
+	//}
 
 	//if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
 	//	log.Fatalf("HTTP server ListenAndServe Error: %v", err)

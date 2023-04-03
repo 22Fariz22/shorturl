@@ -3,9 +3,12 @@ package config
 
 import (
 	"encoding/hex"
+	"encoding/json"
+	"flag"
 	"github.com/caarlos0/env/v6"
 	"github.com/spf13/pflag"
 	"log"
+	"os"
 )
 
 // переменные окружения по умолчанию
@@ -14,6 +17,7 @@ const (
 	DefaultBaseURL            = "http://localhost:8080" // базовый адрес
 	DefaultPprofServerAddress = "http://localhost:8081" // адрес сервера для профилирования
 	DefaultEnableHTTPS        = false
+	DefaultConfigFilePath     = "config.json"
 
 	DefaultDatabaseDSN = "" //"postgres://postgres:55555@127.0.0.1:5432/dburl"
 )
@@ -27,6 +31,7 @@ type Config struct {
 	SecretKey          []byte
 	DatabaseDSN        string `env:"DATABASE_DSN" ` //envDefault:"postgres://postgres:55555@127.0.0.1:5432/dburl"
 	EnableHTTPS        bool   `env:"ENABLE_HTTPS"`
+	ConfigFilePath     string `env:"CONFIG"`
 }
 
 // NewConfig создание конфига
@@ -41,6 +46,21 @@ func NewConfig() *Config {
 	pflag.StringVarP(&cfg.DatabaseDSN, "databasedsn", "d", "", "databaseDSN")
 	pflag.StringVarP(&cfg.PprofServerAddress, "pprof server", "p", DefaultPprofServerAddress, "pprof server address")
 	pflag.BoolVarP(&cfg.EnableHTTPS, "Enable HTTPS", "s", DefaultEnableHTTPS, "enable HTTPS")
+
+	flag.StringVar(&cfg.ConfigFilePath, "c", "", "Config file path")
+	flag.StringVar(&cfg.ConfigFilePath, "config", "", "Config file path")
+
+	if cfg.ConfigFilePath != "" {
+		f, err := os.ReadFile(cfg.ConfigFilePath)
+		if err != nil {
+			log.Fatalln("err in os.ReadFile:", err)
+		}
+
+		err = json.Unmarshal(f, &cfg)
+		if err != nil {
+			log.Fatalln("err in json.Unmarshal:", err)
+		}
+	}
 
 	if err := env.Parse(cfg); err != nil {
 		log.Println(err)
@@ -63,4 +83,17 @@ func NewConfig() *Config {
 		EnableHTTPS:        cfg.EnableHTTPS,
 	}
 
+}
+
+// readConfigFile - прочитаем файл
+func readConfigFile(filePath string, conf *Config) error {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(data, conf)
+	if err != nil {
+		return err
+	}
+	return nil
 }

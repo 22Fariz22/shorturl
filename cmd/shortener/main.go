@@ -26,6 +26,7 @@ func main() {
 	// запускает приложение с учетом конфигурации
 	app.Run(cfg)
 	//os.Exit(1)
+
 }
 
 //  go run cmd/shortener/main.go -d="postgres://postgres:55555@127.0.0.1:5432/dburl"
