@@ -36,8 +36,6 @@ type Config struct {
 
 // NewConfig создание конфига
 func NewConfig() *Config {
-	//flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-
 	cfg := &Config{}
 
 	pflag.StringVarP(&cfg.ServerAddress, "server", "a", DefaultServerAddress, "server address")
@@ -46,7 +44,6 @@ func NewConfig() *Config {
 	pflag.StringVarP(&cfg.DatabaseDSN, "databasedsn", "d", "", "databaseDSN")
 	pflag.StringVarP(&cfg.PprofServerAddress, "pprof server", "p", DefaultPprofServerAddress, "pprof server address")
 	pflag.BoolVarP(&cfg.EnableHTTPS, "Enable HTTPS", "s", DefaultEnableHTTPS, "enable HTTPS")
-
 	flag.StringVar(&cfg.ConfigFilePath, "c", "", "Config file path")
 	flag.StringVar(&cfg.ConfigFilePath, "config", "", "Config file path")
 
