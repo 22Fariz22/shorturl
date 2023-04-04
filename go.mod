@@ -1,6 +1,6 @@
 module github.com/22Fariz22/shorturl
 
-go 1.20
+go 1.19
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -9,7 +9,7 @@ require (
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	golang.org/x/crypto v0.7.0
 	golang.org/x/tools v0.7.0
 	honnef.co/go/tools v0.4.3
