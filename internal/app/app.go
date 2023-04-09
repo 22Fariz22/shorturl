@@ -2,10 +2,7 @@
 package app
 
 import (
-	"log"
-	"net/http"
-	_ "net/http/pprof"
-
+	"context"
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/handler"
 	"github.com/22Fariz22/shorturl/internal/usecase"
@@ -15,6 +12,14 @@ import (
 	"github.com/22Fariz22/shorturl/internal/worker"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"golang.org/x/crypto/acme/autocert"
+	"log"
+	"net/http"
+	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 // Run запускает приложение с учетом конфигурации из main и роутеры
@@ -65,7 +70,37 @@ func Run(cfg *config.Config) {
 		}
 	}()
 
-	if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
-		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+	manager := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist(cfg.BaseURL),
 	}
+	server := &http.Server{
+		Addr:      cfg.ServerAddress,
+		Handler:   r,
+		TLSConfig: manager.TLSConfig(),
+	}
+
+	go func() {
+		if cfg.EnableHTTPS {
+			log.Println("start https server.")
+			server.ListenAndServeTLS("", "")
+
+		} else {
+			if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
+				log.Println("start http server.")
+				log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+			}
+		}
+	}()
+
+	//gracefull shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+
+	<-quit
+
+	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdown()
+
+	server.Shutdown(ctx)
 }
