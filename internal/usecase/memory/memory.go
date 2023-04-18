@@ -3,12 +3,9 @@ package memory
 
 import (
 	"context"
-	"log"
-
+	"github.com/22Fariz22/shorturl/internal/entity"
 	"github.com/22Fariz22/shorturl/internal/storage"
 	"github.com/22Fariz22/shorturl/internal/usecase"
-
-	"github.com/22Fariz22/shorturl/internal/entity"
 )
 
 // inMemoryRepository структура инмемори
@@ -65,7 +62,10 @@ func (m *inMemoryRepository) RepoBatch(ctx context.Context, cook string, batchLi
 
 // Delete удаление записи из инмемори
 func (m *inMemoryRepository) Delete(list []string, cookie string) error {
-	log.Print("del in mem")
 	m.memoryStorage.DeleteStorage(list, cookie)
 	return nil
+}
+
+func (m *inMemoryRepository) Stats(ctx context.Context) (int, int, error) {
+	return m.memoryStorage.Stats(ctx)
 }

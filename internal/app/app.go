@@ -59,6 +59,8 @@ func Run(cfg *config.Config) {
 	r.Post("/api/shorten/batch", hd.Batch)
 	r.Delete("/api/user/urls", hd.DeleteHandler)
 
+	r.Get("/api/internal/stats", hd.Stats)
+
 	go func() {
 		if cfg.PprofServerAddress == "" {
 			log.Println("pprof server address is empty, skipping")

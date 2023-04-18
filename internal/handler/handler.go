@@ -5,9 +5,11 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -46,6 +48,72 @@ func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Poo
 		Cfg:        *cfg,
 		Workers:    workers,
 	}
+}
+
+// Stats возвращает количество сокращённых URL в сервисе и количество пользователей в сервисе
+func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
+	type stats struct {
+		Urls  int `json:"urls"`
+		Users int `json:"users"`
+	}
+
+	addr := r.RemoteAddr
+	fmt.Println("addr", addr)
+	ipStr, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		log.Println("err net.SplitHostPort: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("ipStr", ipStr)
+
+	// парсим ip
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		log.Println("err net.ParseIP: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, ipnet, err := net.ParseCIDR(h.Cfg.TrustedSubnet)
+	if err != nil {
+		log.Println("err net.ParseCIDR: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	urls, users, err := h.Repository.Stats(context.Background())
+	fmt.Println(urls, users, err)
+
+	if ipnet.Contains(ip) {
+		urls, users, err := h.Repository.Stats(context.Background())
+		if err != nil {
+			log.Println("h.Repository.Stats: ", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		fmt.Println(urls, users)
+	} else {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	o := stats{
+		Urls:  urls,
+		Users: users,
+	}
+
+	outJSON, err := json.Marshal(o)
+	if err != nil {
+		log.Println("err net.ParseIP: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(outJSON)
+
 }
 
 // DeleteHandler удаляет запись

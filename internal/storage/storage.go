@@ -2,6 +2,7 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"sync"
 
@@ -14,6 +15,7 @@ type MemoryStorage interface {
 	Insert(key, value string, cook string, deleted bool) (string, error)
 	GetAllStorageURL(string2 string) []map[string]string
 	DeleteStorage([]string, string) error
+	Stats(ctx context.Context) (int, int, error)
 }
 
 // /memoryStorage структура для стоража инмемори
@@ -88,6 +90,18 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 		return "", nil
 	}
 	return v.ID, ErrAlreadyExists // если такого еще нет в мапе,то ничего не вернет. а если есть, то вернет shorturl.
+}
+
+func (m *memoryStorage) Stats(ctx context.Context) (int, int, error) {
+	mpUsers := make(map[string]int)
+	countUrls := 0
+
+	for _, x := range m.storage {
+		mpUsers[x.Cookies] += 1
+		countUrls += 1
+	}
+
+	return countUrls, len(mpUsers), nil
 }
 
 // New создание структуры для инмемори типа

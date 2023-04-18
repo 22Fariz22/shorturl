@@ -16,14 +16,14 @@ import (
 	"github.com/22Fariz22/shorturl/internal/entity"
 )
 
-//inFileRepository структура для сторада инфайл
+// inFileRepository структура для сторада инфайл
 type inFileRepository struct {
 	file          io.ReadWriteCloser
 	memoryStorage storage.MemoryStorage
 	reader        *bufio.Reader
 }
 
-//Delete удаление из инфайла
+// Delete удаление из инфайла
 func (f *inFileRepository) Delete(list []string, cookie string) error {
 	f.memoryStorage.DeleteStorage(list, cookie)
 	return nil
@@ -50,7 +50,7 @@ func (f *inFileRepository) RepoBatch(ctx context.Context, cook string, batchList
 	return nil
 }
 
-//Consumer структура консьюмера
+// Consumer структура консьюмера
 type Consumer struct {
 	File   *os.File
 	reader *bufio.Reader
@@ -103,7 +103,7 @@ func (f *inFileRepository) Init() error {
 	return nil
 }
 
-//SaveURLсохранить запись в файле
+// SaveURLсохранить запись в файле
 func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL string, cook string) (string, error) {
 	url := &entity.URL{
 		Cookies: cook,
@@ -122,18 +122,22 @@ func (f *inFileRepository) SaveURL(ctx context.Context, shortID string, longURL 
 	return "", nil
 }
 
-//GetURL поулсить запись из файла
+// GetURL поулсить запись из файла
 func (f *inFileRepository) GetURL(ctx context.Context, shortID string) (entity.URL, bool) {
 	v, ok := f.memoryStorage.Get(shortID)
 	return v, ok
 }
 
-//GetAll получсить все записи из файла
+// GetAll получсить все записи из файла
 func (f *inFileRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
 	return f.memoryStorage.GetAllStorageURL(cook), nil
 }
 
-//Ping заглушка метода Ping
+// Ping заглушка метода Ping
 func (f *inFileRepository) Ping(ctx context.Context) error {
 	return nil
+}
+
+func (f *inFileRepository) Stats(ctx context.Context) (int, int, error) {
+	return f.memoryStorage.Stats(ctx)
 }
