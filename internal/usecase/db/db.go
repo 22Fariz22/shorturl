@@ -21,6 +21,19 @@ type inDBRepository struct {
 	databaseDSN string
 }
 
+func (i *inDBRepository) Stats(ctx context.Context) (int, int, error) {
+	var urls int
+	var users int
+
+	err := i.pool.QueryRow(ctx, "select count(distinct(cookies)), count(short_url) from urls;").Scan(&users, &urls)
+	if err != nil {
+		log.Println("err in count(short_url):", err)
+		return 0, 0, err
+	}
+
+	return urls, users, nil
+}
+
 // New создание структуры для дб
 func New(cfg *config.Config) usecase.Repository {
 	return &inDBRepository{
@@ -145,8 +158,6 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (entity.URL
 	row, err := i.pool.Query(ctx, "select cookies,long_url,deleted from urls where short_url = $1;", shortID)
 	if err != nil {
 		log.Println(err)
-		//TODO сделать возврат ошибки
-		//	http.NotFound(w, r) ?
 		return entity.URL{}, false
 	}
 	defer row.Close()

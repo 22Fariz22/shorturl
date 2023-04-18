@@ -32,6 +32,7 @@ type Config struct {
 	DatabaseDSN        string `env:"DATABASE_DSN" ` //envDefault:"postgres://postgres:55555@127.0.0.1:5432/dburl"
 	EnableHTTPS        bool   `env:"ENABLE_HTTPS"`
 	ConfigFilePath     string `env:"CONFIG"`
+	TrustedSubnet      string `env:"TRUSTED_SUBNET"`
 }
 
 // NewConfig создание конфига
@@ -46,6 +47,7 @@ func NewConfig() *Config {
 	pflag.BoolVarP(&cfg.EnableHTTPS, "Enable HTTPS", "s", DefaultEnableHTTPS, "enable HTTPS")
 	flag.StringVar(&cfg.ConfigFilePath, "c", "", "Config file path")
 	flag.StringVar(&cfg.ConfigFilePath, "config", "", "Config file path")
+	pflag.StringVarP(&cfg.TrustedSubnet, "trusted subnet", "t", "", "представление бесклассовой адресации (CIDR)")
 
 	if cfg.ConfigFilePath != "" {
 		f, err := os.ReadFile(cfg.ConfigFilePath)
@@ -78,6 +80,7 @@ func NewConfig() *Config {
 		DatabaseDSN:        cfg.DatabaseDSN,
 		PprofServerAddress: cfg.PprofServerAddress,
 		EnableHTTPS:        cfg.EnableHTTPS,
+		TrustedSubnet:      cfg.TrustedSubnet,
 	}
 
 }
