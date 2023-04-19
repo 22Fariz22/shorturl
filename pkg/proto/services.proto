@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package shorturl;
+
+option go_package = "github.com/22Fariz22/shorturl";
+
+import "google/protobuf/empty.proto";
+
+
+message Url {
+  string cookies = 1;
+  string id = 2;
+  string long_url = 3;
+  string correlation_id = 4;
+  bool deleted = 5;
+}
+
+message StatsResponse {
+  int32 urls = 1;
+  int32 users = 2;
+}
+
+message CreateShort {
+  string long = 1;
+}
+
+message DeleteListRequest {
+  repeated string delete_list = 1;
+}
+
+message IDParam {
+  string id = 1;
+}
+
+message PackReq {
+  string correlation_id = 1;
+  string original_url = 2;
+  string short_url = 3;
+}
+
+message ReqURL {
+  string  url = 1;
+}
+
+message CreateShortURLJSONResponse {
+  string result = 1;
+}
+
+message AllURLsResponse{
+  string sort_url = 1;
+  string original_url = 2;
+}
+
+message CreateShortURLHandlerResponse{
+  string  url = 1;
+}
+
+service Services {
+  rpc Stats(google.protobuf.Empty) returns (StatsResponse);
+  rpc DeleteHandler(DeleteListRequest) returns (google.protobuf.Empty);
+  rpc GetAllURL(google.protobuf.Empty) returns (AllURLsResponse);
+  rpc CreateShortURLHandler(CreateShort) returns (CreateShortURLHandlerResponse);
+  rpc GetShortURLByIDHandler(IDParam) returns (Url);
+  rpc Batch(PackReq) returns (PackReq);
+  rpc CreateShortURLJSON(ReqURL) returns (CreateShortURLJSONResponse);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

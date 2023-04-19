@@ -92,6 +92,7 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 	return v.ID, ErrAlreadyExists // если такого еще нет в мапе,то ничего не вернет. а если есть, то вернет shorturl.
 }
 
+//Stats
 func (m *memoryStorage) Stats(ctx context.Context) (int, int, error) {
 	mpUsers := make(map[string]int)
 	countUrls := 0

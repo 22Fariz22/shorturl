@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -57,20 +56,21 @@ func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 		Users int `json:"users"`
 	}
 
+	var st stats
+
 	addr := r.RemoteAddr
-	fmt.Println("addr", addr)
+
 	ipStr, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		log.Println("err net.SplitHostPort: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("ipStr", ipStr)
 
 	// парсим ip
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
-		log.Println("err net.ParseIP: ", err)
+		log.Println("nil from net.ParseIP: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -82,28 +82,21 @@ func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	urls, users, err := h.Repository.Stats(context.Background())
-	fmt.Println(urls, users, err)
-
 	if ipnet.Contains(ip) {
 		urls, users, err := h.Repository.Stats(context.Background())
 		if err != nil {
-			log.Println("h.Repository.Stats: ", err)
+			log.Println("err h.Repository.Stats: ", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		fmt.Println(urls, users)
+		st.Urls = urls
+		st.Users = users
 	} else {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
-	o := stats{
-		Urls:  urls,
-		Users: users,
-	}
-
-	outJSON, err := json.Marshal(o)
+	outJSON, err := json.Marshal(st)
 	if err != nil {
 		log.Println("err net.ParseIP: ", err)
 		w.WriteHeader(http.StatusInternalServerError)

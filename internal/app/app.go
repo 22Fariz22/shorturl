@@ -3,6 +3,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/handler"
 	"github.com/22Fariz22/shorturl/internal/usecase"
@@ -10,10 +11,13 @@ import (
 	"github.com/22Fariz22/shorturl/internal/usecase/file"
 	"github.com/22Fariz22/shorturl/internal/usecase/memory"
 	"github.com/22Fariz22/shorturl/internal/worker"
+	pb "github.com/22Fariz22/shorturl/pkg/proto"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"golang.org/x/crypto/acme/autocert"
+	"google.golang.org/grpc"
 	"log"
+	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -94,6 +98,22 @@ func Run(cfg *config.Config) {
 			}
 		}
 	}()
+
+	// определяем порт для сервера grpc
+	listen, err := net.Listen("tcp", ":3200")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// создаём gRPC-сервер без зарегистрированной службы
+	s := grpc.NewServer()
+	pb.RegisterServicesServer(s, handler.NewGRPCServer(*cfg, hd))
+
+	fmt.Println("Сервер gRPC начал работу")
+	// получаем запрос gRPC
+	if err := s.Serve(listen); err != nil {
+		log.Fatal(err)
+	}
 
 	//gracefull shutdown
 	quit := make(chan os.Signal, 1)
