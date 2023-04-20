@@ -77,18 +77,15 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 
 	_, err = tx.Prepare(ctx,
 		"UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies=$2;")
-	log.Println("after prepare")
 	if err != nil {
 		log.Println("log in db del(2):", err)
 		return err
 	}
 
 	for i := range list {
-		log.Println("before Exec")
 		_, err = tx.Exec(ctx,
 			"UPDATE urls SET deleted = true WHERE short_url = $1 and cookies=$2;",
 			list[i], cookie)
-		log.Println("after exec")
 		if err != nil {
 			log.Println(err)
 			return err
@@ -96,7 +93,6 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 	}
 
 	err = tx.Commit(ctx)
-	log.Println("after commit")
 	if err != nil {
 		log.Println(err)
 		return err

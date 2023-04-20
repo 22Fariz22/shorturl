@@ -28,8 +28,7 @@ func NewGRPCServer(cfg config.Config, handler *Handler) *GRPCServer {
 }
 
 func (s *GRPCServer) Ping(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
-	empty = &emptypb.Empty{}
-
+	log.Println("Ping.")
 	err := s.handler.Repository.Ping(ctx)
 	if err != nil {
 		return empty, status.Error(codes.Unavailable, "unavailable")
@@ -41,14 +40,11 @@ func (s *GRPCServer) Ping(ctx context.Context, empty *emptypb.Empty) (*emptypb.E
 func (s *GRPCServer) Stats(ctx context.Context, empty *emptypb.Empty) (*pb.StatsResponse, error) {
 	stats := &pb.StatsResponse{}
 
-	//addr := r.RemoteAddr
 	var addr string
 
 	md, ok := metadata.FromIncomingContext(ctx)
-	fmt.Println("md: ", md)
 	if ok {
 		values := md.Get(":authority")
-		fmt.Println("addr", values)
 		if len(values) > 0 {
 			// ключ содержит слайс строк, получаем первую строку
 			addr = values[0]
@@ -64,7 +60,7 @@ func (s *GRPCServer) Stats(ctx context.Context, empty *emptypb.Empty) (*pb.Stats
 	// парсим ip
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
-		log.Println("err net.ParseIP: ", err)
+		log.Println("nil from net.ParseIP: ", err)
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 
@@ -88,21 +84,81 @@ func (s *GRPCServer) Stats(ctx context.Context, empty *emptypb.Empty) (*pb.Stats
 	return stats, nil
 }
 
-func DeleteHandler() {
+func (s *GRPCServer) DeleteHandler(ctx context.Context, deletelist *pb.DeleteListRequest) (*emptypb.Empty, error) {
+	fmt.Println("DeleteHandler.")
+	empty := &emptypb.Empty{}
+	fmt.Println("deletelist", deletelist)
+	return empty, nil
+}
+
+func (s *GRPCServer) GetAllURL(ctx context.Context, empty *emptypb.Empty) (*pb.AllURLsResponse, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unknown, "wrong metadata")
+	}
+
+	if len(md.Get("Cookies")) == 0 {
+		return nil, status.Error(codes.Unknown, "wrong metadata")
+	}
+
+	cookie := md.Get("Cookies")[0]
+
+	resp := &pb.AllURLsResponse{RespUrls: []*pb.PackReq{}}
+
+	list, err := s.handler.Repository.GetAll(ctx, cookie)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+	fmt.Println("list:", list)
+
+	//resp.RespUrls = list
+
+	//resp := &pb.AllURLsResponse{
+	//	SortUrl:     list.ID,
+	//	OriginalUrl: list.LongURL,
+	//}
+
+	fmt.Println("resp", resp)
+
+	return resp, nil
 
 }
-func GetAllURL() {
+
+func (s *GRPCServer) CreateShortURLHandler(ctx context.Context, body *pb.CreateShort) (*pb.CreateShortURLHandlerResponse, error) {
+	log.Println("CreateShortURLHandler")
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unknown, "wrong metadata")
+	}
+
+	if len(md.Get("Cookies")) == 0 {
+		return nil, status.Error(codes.Unknown, "wrong metadata")
+	}
+	cookie := md.Get("Cookies")[0]
+
+	//генератор
+	short := GenUlid()
+
+	u, err := s.handler.Repository.SaveURL(ctx, short, body.Long, cookie)
+	if err != nil {
+		exist := &pb.CreateShortURLHandlerResponse{Url: s.cfg.BaseURL + "/" + u}
+		return exist, status.Error(codes.AlreadyExists, "already exist")
+	}
+
+	newShort := s.cfg.BaseURL + "/" + short
+	resp := &pb.CreateShortURLHandlerResponse{Url: newShort}
+	return resp, nil
+}
+
+func (s *GRPCServer) GetShortURLByIDHandler(ctx context.Context) {
 
 }
-func CreateShortURLHandler() {
 
-}
-func GetShortURLByIDHandler() {
-
-}
-func Batch() {
-
-}
-func CreateShortURLJSON() {
-
-}
+//
+//func (s *GRPCServer) Batch() {
+//
+//}
+//func (s *GRPCServer) CreateShortURLJSON() {
+//
+//}
