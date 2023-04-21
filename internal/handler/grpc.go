@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/22Fariz22/shorturl/internal/config"
 	pb "github.com/22Fariz22/shorturl/pkg/proto"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -151,14 +152,50 @@ func (s *GRPCServer) CreateShortURLHandler(ctx context.Context, body *pb.CreateS
 	return resp, nil
 }
 
-func (s *GRPCServer) GetShortURLByIDHandler(ctx context.Context) {
+func (s *GRPCServer) GetShortURLByIDHandler(ctx context.Context, param *pb.IDParam) (*pb.OneString, error) {
+	url, ok := s.handler.Repository.GetURL(ctx, param.Id)
+	if !ok {
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
 
+	header := metadata.Pairs("Location", url.LongURL)
+	grpc.SendHeader(ctx, header)
+
+	resp := &pb.OneString{OneString: url.LongURL}
+
+	return resp, nil
 }
 
-//
 //func (s *GRPCServer) Batch() {
 //
 //}
-//func (s *GRPCServer) CreateShortURLJSON() {
-//
-//}
+
+func (s *GRPCServer) CreateShortURLJSON(ctx context.Context, res *pb.ReqURL) (*pb.CreateShortURLJSONResponse, error) {
+	log.Println("CreateShortURLJSON")
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unknown, "wrong metadata")
+	}
+
+	if len(md.Get("Cookies")) == 0 {
+		return nil, status.Error(codes.Unknown, "wrong metadata")
+	}
+
+	cookie := md.Get("Cookies")[0]
+
+	//генератор
+	short := GenUlid()
+
+	r, err := s.handler.Repository.SaveURL(ctx, short, res.Url, cookie) //если есть такой,то вернуть шорт и конфликт статус
+	fmt.Println(r)
+	if err != nil {
+		if r != "" {
+			exist := s.cfg.BaseURL + "/" + r
+			return &pb.CreateShortURLJSONResponse{Result: exist}, nil
+		}
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+	resp := s.cfg.BaseURL + "/" + short
+
+	return &pb.CreateShortURLJSONResponse{Result: resp}, nil
+}

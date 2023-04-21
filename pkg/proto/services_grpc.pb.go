@@ -38,7 +38,7 @@ type ServicesClient interface {
 	DeleteHandler(ctx context.Context, in *DeleteListRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetAllURL(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AllURLsResponse, error)
 	CreateShortURLHandler(ctx context.Context, in *CreateShort, opts ...grpc.CallOption) (*CreateShortURLHandlerResponse, error)
-	GetShortURLByIDHandler(ctx context.Context, in *IDParam, opts ...grpc.CallOption) (*Url, error)
+	GetShortURLByIDHandler(ctx context.Context, in *IDParam, opts ...grpc.CallOption) (*OneString, error)
 	Batch(ctx context.Context, in *PackReq, opts ...grpc.CallOption) (*PackReq, error)
 	CreateShortURLJSON(ctx context.Context, in *ReqURL, opts ...grpc.CallOption) (*CreateShortURLJSONResponse, error)
 	Ping(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -88,8 +88,8 @@ func (c *servicesClient) CreateShortURLHandler(ctx context.Context, in *CreateSh
 	return out, nil
 }
 
-func (c *servicesClient) GetShortURLByIDHandler(ctx context.Context, in *IDParam, opts ...grpc.CallOption) (*Url, error) {
-	out := new(Url)
+func (c *servicesClient) GetShortURLByIDHandler(ctx context.Context, in *IDParam, opts ...grpc.CallOption) (*OneString, error) {
+	out := new(OneString)
 	err := c.cc.Invoke(ctx, Services_GetShortURLByIDHandler_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -132,7 +132,7 @@ type ServicesServer interface {
 	DeleteHandler(context.Context, *DeleteListRequest) (*emptypb.Empty, error)
 	GetAllURL(context.Context, *emptypb.Empty) (*AllURLsResponse, error)
 	CreateShortURLHandler(context.Context, *CreateShort) (*CreateShortURLHandlerResponse, error)
-	GetShortURLByIDHandler(context.Context, *IDParam) (*Url, error)
+	GetShortURLByIDHandler(context.Context, *IDParam) (*OneString, error)
 	Batch(context.Context, *PackReq) (*PackReq, error)
 	CreateShortURLJSON(context.Context, *ReqURL) (*CreateShortURLJSONResponse, error)
 	Ping(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
@@ -155,7 +155,7 @@ func (UnimplementedServicesServer) GetAllURL(context.Context, *emptypb.Empty) (*
 func (UnimplementedServicesServer) CreateShortURLHandler(context.Context, *CreateShort) (*CreateShortURLHandlerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateShortURLHandler not implemented")
 }
-func (UnimplementedServicesServer) GetShortURLByIDHandler(context.Context, *IDParam) (*Url, error) {
+func (UnimplementedServicesServer) GetShortURLByIDHandler(context.Context, *IDParam) (*OneString, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetShortURLByIDHandler not implemented")
 }
 func (UnimplementedServicesServer) Batch(context.Context, *PackReq) (*PackReq, error) {
