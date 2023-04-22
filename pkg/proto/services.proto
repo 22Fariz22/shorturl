@@ -36,11 +36,24 @@ message IDParam {
   string id = 1;
 }
 
-message PackReq {
+message BatchResp {
   string correlation_id = 1;
   string original_url = 2;
-  string short_url = 3;
 }
+
+message BatchReq {
+  string correlation_id = 1;
+  string short_url = 2;
+}
+
+message BatchListResp{
+  repeated BatchResp batch_list_resp = 1;
+}
+
+message BatchListReq{
+  repeated BatchReq batch_list_result = 1;
+}
+
 
 message ReqURL {
   string  url = 1;
@@ -53,7 +66,7 @@ message CreateShortURLJSONResponse {
 message AllURLsResponse{
 //  string short_url = 1;
 //  string original_url = 2;
-  repeated PackReq resp_urls = 1;
+  repeated BatchListReq resp_urls = 1;
 }
 
 message CreateShortURLHandlerResponse{
@@ -66,7 +79,7 @@ service Services {
   rpc GetAllURL(google.protobuf.Empty) returns (AllURLsResponse); //не получается
   rpc CreateShortURLHandler(CreateShort) returns (CreateShortURLHandlerResponse);
   rpc GetShortURLByIDHandler(IDParam) returns (OneString);
-  rpc Batch(PackReq) returns (PackReq);
+  rpc Batch(BatchListResp) returns (BatchListReq);
   rpc CreateShortURLJSON(ReqURL) returns (CreateShortURLJSONResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

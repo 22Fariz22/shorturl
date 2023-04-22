@@ -39,7 +39,7 @@ type ServicesClient interface {
 	GetAllURL(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AllURLsResponse, error)
 	CreateShortURLHandler(ctx context.Context, in *CreateShort, opts ...grpc.CallOption) (*CreateShortURLHandlerResponse, error)
 	GetShortURLByIDHandler(ctx context.Context, in *IDParam, opts ...grpc.CallOption) (*OneString, error)
-	Batch(ctx context.Context, in *PackReq, opts ...grpc.CallOption) (*PackReq, error)
+	Batch(ctx context.Context, in *BatchListResp, opts ...grpc.CallOption) (*BatchListReq, error)
 	CreateShortURLJSON(ctx context.Context, in *ReqURL, opts ...grpc.CallOption) (*CreateShortURLJSONResponse, error)
 	Ping(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -97,8 +97,8 @@ func (c *servicesClient) GetShortURLByIDHandler(ctx context.Context, in *IDParam
 	return out, nil
 }
 
-func (c *servicesClient) Batch(ctx context.Context, in *PackReq, opts ...grpc.CallOption) (*PackReq, error) {
-	out := new(PackReq)
+func (c *servicesClient) Batch(ctx context.Context, in *BatchListResp, opts ...grpc.CallOption) (*BatchListReq, error) {
+	out := new(BatchListReq)
 	err := c.cc.Invoke(ctx, Services_Batch_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ type ServicesServer interface {
 	GetAllURL(context.Context, *emptypb.Empty) (*AllURLsResponse, error)
 	CreateShortURLHandler(context.Context, *CreateShort) (*CreateShortURLHandlerResponse, error)
 	GetShortURLByIDHandler(context.Context, *IDParam) (*OneString, error)
-	Batch(context.Context, *PackReq) (*PackReq, error)
+	Batch(context.Context, *BatchListResp) (*BatchListReq, error)
 	CreateShortURLJSON(context.Context, *ReqURL) (*CreateShortURLJSONResponse, error)
 	Ping(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedServicesServer()
@@ -158,7 +158,7 @@ func (UnimplementedServicesServer) CreateShortURLHandler(context.Context, *Creat
 func (UnimplementedServicesServer) GetShortURLByIDHandler(context.Context, *IDParam) (*OneString, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetShortURLByIDHandler not implemented")
 }
-func (UnimplementedServicesServer) Batch(context.Context, *PackReq) (*PackReq, error) {
+func (UnimplementedServicesServer) Batch(context.Context, *BatchListResp) (*BatchListReq, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Batch not implemented")
 }
 func (UnimplementedServicesServer) CreateShortURLJSON(context.Context, *ReqURL) (*CreateShortURLJSONResponse, error) {
@@ -271,7 +271,7 @@ func _Services_GetShortURLByIDHandler_Handler(srv interface{}, ctx context.Conte
 }
 
 func _Services_Batch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PackReq)
+	in := new(BatchListResp)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -283,7 +283,7 @@ func _Services_Batch_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: Services_Batch_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServicesServer).Batch(ctx, req.(*PackReq))
+		return srv.(ServicesServer).Batch(ctx, req.(*BatchListResp))
 	}
 	return interceptor(ctx, in, info, handler)
 }

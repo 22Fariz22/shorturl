@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/22Fariz22/shorturl/internal/config"
+	"github.com/22Fariz22/shorturl/internal/entity"
 	pb "github.com/22Fariz22/shorturl/pkg/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -104,7 +105,7 @@ func (s *GRPCServer) GetAllURL(ctx context.Context, empty *emptypb.Empty) (*pb.A
 
 	cookie := md.Get("Cookies")[0]
 
-	resp := &pb.AllURLsResponse{RespUrls: []*pb.PackReq{}}
+	resp := &pb.AllURLsResponse{RespUrls: []*pb.BatchListReq{}}
 
 	list, err := s.handler.Repository.GetAll(ctx, cookie)
 	if err != nil {
@@ -166,12 +167,59 @@ func (s *GRPCServer) GetShortURLByIDHandler(ctx context.Context, param *pb.IDPar
 	return resp, nil
 }
 
-//func (s *GRPCServer) Batch() {
-//
-//}
+func (s *GRPCServer) Batch(ctx context.Context, packReq *pb.BatchListResp) (*pb.BatchListReq, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unknown, "wrong metadata")
+	}
+
+	if len(md.Get("Cookies")) == 0 {
+		return nil, status.Error(codes.Unknown, "wrong metadata")
+	}
+
+	cookie := md.Get("Cookies")[0]
+
+	//загатовка message response
+	arrPackReq := make([]entity.PackReq, 0, len(packReq.GetBatchListResp()))
+
+	//загатовка message  request
+	arrBatchReq := make([]*pb.BatchReq, 0, len(packReq.GetBatchListResp()))
+
+	//добавляем в массив для отправки в репу и другой массив для response
+	for _, v := range packReq.GetBatchListResp() {
+		//генератор
+		short := GenUlid()
+
+		//заполняем заготовку для репы
+		preq := entity.PackReq{
+			CorrelationID: v.CorrelationId,
+			OriginalURL:   v.OriginalUrl,
+			ShortURL:      short,
+		}
+		arrPackReq = append(arrPackReq, preq)
+
+		//заполняем заготовку для request
+		batchReq := &pb.BatchReq{
+			CorrelationId: v.CorrelationId,
+			ShortUrl:      short,
+		}
+		arrBatchReq = append(arrBatchReq, batchReq)
+
+	}
+
+	//отравляем заполненную загатовку в репу
+	err := s.handler.Repository.RepoBatch(ctx, cookie, arrPackReq)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+
+	//окончательная загатовка для request
+	bResp := &pb.BatchListReq{BatchListResult: arrBatchReq}
+
+	return bResp, nil
+}
 
 func (s *GRPCServer) CreateShortURLJSON(ctx context.Context, res *pb.ReqURL) (*pb.CreateShortURLJSONResponse, error) {
-	log.Println("CreateShortURLJSON")
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unknown, "wrong metadata")
@@ -187,7 +235,6 @@ func (s *GRPCServer) CreateShortURLJSON(ctx context.Context, res *pb.ReqURL) (*p
 	short := GenUlid()
 
 	r, err := s.handler.Repository.SaveURL(ctx, short, res.Url, cookie) //если есть такой,то вернуть шорт и конфликт статус
-	fmt.Println(r)
 	if err != nil {
 		if r != "" {
 			exist := s.cfg.BaseURL + "/" + r
