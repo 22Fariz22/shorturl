@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/entity"
 	pb "github.com/22Fariz22/shorturl/pkg/proto"
@@ -87,9 +86,27 @@ func (s *GRPCServer) Stats(ctx context.Context, empty *emptypb.Empty) (*pb.Stats
 }
 
 func (s *GRPCServer) DeleteHandler(ctx context.Context, deletelist *pb.DeleteListRequest) (*emptypb.Empty, error) {
-	fmt.Println("DeleteHandler.")
 	empty := &emptypb.Empty{}
-	fmt.Println("deletelist", deletelist)
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unknown, "wrong metadata")
+	}
+
+	if len(md.Get("Cookies")) == 0 {
+		return nil, status.Error(codes.Unknown, "wrong metadata")
+	}
+
+	cookie := md.Get("Cookies")[0]
+
+	arr := make([]string, len(deletelist.DeleteList))
+
+	for _, v := range deletelist.DeleteList {
+		arr = append(arr, v.OneString)
+	}
+
+	s.handler.Workers.AddJob(ctx, arr, cookie)
+
 	return empty, nil
 }
 

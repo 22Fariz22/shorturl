@@ -77,8 +77,8 @@ message CreateShortURLHandlerResponse{
 
 service Services {
   rpc Stats(google.protobuf.Empty) returns (StatsResponse);
-  rpc DeleteHandler(DeleteListRequest) returns (google.protobuf.Empty);
-  rpc GetAllURL(google.protobuf.Empty) returns (AllURLRequestList); //не получается
+  rpc DeleteHandler(DeleteListRequest) returns (google.protobuf.Empty); // доделать
+  rpc GetAllURL(google.protobuf.Empty) returns (AllURLRequestList);
   rpc CreateShortURLHandler(CreateShort) returns (CreateShortURLHandlerResponse);
   rpc GetShortURLByIDHandler(IDParam) returns (OneString);
   rpc Batch(BatchListResp) returns (BatchListReq);
