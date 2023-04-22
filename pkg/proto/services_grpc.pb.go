@@ -36,7 +36,7 @@ const (
 type ServicesClient interface {
 	Stats(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatsResponse, error)
 	DeleteHandler(ctx context.Context, in *DeleteListRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetAllURL(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AllURLsResponse, error)
+	GetAllURL(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AllURLRequestList, error)
 	CreateShortURLHandler(ctx context.Context, in *CreateShort, opts ...grpc.CallOption) (*CreateShortURLHandlerResponse, error)
 	GetShortURLByIDHandler(ctx context.Context, in *IDParam, opts ...grpc.CallOption) (*OneString, error)
 	Batch(ctx context.Context, in *BatchListResp, opts ...grpc.CallOption) (*BatchListReq, error)
@@ -70,8 +70,8 @@ func (c *servicesClient) DeleteHandler(ctx context.Context, in *DeleteListReques
 	return out, nil
 }
 
-func (c *servicesClient) GetAllURL(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AllURLsResponse, error) {
-	out := new(AllURLsResponse)
+func (c *servicesClient) GetAllURL(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AllURLRequestList, error) {
+	out := new(AllURLRequestList)
 	err := c.cc.Invoke(ctx, Services_GetAllURL_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func (c *servicesClient) Ping(ctx context.Context, in *emptypb.Empty, opts ...gr
 type ServicesServer interface {
 	Stats(context.Context, *emptypb.Empty) (*StatsResponse, error)
 	DeleteHandler(context.Context, *DeleteListRequest) (*emptypb.Empty, error)
-	GetAllURL(context.Context, *emptypb.Empty) (*AllURLsResponse, error)
+	GetAllURL(context.Context, *emptypb.Empty) (*AllURLRequestList, error)
 	CreateShortURLHandler(context.Context, *CreateShort) (*CreateShortURLHandlerResponse, error)
 	GetShortURLByIDHandler(context.Context, *IDParam) (*OneString, error)
 	Batch(context.Context, *BatchListResp) (*BatchListReq, error)
@@ -149,7 +149,7 @@ func (UnimplementedServicesServer) Stats(context.Context, *emptypb.Empty) (*Stat
 func (UnimplementedServicesServer) DeleteHandler(context.Context, *DeleteListRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteHandler not implemented")
 }
-func (UnimplementedServicesServer) GetAllURL(context.Context, *emptypb.Empty) (*AllURLsResponse, error) {
+func (UnimplementedServicesServer) GetAllURL(context.Context, *emptypb.Empty) (*AllURLRequestList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllURL not implemented")
 }
 func (UnimplementedServicesServer) CreateShortURLHandler(context.Context, *CreateShort) (*CreateShortURLHandlerResponse, error) {

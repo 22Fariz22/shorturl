@@ -93,7 +93,7 @@ func (s *GRPCServer) DeleteHandler(ctx context.Context, deletelist *pb.DeleteLis
 	return empty, nil
 }
 
-func (s *GRPCServer) GetAllURL(ctx context.Context, empty *emptypb.Empty) (*pb.AllURLsResponse, error) {
+func (s *GRPCServer) GetAllURL(ctx context.Context, empty *emptypb.Empty) (*pb.AllURLRequestList, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unknown, "wrong metadata")
@@ -105,25 +105,29 @@ func (s *GRPCServer) GetAllURL(ctx context.Context, empty *emptypb.Empty) (*pb.A
 
 	cookie := md.Get("Cookies")[0]
 
-	resp := &pb.AllURLsResponse{RespUrls: []*pb.BatchListReq{}}
-
-	list, err := s.handler.Repository.GetAll(ctx, cookie)
+	repoAnswer, err := s.handler.Repository.GetAll(ctx, cookie)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
-	fmt.Println("list:", list)
 
-	//resp.RespUrls = list
+	//загатовка для request
+	batchListReq := make([]*pb.AllURLRequest, 0, len(repoAnswer))
 
-	//resp := &pb.AllURLsResponse{
-	//	SortUrl:     list.ID,
-	//	OriginalUrl: list.LongURL,
-	//}
+	for _, mp := range repoAnswer {
+		for k, v := range mp {
+			temp := &pb.AllURLRequest{
+				ShortUrl:    s.cfg.BaseURL + "/" + k,
+				OriginalUrl: v,
+			}
+			//добавялем в загатовку для request
+			batchListReq = append(batchListReq, temp)
+		}
+	}
 
-	fmt.Println("resp", resp)
+	//для request
+	resp := &pb.AllURLRequestList{AllUrls: batchListReq}
 
 	return resp, nil
-
 }
 
 func (s *GRPCServer) CreateShortURLHandler(ctx context.Context, body *pb.CreateShort) (*pb.CreateShortURLHandlerResponse, error) {
