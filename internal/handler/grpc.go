@@ -29,7 +29,6 @@ func NewGRPCServer(cfg config.Config, handler *Handler) *GRPCServer {
 }
 
 func (s *GRPCServer) Ping(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
-	log.Println("Ping.")
 	err := s.handler.Repository.Ping(ctx)
 	if err != nil {
 		return empty, status.Error(codes.Unavailable, "unavailable")
@@ -148,8 +147,6 @@ func (s *GRPCServer) GetAllURL(ctx context.Context, empty *emptypb.Empty) (*pb.A
 }
 
 func (s *GRPCServer) CreateShortURLHandler(ctx context.Context, body *pb.CreateShort) (*pb.CreateShortURLHandlerResponse, error) {
-	log.Println("CreateShortURLHandler")
-
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unknown, "wrong metadata")
