@@ -2,34 +2,37 @@ package handler
 
 import (
 	"context"
+	"net"
+
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/entity"
+	"github.com/22Fariz22/shorturl/pkg/logger"
 	pb "github.com/22Fariz22/shorturl/pkg/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"log"
-	"net"
 )
 
 type GRPCServer struct {
 	pb.UnimplementedServicesServer
+	l       logger.Interface
 	cfg     config.Config
 	handler *Handler
 }
 
-func NewGRPCServer(cfg config.Config, handler *Handler) *GRPCServer {
+func NewGRPCServer(l logger.Interface, cfg config.Config, handler *Handler) *GRPCServer {
 	return &GRPCServer{
 		UnimplementedServicesServer: pb.UnimplementedServicesServer{},
+		l:                           l,
 		cfg:                         cfg,
 		handler:                     handler,
 	}
 }
 
 func (s *GRPCServer) Ping(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
-	err := s.handler.Repository.Ping(ctx)
+	err := s.handler.Repository.Ping(ctx, s.l)
 	if err != nil {
 		return empty, status.Error(codes.Unavailable, "unavailable")
 	}
@@ -53,25 +56,25 @@ func (s *GRPCServer) Stats(ctx context.Context, empty *emptypb.Empty) (*pb.Stats
 
 	ipStr, _, err := net.SplitHostPort(addr)
 	if err != nil {
-		log.Println("err net.SplitHostPort: ", err)
+		s.l.Info("err net.SplitHostPort: ", err)
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 
 	// парсим ip
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
-		log.Println("nil from net.ParseIP: ", err)
+		s.l.Info("nil from net.ParseIP: ", err)
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 
 	_, ipnet, err := net.ParseCIDR(s.cfg.TrustedSubnet)
 	if err != nil {
-		log.Println("err net.ParseCIDR: ", err)
+		s.l.Info("err net.ParseCIDR: ", err)
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 
 	if ipnet.Contains(ip) {
-		urls, users, err := s.handler.Repository.Stats(ctx)
+		urls, users, err := s.handler.Repository.Stats(ctx, s.l)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "internal server error")
 		}
@@ -104,7 +107,7 @@ func (s *GRPCServer) DeleteHandler(ctx context.Context, deletelist *pb.DeleteLis
 		arr = append(arr, v.OneString)
 	}
 
-	s.handler.Workers.AddJob(ctx, arr, cookie)
+	s.handler.Workers.AddJob(ctx, s.l, arr, cookie)
 
 	return empty, nil
 }
@@ -121,7 +124,7 @@ func (s *GRPCServer) GetAllURL(ctx context.Context, empty *emptypb.Empty) (*pb.A
 
 	cookie := md.Get("Cookies")[0]
 
-	repoAnswer, err := s.handler.Repository.GetAll(ctx, cookie)
+	repoAnswer, err := s.handler.Repository.GetAll(ctx, s.l, cookie)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
@@ -160,7 +163,7 @@ func (s *GRPCServer) CreateShortURLHandler(ctx context.Context, body *pb.CreateS
 	//генератор
 	short := GenUlid()
 
-	u, err := s.handler.Repository.SaveURL(ctx, short, body.Long, cookie)
+	u, err := s.handler.Repository.SaveURL(ctx, s.l, short, body.Long, cookie)
 	if err != nil {
 		exist := &pb.CreateShortURLHandlerResponse{Url: s.cfg.BaseURL + "/" + u}
 		return exist, status.Error(codes.AlreadyExists, "already exist")
@@ -172,7 +175,7 @@ func (s *GRPCServer) CreateShortURLHandler(ctx context.Context, body *pb.CreateS
 }
 
 func (s *GRPCServer) GetShortURLByIDHandler(ctx context.Context, param *pb.IDParam) (*pb.OneString, error) {
-	url, ok := s.handler.Repository.GetURL(ctx, param.Id)
+	url, ok := s.handler.Repository.GetURL(ctx, s.l, param.Id)
 	if !ok {
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
@@ -226,7 +229,7 @@ func (s *GRPCServer) Batch(ctx context.Context, packReq *pb.BatchListResp) (*pb.
 	}
 
 	//отравляем заполненную загатовку в репу
-	err := s.handler.Repository.RepoBatch(ctx, cookie, arrPackReq)
+	err := s.handler.Repository.RepoBatch(ctx, s.l, cookie, arrPackReq)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
@@ -252,7 +255,7 @@ func (s *GRPCServer) CreateShortURLJSON(ctx context.Context, res *pb.ReqURL) (*p
 	//генератор
 	short := GenUlid()
 
-	r, err := s.handler.Repository.SaveURL(ctx, short, res.Url, cookie) //если есть такой,то вернуть шорт и конфликт статус
+	r, err := s.handler.Repository.SaveURL(ctx, s.l, short, res.Url, cookie) //если есть такой,то вернуть шорт и конфликт статус
 	if err != nil {
 		if r != "" {
 			exist := s.cfg.BaseURL + "/" + r

@@ -4,8 +4,9 @@ package db
 import (
 	"context"
 	"errors"
-	"log"
 	"time"
+
+	"github.com/22Fariz22/shorturl/pkg/logger"
 
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/usecase"
@@ -21,13 +22,13 @@ type inDBRepository struct {
 	databaseDSN string
 }
 
-func (i *inDBRepository) Stats(ctx context.Context) (int, int, error) {
+func (i *inDBRepository) Stats(ctx context.Context, l logger.Interface) (int, int, error) {
 	var urls int
 	var users int
 
 	err := i.pool.QueryRow(ctx, "select count(distinct(cookies)), count(short_url) from urls;").Scan(&users, &urls)
 	if err != nil {
-		log.Println("err in count(short_url):", err)
+		l.Info("err in count(short_url):", err)
 		return 0, 0, err
 	}
 
@@ -42,13 +43,13 @@ func New(cfg *config.Config) usecase.Repository {
 }
 
 // Init инициализация дб связки
-func (i *inDBRepository) Init() error {
+func (i *inDBRepository) Init(l logger.Interface) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	db, err := pgxpool.New(ctx, i.databaseDSN)
 	if err != nil {
-		log.Printf("Unable to create connection pool: %v\n", err)
+		l.Info("Unable to create connection pool: %v\n", err)
 		return err
 	}
 	i.pool = db
@@ -57,20 +58,20 @@ func (i *inDBRepository) Init() error {
 		"CREATE TABLE if not exists urls(id_pk SERIAL PRIMARY KEY, cookies TEXT, correlation_id TEXT,"+
 			" short_url TEXT, long_url TEXT , deleted boolean default false);")
 	if err != nil {
-		log.Printf("Unable to create table: %v\n", err)
+		l.Info("Unable to create table: %v\n", err)
 		return err
 	}
 	return nil
 }
 
 // Delete удаление записи из дб
-func (i *inDBRepository) Delete(list []string, cookie string) error {
+func (i *inDBRepository) Delete(l logger.Interface, list []string, cookie string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	tx, err := i.pool.Begin(ctx)
 	if err != nil {
-		log.Println(err)
+		l.Info("", err)
 		return err
 	}
 	defer tx.Rollback(ctx)
@@ -78,7 +79,7 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 	_, err = tx.Prepare(ctx,
 		"UPDATE", "UPDATE urls SET deleted = true WHERE short_url = $1 and cookies=$2;")
 	if err != nil {
-		log.Println("log in db del(2):", err)
+		l.Info("log in db del(2):", err)
 		return err
 	}
 
@@ -87,21 +88,21 @@ func (i *inDBRepository) Delete(list []string, cookie string) error {
 			"UPDATE urls SET deleted = true WHERE short_url = $1 and cookies=$2;",
 			list[i], cookie)
 		if err != nil {
-			log.Println(err)
+			l.Info("", err)
 			return err
 		}
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		log.Println(err)
+		l.Info("", err)
 		return err
 	}
 	return nil
 }
 
 // SaveURL сохранение записи в дб
-func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL string, cook string) (string, error) {
+func (i *inDBRepository) SaveURL(ctx context.Context, l logger.Interface, shortURL string, longURL string, cook string) (string, error) {
 	// ErrAlreadyExists вывод ошибки если такой урл уже существует
 	var ErrAlreadyExists = errors.New("this URL already exists")
 	var id int8
@@ -111,14 +112,14 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 		longURL, cook)
 	err := row.Scan(&id)
 	if err != nil {
-		log.Println("log in db SaveURL(0):", err)
+		l.Info("log in db SaveURL(0):", err)
 	}
 	if id == 0 {
 		// добавляем новую запись
 		_, err = i.pool.Exec(ctx, "insert into urls (cookies, short_url, long_url) values($1,$2,$3);",
 			cook, shortURL, longURL)
 		if err != nil {
-			log.Println("log in db SaveURL(1):", err)
+			l.Info("log in db SaveURL(1):", err)
 			return "", err
 		}
 		return "", nil
@@ -130,19 +131,19 @@ func (i *inDBRepository) SaveURL(ctx context.Context, shortURL string, longURL s
 	err = i.pool.QueryRow(ctx, "select short_url from urls where long_url = $1 and cookies = $2;",
 		longURL, cook).Scan(&su)
 	if err != nil {
-		log.Println("log in SaveURL(2):", err)
+		l.Info("log in SaveURL(2):", err)
 		return "", err
 	}
 	return su, ErrAlreadyExists
 }
 
 // RepoBatch создание записей из списка в дб
-func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList []entity.PackReq) error {
+func (i *inDBRepository) RepoBatch(ctx context.Context, l logger.Interface, cook string, batchList []entity.PackReq) error {
 	for b := range batchList {
 		_, err := i.pool.Exec(ctx, "insert into urls (cookies,correlation_id, short_url, long_url) values($1,$2,$3,$4);",
 			cook, batchList[b].CorrelationID, batchList[b].ShortURL, batchList[b].OriginalURL)
 		if err != nil {
-			log.Println(err)
+			l.Info("", err)
 			return err
 		}
 	}
@@ -150,10 +151,10 @@ func (i *inDBRepository) RepoBatch(ctx context.Context, cook string, batchList [
 }
 
 // GetURL return long url, deleted status, exist row
-func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (entity.URL, bool) {
+func (i *inDBRepository) GetURL(ctx context.Context, l logger.Interface, shortID string) (entity.URL, bool) {
 	row, err := i.pool.Query(ctx, "select cookies,long_url,deleted from urls where short_url = $1;", shortID)
 	if err != nil {
-		log.Println(err)
+		l.Info("", err)
 		return entity.URL{}, false
 	}
 	defer row.Close()
@@ -176,10 +177,10 @@ func (i *inDBRepository) GetURL(ctx context.Context, shortID string) (entity.URL
 }
 
 // GetAll получить все записи в дб
-func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]string, error) {
+func (i *inDBRepository) GetAll(ctx context.Context, l logger.Interface, cook string) ([]map[string]string, error) {
 	rows, err := i.pool.Query(ctx, "select short_url, long_url from urls where cookies = $1;", cook)
 	if err != nil {
-		log.Println(err)
+		l.Info("", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -191,7 +192,7 @@ func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]
 		var longurl string
 		err = rows.Scan(&id, &longurl)
 		if err != nil {
-			log.Println(err)
+			l.Info("", err)
 			return nil, err
 		}
 
@@ -203,6 +204,6 @@ func (i *inDBRepository) GetAll(ctx context.Context, cook string) ([]map[string]
 }
 
 // Ping проверка связи с дб
-func (i *inDBRepository) Ping(ctx context.Context) error {
+func (i *inDBRepository) Ping(ctx context.Context, l logger.Interface) error {
 	return i.pool.Ping(ctx)
 }
