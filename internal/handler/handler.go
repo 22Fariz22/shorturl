@@ -23,7 +23,7 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-const ctxTimeOut = 5 * time.Second
+const CtxTimeOut = 5 * time.Second
 
 //go:generate make total
 
@@ -85,7 +85,7 @@ func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 	if ipnet.Contains(ip) {
 		urls, users, err := h.Repository.Stats(context.Background())
 		if err != nil {
-			log.Println("err h.Repository.Stats: ", err)
+			log.Println("h.Repository.Stats: ", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -124,7 +124,7 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
 	h.Workers.AddJob(ctx, list, r.Cookies()[0].Value)
@@ -145,7 +145,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	}
 	var res []resp
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
 	list, err := h.Repository.GetAll(ctx, r.Cookies()[0].Value)
@@ -195,7 +195,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//сокращатель
 	short := GenUlid()
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
@@ -220,7 +220,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 	vars := chi.URLParam(r, "id")
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
 	url, ok := h.Repository.GetURL(ctx, vars)
@@ -247,7 +247,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
 	var batchResp []entity.PackReq
@@ -335,7 +335,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
@@ -401,7 +401,7 @@ type gzipReader struct {
 
 // Ping проверка соединения
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
 	err := h.Repository.Ping(ctx)
