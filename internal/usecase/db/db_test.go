@@ -5,35 +5,40 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/cookies"
 	"github.com/22Fariz22/shorturl/internal/handler"
 	mock_usecase "github.com/22Fariz22/shorturl/internal/usecase/mocks"
 	"github.com/22Fariz22/shorturl/internal/worker"
+	"github.com/22Fariz22/shorturl/pkg/logger"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"log"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func Test_inDBRepository_Stats(t *testing.T) {
+	l := logger.New("debug")
+	ctx := context.Background()
+
 	ctrl := gomock.NewController(t)
 	dbMock := mock_usecase.NewMockRepository(ctrl)
 
 	cfg := config.NewConfig()
 	cfg.TrustedSubnet = "127.0.0.1/8"
 
-	hd := handler.NewHandler(dbMock, cfg, nil)
+	hd := handler.NewHandler(ctx, dbMock, cfg, nil, l)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", cfg.BaseURL+"/api/internal/stats", nil)
 
-	dbMock.EXPECT().Stats(gomock.Any()).Return(0, 0, nil)
+	dbMock.EXPECT().Stats(l, gomock.Any()).Return(0, 0, nil)
 	hd.Stats(w, r)
 
-	dbMock.Stats(context.Background())
+	dbMock.Stats(context.Background(), l)
 
 	require.Equal(t, http.StatusForbidden, w.Result().StatusCode)
 
@@ -86,6 +91,9 @@ func Test_inDBRepository_Stats(t *testing.T) {
 //}
 
 func Test_inDBRepository_Ping(t *testing.T) {
+	l := logger.New("debug")
+	ctx := context.Background()
+
 	ctrl := gomock.NewController(t)
 	dbMock := mock_usecase.NewMockRepository(ctrl)
 
@@ -95,39 +103,42 @@ func Test_inDBRepository_Ping(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	hd := handler.NewHandler(dbMock, &config.Config{
+	hd := handler.NewHandler(ctx, dbMock, &config.Config{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8080",
 		SecretKey:     secretKey,
-	}, nil)
+	}, nil, l)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", hd.Cfg.BaseURL+"/ping", nil)
 
-	dbMock.EXPECT().Ping(gomock.Any()).Return(nil)
+	dbMock.EXPECT().Ping(l, gomock.Any()).Return(nil)
 	hd.Ping(w, r)
 
 	require.Equal(t, http.StatusOK, w.Result().StatusCode)
 }
 
 func Test_inDBRepository_Delete(t *testing.T) {
+	l := logger.New("debug")
+	ctx := context.Background()
+
 	ctrl := gomock.NewController(t)
 	dbMock := mock_usecase.NewMockRepository(ctrl)
 
 	//cfg := config.NewConfig()
 
-	workers := worker.NewWorkerPool(dbMock)
+	workers := worker.NewWorkerPool(l, dbMock)
 
 	secretKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	hd := handler.NewHandler(dbMock, &config.Config{
+	hd := handler.NewHandler(ctx, dbMock, &config.Config{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8080",
 		SecretKey:     secretKey,
-	}, workers)
+	}, workers, l)
 
 	query := []string{"1", "2", "3"}
 
@@ -141,10 +152,10 @@ func Test_inDBRepository_Delete(t *testing.T) {
 	cookies.SetCookieHandler(w, r, secretKey)
 	cookies := r.Cookies()[0].Value
 
-	dbMock.EXPECT().Delete(query, cookies).Return(nil)
+	dbMock.EXPECT().Delete(l, query, cookies).Return(nil)
 	hd.DeleteHandler(w, r)
 
-	hd.Repository.Delete(query, cookies)
+	hd.Repository.Delete(l, query, cookies)
 
 	require.Equal(t, http.StatusAccepted, w.Result().StatusCode)
 }
