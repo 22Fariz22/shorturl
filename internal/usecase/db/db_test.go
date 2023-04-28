@@ -34,7 +34,7 @@ func Test_inDBRepository_Stats(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", cfg.BaseURL+"/api/internal/stats", nil)
-	r.Body.Close()
+	defer r.Body.Close()
 
 	dbMock.EXPECT().Stats(l, gomock.Any()).Return(0, 0, nil)
 	hd.Stats(w, r)
@@ -112,7 +112,7 @@ func Test_inDBRepository_Ping(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", hd.Cfg.BaseURL+"/ping", nil)
-	r.Body.Close()
+	defer r.Body.Close()
 
 	dbMock.EXPECT().Ping(l, gomock.Any()).Return(nil)
 	hd.Ping(w, r)
@@ -150,7 +150,7 @@ func Test_inDBRepository_Delete(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("DELETE", hd.Cfg.BaseURL+"/api/user/urls", buf)
-	r.Body.Close()
+	defer r.Body.Close()
 
 	cookies.SetCookieHandler(w, r, secretKey)
 	cookies := r.Cookies()[0].Value
