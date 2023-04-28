@@ -49,7 +49,10 @@ func Run(cfg *config.Config) {
 
 	r := chi.NewRouter()
 
-	hd := handler.NewHandler(repo, cfg, workers, l)
+	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdown()
+
+	hd := handler.NewHandler(ctx, repo, cfg, workers, l)
 
 	r.Use(handler.DeCompress)
 	r.Use(middleware.RequestID)
@@ -92,7 +95,6 @@ func Run(cfg *config.Config) {
 		if cfg.EnableHTTPS {
 			l.Info("start https server.")
 			server.ListenAndServeTLS("", "")
-
 		} else {
 			if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
 				l.Info("start http server.")
@@ -121,10 +123,11 @@ func Run(cfg *config.Config) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
-	<-quit
-
-	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
-	defer shutdown()
+	go func() {
+		<-quit
+		s.GracefulStop()
+	}()
 
 	server.Shutdown(ctx)
+
 }

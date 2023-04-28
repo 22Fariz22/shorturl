@@ -31,6 +31,7 @@ const CtxTimeOut = 5 * time.Second
 
 // Handler структура хэндлер
 type Handler struct {
+	ctx        context.Context
 	Repository usecase.Repository
 	Cfg        config.Config
 	Workers    *worker.Pool
@@ -44,8 +45,9 @@ type reqURL struct {
 var rURL reqURL
 
 // NewHandler создает хэндлер
-func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Pool, l logger.Interface) *Handler {
+func NewHandler(ctx context.Context, repo usecase.Repository, cfg *config.Config, workers *worker.Pool, l logger.Interface) *Handler {
 	return &Handler{
+		ctx:        ctx,
 		Repository: repo,
 		Cfg:        *cfg,
 		Workers:    workers,

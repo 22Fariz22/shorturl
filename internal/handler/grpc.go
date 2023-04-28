@@ -101,7 +101,7 @@ func (s *GRPCServer) DeleteHandler(ctx context.Context, deletelist *pb.DeleteLis
 
 	cookie := md.Get("Cookies")[0]
 
-	arr := make([]string, len(deletelist.DeleteList))
+	arr := make([]string, 0, len(deletelist.DeleteList))
 
 	for _, v := range deletelist.DeleteList {
 		arr = append(arr, v.OneString)

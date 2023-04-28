@@ -10,14 +10,14 @@ type URL struct {
 	Deleted       bool
 }
 
-//PackReq запрос для json
+// PackReq запрос для json
 type PackReq struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
 	ShortURL      string `json:"short_url"`
 }
 
-//PackResponse ответ для json
+// PackResponse ответ для json
 type PackResponse struct {
 	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
