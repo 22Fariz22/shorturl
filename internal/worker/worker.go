@@ -4,14 +4,15 @@ package worker
 import (
 	"context"
 	"errors"
-	"log"
+	"github.com/22Fariz22/shorturl/pkg/logger"
 	"sync"
 
 	"github.com/22Fariz22/shorturl/internal/usecase"
 )
 
-//Pool структура для воркера
+// Pool структура для воркера
 type Pool struct {
+	l          logger.Interface
 	wg         sync.WaitGroup
 	once       sync.Once
 	shutDown   chan struct{}
@@ -19,9 +20,10 @@ type Pool struct {
 	repository usecase.Repository
 }
 
-//NewWorkerPool создание воркера
-func NewWorkerPool(repo usecase.Repository) *Pool {
+// NewWorkerPool создание воркера
+func NewWorkerPool(l logger.Interface, repo usecase.Repository) *Pool {
 	return &Pool{
+		l:          l,
 		wg:         sync.WaitGroup{},
 		once:       sync.Once{},
 		shutDown:   make(chan struct{}),
@@ -30,14 +32,14 @@ func NewWorkerPool(repo usecase.Repository) *Pool {
 	}
 }
 
-//workerData структура содержания воркера
+// workerData структура содержания воркера
 type workerData struct {
 	urls   []string
 	cookie string
 }
 
-//AddJob запуск в handler
-func (w *Pool) AddJob(ctx context.Context, arr []string, cookies string) error {
+// AddJob запуск в handler
+func (w *Pool) AddJob(ctx context.Context, l logger.Interface, arr []string, cookies string) error {
 	select {
 	case <-w.shutDown:
 		return errors.New("all channels are closed")
@@ -49,7 +51,7 @@ func (w *Pool) AddJob(ctx context.Context, arr []string, cookies string) error {
 	}
 }
 
-//RunWorkers запуск в App
+// RunWorkers запуск в App
 func (w *Pool) RunWorkers(count int) {
 	for i := 0; i < count; i++ {
 		w.wg.Add(1)
@@ -64,9 +66,9 @@ func (w *Pool) RunWorkers(count int) {
 						return
 					}
 
-					err := w.repository.Delete(urls.urls, urls.cookie)
+					err := w.repository.Delete(w.l, urls.urls, urls.cookie)
 					if err != nil {
-						log.Print(err)
+						w.l.Info("", err)
 					}
 				}
 			}
@@ -74,7 +76,7 @@ func (w *Pool) RunWorkers(count int) {
 	}
 }
 
-//Stop остановка воркера
+// Stop остановка воркера
 func (w *Pool) Stop() {
 	w.once.Do(func() {
 		close(w.shutDown)

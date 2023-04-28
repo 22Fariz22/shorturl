@@ -8,9 +8,12 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/22Fariz22/shorturl/pkg/logger"
 
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/cookies"
@@ -22,15 +25,17 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-const ctxTimeOut = 5 * time.Second
+const CtxTimeOut = 5 * time.Second
 
 //go:generate make total
 
 // Handler структура хэндлер
 type Handler struct {
+	ctx        context.Context
 	Repository usecase.Repository
 	Cfg        config.Config
 	Workers    *worker.Pool
+	l          logger.Interface
 }
 
 type reqURL struct {
@@ -40,12 +45,74 @@ type reqURL struct {
 var rURL reqURL
 
 // NewHandler создает хэндлер
-func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Pool) *Handler {
+func NewHandler(ctx context.Context, repo usecase.Repository, cfg *config.Config, workers *worker.Pool, l logger.Interface) *Handler {
 	return &Handler{
+		ctx:        ctx,
 		Repository: repo,
 		Cfg:        *cfg,
 		Workers:    workers,
+		l:          l,
 	}
+}
+
+// Stats возвращает количество сокращённых URL в сервисе и количество пользователей в сервисе
+func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
+	type stats struct {
+		Urls  int `json:"urls"`
+		Users int `json:"users"`
+	}
+
+	var st stats
+
+	addr := r.RemoteAddr
+
+	ipStr, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		h.l.Info("err net.SplitHostPort: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// парсим ip
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		h.l.Info("nil from net.ParseIP: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, ipnet, err := net.ParseCIDR(h.Cfg.TrustedSubnet)
+	if err != nil {
+		h.l.Info("err net.ParseCIDR: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if ipnet.Contains(ip) {
+		urls, users, err := h.Repository.Stats(context.Background(), h.l)
+		if err != nil {
+			h.l.Info("h.Repository.Stats: ", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		st.Urls = urls
+		st.Users = users
+	} else {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	outJSON, err := json.Marshal(st)
+	if err != nil {
+		h.l.Info("err net.ParseIP: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(outJSON)
+
 }
 
 // DeleteHandler удаляет запись
@@ -57,16 +124,16 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	var list []string
 
 	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
-		log.Println(err)
+		h.l.Info("", err)
 		//status 400
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
-	h.Workers.AddJob(ctx, list, r.Cookies()[0].Value)
+	h.Workers.AddJob(ctx, h.l, list, r.Cookies()[0].Value)
 
 	//status 202
 	w.WriteHeader(http.StatusAccepted)
@@ -84,13 +151,13 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	}
 	var res []resp
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
-	list, err := h.Repository.GetAll(ctx, r.Cookies()[0].Value)
+	list, err := h.Repository.GetAll(ctx, h.l, r.Cookies()[0].Value)
 	//status 204
 	if err != nil {
-		log.Println(err)
+		h.l.Info("", err)
 		w.WriteHeader(http.StatusNoContent)
 	}
 
@@ -104,7 +171,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	}
 	res1, err := json.Marshal(res)
 	if err != nil {
-		log.Println(err)
+		h.l.Info("", err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -128,16 +195,16 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
+		h.l.Info("", err)
 	}
 
 	//сокращатель
 	short := GenUlid()
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
-	s, err := h.Repository.SaveURL(ctx, short, string(payload), r.Cookies()[0].Value)
+	s, err := h.Repository.SaveURL(ctx, h.l, short, string(payload), r.Cookies()[0].Value)
 
 	//status 409
 	if err != nil {
@@ -159,10 +226,10 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 	vars := chi.URLParam(r, "id")
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
-	url, ok := h.Repository.GetURL(ctx, vars)
+	url, ok := h.Repository.GetURL(ctx, h.l, vars)
 
 	//status 400
 	if !ok {
@@ -186,19 +253,19 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
 	var batchResp []entity.PackReq
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
+		h.l.Info("", err)
 		http.Error(w, "", 500)
 		return
 	}
 	if err := json.Unmarshal(payload, &batchResp); err != nil {
-		log.Print(err)
+		h.l.Info("", err)
 		return
 	}
 
@@ -225,15 +292,15 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		listResp = append(listResp, resp)
 	}
 
-	err = h.Repository.RepoBatch(ctx, r.Cookies()[0].Value, listReq)
+	err = h.Repository.RepoBatch(ctx, h.l, r.Cookies()[0].Value, listReq)
 	if err != nil {
-		log.Println(err)
+		h.l.Info("", err)
 		return
 	}
 
 	res, err := json.Marshal(listResp)
 	if err != nil {
-		log.Print(err)
+		h.l.Info("", err)
 	}
 	w.Header().Set("Content-Type", "application/json")
 
@@ -250,12 +317,12 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
+		h.l.Info("", err)
 		http.Error(w, "", 500)
 	}
 
 	if err := json.Unmarshal(payload, &rURL); err != nil {
-		log.Print(err)
+		h.l.Info("", err)
 		return
 	}
 
@@ -271,13 +338,13 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 
 	res, err := json.Marshal(resp)
 	if err != nil {
-		log.Print(err)
+		h.l.Info("", err)
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
-	s, err := h.Repository.SaveURL(ctx, short, rURL.URL, r.Cookies()[0].Value)
+	s, err := h.Repository.SaveURL(ctx, h.l, short, rURL.URL, r.Cookies()[0].Value)
 
 	if err != nil {
 		resp1 := respURL{
@@ -285,7 +352,7 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		}
 		res1, err := json.Marshal(resp1)
 		if err != nil {
-			log.Print(err)
+			h.l.Info("", err)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		//status 409
@@ -340,10 +407,10 @@ type gzipReader struct {
 
 // Ping проверка соединения
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), ctxTimeOut)
+	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
 	defer cancel()
 
-	err := h.Repository.Ping(ctx)
+	err := h.Repository.Ping(ctx, h.l)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

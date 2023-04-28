@@ -3,6 +3,16 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"github.com/22Fariz22/shorturl/pkg/logger"
+	"net"
+	"net/http"
+	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/handler"
 	"github.com/22Fariz22/shorturl/internal/usecase"
@@ -10,20 +20,17 @@ import (
 	"github.com/22Fariz22/shorturl/internal/usecase/file"
 	"github.com/22Fariz22/shorturl/internal/usecase/memory"
 	"github.com/22Fariz22/shorturl/internal/worker"
+	pb "github.com/22Fariz22/shorturl/pkg/proto"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"golang.org/x/crypto/acme/autocert"
-	"log"
-	"net/http"
-	_ "net/http/pprof"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"google.golang.org/grpc"
 )
 
 // Run запускает приложение с учетом конфигурации из main и роутеры
 func Run(cfg *config.Config) {
+	l := logger.New("debug")
+
 	var repo usecase.Repository
 
 	if cfg.DatabaseDSN != "" {
@@ -34,22 +41,24 @@ func Run(cfg *config.Config) {
 		repo = memory.New()
 	}
 
-	repo.Init()
+	repo.Init(l)
 
-	workers := worker.NewWorkerPool(repo)
+	workers := worker.NewWorkerPool(l, repo)
 	workers.RunWorkers(10)
 	defer workers.Stop()
 
 	r := chi.NewRouter()
 
-	hd := handler.NewHandler(repo, cfg, workers)
+	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdown()
+
+	hd := handler.NewHandler(ctx, repo, cfg, workers, l)
 
 	r.Use(handler.DeCompress)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	//r.Mount("/debug", middleware.Profiler())
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
@@ -59,14 +68,16 @@ func Run(cfg *config.Config) {
 	r.Post("/api/shorten/batch", hd.Batch)
 	r.Delete("/api/user/urls", hd.DeleteHandler)
 
+	r.Get("/api/internal/stats", hd.Stats)
+
 	go func() {
 		if cfg.PprofServerAddress == "" {
-			log.Println("pprof server address is empty, skipping")
+			l.Info("pprof server address is empty, skipping")
 			return
 		}
 		err := http.ListenAndServe(cfg.PprofServerAddress, nil)
 		if err != nil {
-			log.Printf("pprof server error: %s\n", err)
+			l.Info("pprof server error: %s\n", err)
 		}
 	}()
 
@@ -82,25 +93,41 @@ func Run(cfg *config.Config) {
 
 	go func() {
 		if cfg.EnableHTTPS {
-			log.Println("start https server.")
+			l.Info("start https server.")
 			server.ListenAndServeTLS("", "")
-
 		} else {
 			if err := http.ListenAndServe(cfg.ServerAddress, r); err != http.ErrServerClosed {
-				log.Println("start http server.")
-				log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+				l.Info("start http server.")
+				l.Fatal("HTTP server ListenAndServe Error: %v", err)
 			}
 		}
 	}()
+
+	// определяем порт для сервера grpc
+	listen, err := net.Listen("tcp", ":3200")
+	if err != nil {
+		l.Fatal(err)
+	}
+
+	// создаём gRPC-сервер без зарегистрированной службы
+	s := grpc.NewServer()
+	pb.RegisterServicesServer(s, handler.NewGRPCServer(l, *cfg, hd))
+
+	fmt.Println("Сервер gRPC начал работу")
+	// получаем запрос gRPC
+	if err := s.Serve(listen); err != nil {
+		l.Fatal(err)
+	}
 
 	//gracefull shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
-	<-quit
-
-	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
-	defer shutdown()
+	go func() {
+		<-quit
+		s.GracefulStop()
+	}()
 
 	server.Shutdown(ctx)
+
 }
