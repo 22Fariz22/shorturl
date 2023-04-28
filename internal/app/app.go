@@ -129,5 +129,4 @@ func Run(cfg *config.Config) {
 	}()
 
 	server.Shutdown(ctx)
-
 }
