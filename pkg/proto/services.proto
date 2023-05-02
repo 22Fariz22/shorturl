@@ -67,6 +67,7 @@ message AllURLRequest {
     string short_url = 1;
     string original_url = 2;
 }
+
 message AllURLRequestList{
   repeated AllURLRequest all_urls = 1;
 }

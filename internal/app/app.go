@@ -49,16 +49,14 @@ func Run(cfg *config.Config) {
 
 	r := chi.NewRouter()
 
-	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
-	defer shutdown()
-
-	hd := handler.NewHandler(ctx, repo, cfg, workers, l)
+	hd := handler.NewHandler(repo, cfg, workers, l)
 
 	r.Use(handler.DeCompress)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(2 * time.Second))
 
 	r.Post("/", hd.CreateShortURLHandler)
 	r.Get("/{id}", hd.GetShortURLByIDHandler)
@@ -125,8 +123,11 @@ func Run(cfg *config.Config) {
 
 	go func() {
 		<-quit
+		ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
+		defer shutdown()
 		s.GracefulStop()
+		server.Shutdown(ctx)
+
 	}()
 
-	server.Shutdown(ctx)
 }

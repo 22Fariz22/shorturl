@@ -3,7 +3,6 @@ package handler
 
 import (
 	"compress/gzip"
-	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -31,7 +30,6 @@ const CtxTimeOut = 5 * time.Second
 
 // Handler структура хэндлер
 type Handler struct {
-	ctx        context.Context
 	Repository usecase.Repository
 	Cfg        config.Config
 	Workers    *worker.Pool
@@ -45,9 +43,8 @@ type reqURL struct {
 var rURL reqURL
 
 // NewHandler создает хэндлер
-func NewHandler(ctx context.Context, repo usecase.Repository, cfg *config.Config, workers *worker.Pool, l logger.Interface) *Handler {
+func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Pool, l logger.Interface) *Handler {
 	return &Handler{
-		ctx:        ctx,
 		Repository: repo,
 		Cfg:        *cfg,
 		Workers:    workers,
@@ -89,7 +86,8 @@ func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ipnet.Contains(ip) {
-		urls, users, err := h.Repository.Stats(context.Background(), h.l)
+		ctx := r.Context()
+		urls, users, err := h.Repository.Stats(ctx, h.l)
 		if err != nil {
 			h.l.Info("h.Repository.Stats: ", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -130,8 +128,7 @@ func (h *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
-	defer cancel()
+	ctx := r.Context()
 
 	h.Workers.AddJob(ctx, h.l, list, r.Cookies()[0].Value)
 
@@ -151,8 +148,7 @@ func (h *Handler) GetAllURL(w http.ResponseWriter, r *http.Request) {
 	}
 	var res []resp
 
-	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
-	defer cancel()
+	ctx := r.Context()
 
 	list, err := h.Repository.GetAll(ctx, h.l, r.Cookies()[0].Value)
 	//status 204
@@ -201,8 +197,7 @@ func (h *Handler) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) 
 	//сокращатель
 	short := GenUlid()
 
-	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
-	defer cancel()
+	ctx := r.Context()
 
 	s, err := h.Repository.SaveURL(ctx, h.l, short, string(payload), r.Cookies()[0].Value)
 
@@ -226,8 +221,7 @@ func (h *Handler) GetShortURLByIDHandler(w http.ResponseWriter, r *http.Request)
 
 	vars := chi.URLParam(r, "id")
 
-	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
-	defer cancel()
+	ctx := r.Context()
 
 	url, ok := h.Repository.GetURL(ctx, h.l, vars)
 
@@ -253,8 +247,7 @@ func (h *Handler) Batch(w http.ResponseWriter, r *http.Request) {
 		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
-	defer cancel()
+	ctx := r.Context()
 
 	var batchResp []entity.PackReq
 
@@ -315,6 +308,8 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 		cookies.SetCookieHandler(w, r, h.Cfg.SecretKey)
 	}
 
+	ctx := r.Context()
+
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.l.Info("", err)
@@ -340,9 +335,6 @@ func (h *Handler) CreateShortURLJSON(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.l.Info("", err)
 	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
-	defer cancel()
 
 	s, err := h.Repository.SaveURL(ctx, h.l, short, rURL.URL, r.Cookies()[0].Value)
 
@@ -407,8 +399,7 @@ type gzipReader struct {
 
 // Ping проверка соединения
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), CtxTimeOut)
-	defer cancel()
+	ctx := r.Context()
 
 	err := h.Repository.Ping(ctx, h.l)
 	if err != nil {
