@@ -30,16 +30,16 @@ func Test_inDBRepository_Stats(t *testing.T) {
 	cfg := config.NewConfig()
 	cfg.TrustedSubnet = "127.0.0.1/8"
 
-	hd := handler.NewHandler(ctx, dbMock, cfg, nil, l)
+	hd := handler.NewHandler(dbMock, cfg, nil, l)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", cfg.BaseURL+"/api/internal/stats", nil)
 	defer r.Body.Close()
 
-	dbMock.EXPECT().Stats(l, gomock.Any()).Return(0, 0, nil)
+	dbMock.EXPECT().Stats(ctx, l).Return(0, 0, nil)
 	hd.Stats(w, r)
 
-	dbMock.Stats(context.Background(), l)
+	dbMock.Stats(ctx, l)
 
 	require.Equal(t, http.StatusForbidden, w.Result().StatusCode)
 
@@ -104,7 +104,7 @@ func Test_inDBRepository_Ping(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	hd := handler.NewHandler(ctx, dbMock, &config.Config{
+	hd := handler.NewHandler(dbMock, &config.Config{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8080",
 		SecretKey:     secretKey,
@@ -114,7 +114,7 @@ func Test_inDBRepository_Ping(t *testing.T) {
 	r := httptest.NewRequest("GET", hd.Cfg.BaseURL+"/ping", nil)
 	defer r.Body.Close()
 
-	dbMock.EXPECT().Ping(l, gomock.Any()).Return(nil)
+	dbMock.EXPECT().Ping(ctx, l).Return(nil)
 	hd.Ping(w, r)
 
 	require.Equal(t, http.StatusOK, w.Result().StatusCode)
@@ -122,7 +122,7 @@ func Test_inDBRepository_Ping(t *testing.T) {
 
 func Test_inDBRepository_Delete(t *testing.T) {
 	l := logger.New("debug")
-	ctx := context.Background()
+	//ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
 	dbMock := mock_usecase.NewMockRepository(ctrl)
@@ -136,7 +136,7 @@ func Test_inDBRepository_Delete(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	hd := handler.NewHandler(ctx, dbMock, &config.Config{
+	hd := handler.NewHandler(dbMock, &config.Config{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8080",
 		SecretKey:     secretKey,

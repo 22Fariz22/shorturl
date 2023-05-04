@@ -11,6 +11,7 @@ import (
 	"github.com/22Fariz22/shorturl/internal/handler"
 	"github.com/22Fariz22/shorturl/internal/usecase/memory"
 	"github.com/22Fariz22/shorturl/internal/worker"
+	"github.com/22Fariz22/shorturl/pkg/logger"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"net/http"
@@ -184,7 +185,10 @@ func TestHandler_Batch(t *testing.T) {
 	}
 }
 
-func TestHandler_DeleteHandler(t *testing.T) { //status 400. как исправить bodyReader?
+func TestHandler_DeleteHandler(t *testing.T) {
+	l := logger.New("debug")
+	ctx := context.Background()
+
 	tests := []struct {
 		name   string
 		status int
@@ -205,7 +209,7 @@ func TestHandler_DeleteHandler(t *testing.T) { //status 400. как исправ
 	if err != nil {
 		log.Fatal(err)
 	}
-	worker := worker.NewWorkerPool(repo)
+	worker := worker.NewWorkerPool(l, repo)
 
 	h := &handler.Handler{
 		Repository: repo,
@@ -225,25 +229,26 @@ func TestHandler_DeleteHandler(t *testing.T) { //status 400. как исправ
 
 			cookies.SetCookieHandler(w, req, h.Cfg.SecretKey)
 
-			repo.SaveURL(context.Background(), "short", "https://ya.ru", "7654321") //save before delete
+			repo.SaveURL(ctx, l, "short", "https://ya.ru", "7654321") //save before delete
 
 			h.DeleteHandler(w, req)
 		})
-		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodDelete, "/api/user/urls", nil)
-			w := httptest.NewRecorder()
-
-			cookies.SetCookieHandler(w, req, h.Cfg.SecretKey)
-
-			h.DeleteHandler(w, req)
-
-			fmt.Println("status: ", w.Code)
-		})
+		//t.Run(tt.name, func(t *testing.T) {
+		//	req := httptest.NewRequest(http.MethodDelete, "/api/user/urls", nil)
+		//	w := httptest.NewRecorder()
+		//
+		//	cookies.SetCookieHandler(w, req, h.Cfg.SecretKey)
+		//
+		//	h.DeleteHandler(w, req)
+		//
+		//	fmt.Println("status: ", w.Code)
+		//})
 	}
 }
 
 func TestHandler_GetAllURL(t *testing.T) { // получилось
-	//bodyReader := strings.NewReader("")
+	l := logger.New("debug")
+
 	tests := []struct {
 		name   string
 		status int
@@ -278,7 +283,7 @@ func TestHandler_GetAllURL(t *testing.T) { // получилось
 
 			cookies.SetCookieHandler(w, req, h.Cfg.SecretKey)
 
-			repo.SaveURL(context.Background(), "short", "https://ya.ru", "7654321")
+			repo.SaveURL(context.Background(), l, "short", "https://ya.ru", "7654321")
 
 			h.GetAllURL(w, req)
 
@@ -289,6 +294,8 @@ func TestHandler_GetAllURL(t *testing.T) { // получилось
 }
 
 func TestHandler_GetShortURLByIDHandler(t *testing.T) {
+	l := logger.New("debug")
+
 	tests := []struct {
 		name   string
 		status int
@@ -323,7 +330,7 @@ func TestHandler_GetShortURLByIDHandler(t *testing.T) {
 
 			cookies.SetCookieHandler(w, req, h.Cfg.SecretKey)
 
-			repo.SaveURL(context.Background(), "short", "https://ya.ru", "7654321")
+			repo.SaveURL(context.Background(), l, "short", "https://ya.ru", "7654321")
 
 			h.GetShortURLByIDHandler(w, req)
 

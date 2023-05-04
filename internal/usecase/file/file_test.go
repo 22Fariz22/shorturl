@@ -6,6 +6,7 @@ import (
 	"github.com/22Fariz22/shorturl/internal/config"
 	"github.com/22Fariz22/shorturl/internal/entity"
 	"github.com/22Fariz22/shorturl/internal/usecase"
+	"github.com/22Fariz22/shorturl/pkg/logger"
 	"os"
 	"reflect"
 	"testing"
@@ -13,9 +14,11 @@ import (
 	"github.com/22Fariz22/shorturl/internal/storage"
 )
 
-//Test_inFileRepository_SaveURL
-//сигнатура: SaveURL(ctx context.Context, shortID string, longURL string, cook string) (string, error)
+// Test_inFileRepository_SaveURL
+// сигнатура: SaveURL(ctx context.Context, shortID string, longURL string, cook string) (string, error)
 func Test_inFileRepository_SaveURL(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		inFileRepository
 	}
@@ -61,7 +64,7 @@ func Test_inFileRepository_SaveURL(t *testing.T) {
 				reader:        tt.fields.reader,
 			}
 
-			got, err := f.SaveURL(tt.args.ctx, tt.args.shortID, tt.args.longURL, tt.args.cook)
+			got, err := f.SaveURL(tt.args.ctx, l, tt.args.shortID, tt.args.longURL, tt.args.cook)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SaveURL() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -74,6 +77,8 @@ func Test_inFileRepository_SaveURL(t *testing.T) {
 }
 
 func Test_inFileRepository_GetURL(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		inFileRepository
 	}
@@ -112,7 +117,7 @@ func Test_inFileRepository_GetURL(t *testing.T) {
 				memoryStorage: tt.fields.memoryStorage,
 				reader:        tt.fields.reader,
 			}
-			got, got1 := f.GetURL(tt.args.ctx, tt.args.shortID)
+			got, got1 := f.GetURL(tt.args.ctx, l, tt.args.shortID)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetURL() got = %v, want %v", got, tt.want)
 			}
@@ -124,6 +129,8 @@ func Test_inFileRepository_GetURL(t *testing.T) {
 }
 
 func Test_inFileRepository_GetAll(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		inFileRepository
 	}
@@ -162,7 +169,7 @@ func Test_inFileRepository_GetAll(t *testing.T) {
 				memoryStorage: tt.fields.memoryStorage,
 				reader:        tt.fields.reader,
 			}
-			got, err := f.GetAll(tt.args.ctx, tt.args.cook)
+			got, err := f.GetAll(tt.args.ctx, l, tt.args.cook)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -175,6 +182,8 @@ func Test_inFileRepository_GetAll(t *testing.T) {
 }
 
 func Test_inFileRepository_Init(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		inFileRepository
 	}
@@ -202,7 +211,7 @@ func Test_inFileRepository_Init(t *testing.T) {
 				memoryStorage: tt.fields.memoryStorage,
 				reader:        tt.fields.reader,
 			}
-			if err := f.Init(); (err != nil) != tt.wantErr {
+			if err := f.Init(l); (err != nil) != tt.wantErr {
 				t.Errorf("Init() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -210,6 +219,8 @@ func Test_inFileRepository_Init(t *testing.T) {
 }
 
 func Test_inFileRepository_RepoBatch(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		inFileRepository
 	}
@@ -256,7 +267,7 @@ func Test_inFileRepository_RepoBatch(t *testing.T) {
 				memoryStorage: tt.fields.memoryStorage,
 				reader:        tt.fields.reader,
 			}
-			if err := f.RepoBatch(tt.args.ctx, tt.args.cook, tt.args.batchList); (err != nil) != tt.wantErr {
+			if err := f.RepoBatch(tt.args.ctx, l, tt.args.cook, tt.args.batchList); (err != nil) != tt.wantErr {
 				t.Errorf("RepoBatch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -264,6 +275,8 @@ func Test_inFileRepository_RepoBatch(t *testing.T) {
 }
 
 func Test_inFileRepository_Delete(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		inFileRepository
 	}
@@ -300,7 +313,7 @@ func Test_inFileRepository_Delete(t *testing.T) {
 				memoryStorage: tt.fields.memoryStorage,
 				reader:        tt.fields.reader,
 			}
-			if err := f.Delete(tt.args.list, tt.args.cookie); (err != nil) != tt.wantErr {
+			if err := f.Delete(l, tt.args.list, tt.args.cookie); (err != nil) != tt.wantErr {
 				t.Errorf("Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
