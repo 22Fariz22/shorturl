@@ -42,11 +42,11 @@ func Test_inDBRepository_Stats(t *testing.T) {
 
 	require.Equal(t, http.StatusForbidden, w.Result().StatusCode)
 
-	ctx.Done()
+	defer w.Result().Request.Body.Close()
 
-	r.Response.Body.Close()
-	r.Body.Close()
-	w.Result().Body.Close()
+	defer r.Response.Body.Close()
+	defer r.Body.Close()
+	defer w.Result().Body.Close()
 }
 
 //func Test_inDBRepository_SaveURL(t *testing.T) {
