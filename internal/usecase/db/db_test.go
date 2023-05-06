@@ -35,17 +35,15 @@ func Test_inDBRepository_Stats(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", cfg.BaseURL+"/api/internal/stats", nil)
 
-	defer r.Response.Body.Close()
-	defer r.Body.Close()
-	defer w.Result().Body.Close()
-
 	dbMock.EXPECT().Stats(ctx, l).Return(0, 0, nil)
 	hd.Stats(w, r)
 
 	dbMock.Stats(ctx, l)
 
 	require.Equal(t, http.StatusForbidden, w.Result().StatusCode)
-
+	r.Response.Body.Close()
+	r.Body.Close()
+	w.Result().Body.Close()
 }
 
 //func Test_inDBRepository_SaveURL(t *testing.T) {
