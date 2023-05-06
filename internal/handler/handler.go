@@ -54,7 +54,6 @@ func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Poo
 
 // Stats возвращает количество сокращённых URL в сервисе и количество пользователей в сервисе
 func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
 
 	type stats struct {
 		Urls  int `json:"urls"`
@@ -108,6 +107,7 @@ func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	defer r.Body.Close()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -409,6 +409,7 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	defer r.Body.Close()
 }
 
 // GenUlid генератор шортурлов
