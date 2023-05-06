@@ -36,6 +36,7 @@ func Test_inDBRepository_Stats(t *testing.T) {
 	r := httptest.NewRequest("GET", cfg.BaseURL+"/api/internal/stats", nil)
 
 	defer r.Response.Body.Close()
+	defer r.Body.Close()
 
 	dbMock.EXPECT().Stats(ctx, l).Return(0, 0, nil)
 	hd.Stats(w, r)
