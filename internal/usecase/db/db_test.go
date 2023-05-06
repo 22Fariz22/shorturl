@@ -41,7 +41,8 @@ func Test_inDBRepository_Stats(t *testing.T) {
 	dbMock.Stats(ctx, l)
 
 	require.Equal(t, http.StatusForbidden, w.Result().StatusCode)
-	r.Body.Close()
+	defer r.Body.Close()
+	defer w.Result().Body.Close()
 
 }
 
