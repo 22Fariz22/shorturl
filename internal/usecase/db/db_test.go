@@ -99,6 +99,7 @@ func Test_inDBRepository_Ping(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 	dbMock := mock_usecase.NewMockRepository(ctrl)
 
 	//cfg := config.NewConfig()
