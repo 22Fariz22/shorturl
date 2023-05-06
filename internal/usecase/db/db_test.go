@@ -41,6 +41,9 @@ func Test_inDBRepository_Stats(t *testing.T) {
 	dbMock.Stats(ctx, l)
 
 	require.Equal(t, http.StatusForbidden, w.Result().StatusCode)
+
+	ctx.Done()
+
 	r.Response.Body.Close()
 	r.Body.Close()
 	w.Result().Body.Close()
