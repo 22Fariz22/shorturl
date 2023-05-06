@@ -54,6 +54,8 @@ func NewHandler(repo usecase.Repository, cfg *config.Config, workers *worker.Poo
 
 // Stats возвращает количество сокращённых URL в сервисе и количество пользователей в сервисе
 func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
 	type stats struct {
 		Urls  int `json:"urls"`
 		Users int `json:"users"`
