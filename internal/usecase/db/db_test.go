@@ -37,6 +37,7 @@ func Test_inDBRepository_Stats(t *testing.T) {
 
 	defer r.Response.Body.Close()
 	defer r.Body.Close()
+	defer w.Result().Body.Close()
 
 	dbMock.EXPECT().Stats(ctx, l).Return(0, 0, nil)
 	hd.Stats(w, r)
