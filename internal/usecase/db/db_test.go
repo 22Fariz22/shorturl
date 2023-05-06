@@ -25,6 +25,7 @@ func Test_inDBRepository_Stats(t *testing.T) {
 	ctx := context.Background()
 
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 	dbMock := mock_usecase.NewMockRepository(ctrl)
 
 	cfg := config.NewConfig()
@@ -41,8 +42,6 @@ func Test_inDBRepository_Stats(t *testing.T) {
 	dbMock.Stats(ctx, l)
 
 	require.Equal(t, http.StatusForbidden, w.Result().StatusCode)
-
-	defer w.Result().Request.Body.Close()
 
 	defer r.Response.Body.Close()
 	defer r.Body.Close()
