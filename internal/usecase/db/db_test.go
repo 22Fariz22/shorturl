@@ -35,6 +35,10 @@ func Test_inDBRepository_Stats(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", cfg.BaseURL+"/api/internal/stats", nil)
+	defer r.Body.Close()
+
+	defer r.Response.Body.Close()
+	defer w.Result().Body.Close()
 
 	dbMock.EXPECT().Stats(ctx, l).Return(0, 0, nil)
 	hd.Stats(w, r)
@@ -43,9 +47,6 @@ func Test_inDBRepository_Stats(t *testing.T) {
 
 	require.Equal(t, http.StatusForbidden, w.Result().StatusCode)
 
-	defer r.Response.Body.Close()
-	defer r.Body.Close()
-	defer w.Result().Body.Close()
 }
 
 //func Test_inDBRepository_SaveURL(t *testing.T) {
@@ -116,8 +117,9 @@ func Test_inDBRepository_Ping(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", hd.Cfg.BaseURL+"/ping", nil)
-	defer r.Response.Body.Close()
 	defer r.Body.Close()
+
+	defer r.Response.Body.Close()
 	defer w.Result().Body.Close()
 
 	dbMock.EXPECT().Ping(ctx, l).Return(nil)
@@ -156,8 +158,9 @@ func Test_inDBRepository_Delete(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("DELETE", hd.Cfg.BaseURL+"/api/user/urls", buf)
-	defer r.Response.Body.Close()
 	defer r.Body.Close()
+
+	defer r.Response.Body.Close()
 	defer w.Result().Body.Close()
 
 	cookies.SetCookieHandler(w, r, secretKey)
