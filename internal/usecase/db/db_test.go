@@ -116,7 +116,9 @@ func Test_inDBRepository_Ping(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", hd.Cfg.BaseURL+"/ping", nil)
+	defer r.Response.Body.Close()
 	defer r.Body.Close()
+	defer w.Result().Body.Close()
 
 	dbMock.EXPECT().Ping(ctx, l).Return(nil)
 	hd.Ping(w, r)
@@ -154,7 +156,9 @@ func Test_inDBRepository_Delete(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("DELETE", hd.Cfg.BaseURL+"/api/user/urls", buf)
+	defer r.Response.Body.Close()
 	defer r.Body.Close()
+	defer w.Result().Body.Close()
 
 	cookies.SetCookieHandler(w, r, secretKey)
 	cookies := r.Cookies()[0].Value

@@ -127,7 +127,5 @@ func Run(cfg *config.Config) {
 		defer shutdown()
 		s.GracefulStop()
 		server.Shutdown(ctx)
-
 	}()
-
 }
