@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/22Fariz22/shorturl/internal/entity"
+	"github.com/22Fariz22/shorturl/pkg/logger"
 	"reflect"
 	"testing"
 )
@@ -10,6 +11,8 @@ import (
 //
 //	Insert(key, value string, cook string, deleted bool) (string, error)
 func Test_memoryStorage_Insert(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		storage map[string]entity.URL
 		//mutex   sync.RWMutex
@@ -51,7 +54,7 @@ func Test_memoryStorage_Insert(t *testing.T) {
 				//mutex:   tt.fields.mutex,
 			}
 
-			got, err := m.Insert(tt.args.key, tt.args.value, tt.args.cook, tt.args.deleted)
+			got, err := m.Insert(l, tt.args.key, tt.args.value, tt.args.cook, tt.args.deleted)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Insert() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -65,6 +68,8 @@ func Test_memoryStorage_Insert(t *testing.T) {
 
 // Test_memoryStorage_InsertIfExist тестируем стораж инмемори и случай когда такой урл уже существует
 func Test_memoryStorage_InsertExist(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		storage map[string]entity.URL
 		//mutex   sync.RWMutex
@@ -113,7 +118,7 @@ func Test_memoryStorage_InsertExist(t *testing.T) {
 				Deleted:       false,
 			}
 
-			got, err := m.Insert(tt.args.key, tt.args.value, tt.args.cook, tt.args.deleted)
+			got, err := m.Insert(l, tt.args.key, tt.args.value, tt.args.cook, tt.args.deleted)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Insert() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -128,6 +133,8 @@ func Test_memoryStorage_InsertExist(t *testing.T) {
 // Test_memoryStorage_Get  сигнатура:Get(key string) (entity.URL, bool)
 // // когда вводим существующий шортурл
 func Test_memoryStorage_Get(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		storage map[string]entity.URL
 		//mutex   sync.RWMutex
@@ -172,7 +179,7 @@ func Test_memoryStorage_Get(t *testing.T) {
 				CorrelationID: "",
 				Deleted:       false,
 			}
-			got, got1 := m.Get(tt.args.key)
+			got, got1 := m.Get(l, tt.args.key)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Get() got = %v, want %v", got, tt.want)
 			}
@@ -186,6 +193,8 @@ func Test_memoryStorage_Get(t *testing.T) {
 // Test_memoryStorage_GetNotExist  сигнатура:Get(key string) (entity.URL, bool)
 // когда вводим не существующий шортурл
 func Test_memoryStorage_GetNotExist(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		storage map[string]entity.URL
 		//mutex   sync.RWMutex
@@ -224,7 +233,7 @@ func Test_memoryStorage_GetNotExist(t *testing.T) {
 				CorrelationID: "",
 				Deleted:       false,
 			}
-			got, got1 := m.Get(tt.args.key)
+			got, got1 := m.Get(l, tt.args.key)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Get() got = %v, want %v", got, tt.want)
 			}
@@ -237,6 +246,8 @@ func Test_memoryStorage_GetNotExist(t *testing.T) {
 
 // Test_memoryStorage_GetAllStorageURL сигнатура: GetAllStorageURL(cook string) []map[string]string
 func Test_memoryStorage_GetAllStorageURL(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		storage map[string]entity.URL
 		//mutex   sync.RWMutex
@@ -284,7 +295,7 @@ func Test_memoryStorage_GetAllStorageURL(t *testing.T) {
 				CorrelationID: "",
 				Deleted:       false,
 			}
-			if got := m.GetAllStorageURL(tt.args.cook); !reflect.DeepEqual(got, tt.want) {
+			if got := m.GetAllStorageURL(l, tt.args.cook); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetAllStorageURL() = %v, want %v", got, tt.want)
 			}
 		})
@@ -293,6 +304,8 @@ func Test_memoryStorage_GetAllStorageURL(t *testing.T) {
 
 // Test_memoryStorage_DeleteStorage сигнатура:DeleteStorage(listShorts []string, cookies string) error
 func Test_memoryStorage_DeleteStorage(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		storage map[string]entity.URL
 		//mutex   sync.RWMutex
@@ -342,7 +355,7 @@ func Test_memoryStorage_DeleteStorage(t *testing.T) {
 				Deleted:       false,
 			}
 
-			if err := m.DeleteStorage(tt.args.listShorts, tt.args.cookies); (err != nil) != tt.wantErr {
+			if err := m.DeleteStorage(l, tt.args.listShorts, tt.args.cookies); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteStorage() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

@@ -13,3 +13,7 @@ total:
 	go test -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
 	go tool cover -func=coverage.out
 	rm coverage.out
+
+.PHONY: run
+run:
+	go run cmd/shortener/main.go -d="postgres://postgres:55555@127.0.0.1:5432/dburl" -t="127.0.0.1/8"

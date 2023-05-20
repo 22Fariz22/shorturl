@@ -2,7 +2,9 @@
 package storage
 
 import (
+	"context"
 	"errors"
+	"github.com/22Fariz22/shorturl/pkg/logger"
 	"sync"
 
 	"github.com/22Fariz22/shorturl/internal/entity"
@@ -10,10 +12,11 @@ import (
 
 // MemoryStorage интерфейс для стоража инмемори
 type MemoryStorage interface {
-	Get(key string) (entity.URL, bool)
-	Insert(key, value string, cook string, deleted bool) (string, error)
-	GetAllStorageURL(string2 string) []map[string]string
-	DeleteStorage([]string, string) error
+	Get(l logger.Interface, key string) (entity.URL, bool)
+	Insert(l logger.Interface, key, value string, cook string, deleted bool) (string, error)
+	GetAllStorageURL(l logger.Interface, string2 string) []map[string]string
+	DeleteStorage(logger.Interface, []string, string) error
+	Stats(ctx context.Context, l logger.Interface) (int, int, error)
 }
 
 // /memoryStorage структура для стоража инмемори
@@ -23,7 +26,7 @@ type memoryStorage struct {
 }
 
 // DeleteStorage удаление записи
-func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error {
+func (m *memoryStorage) DeleteStorage(l logger.Interface, listShorts []string, cookies string) error {
 	for _, v := range listShorts {
 		for k := range m.storage {
 			if m.storage[k].ID == v && m.storage[k].Cookies == cookies {
@@ -41,7 +44,7 @@ func (m *memoryStorage) DeleteStorage(listShorts []string, cookies string) error
 }
 
 // GetAllStorageURL получить все записи
-func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
+func (m *memoryStorage) GetAllStorageURL(l logger.Interface, cook string) []map[string]string {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	list := make([]map[string]string, 0)
@@ -57,7 +60,7 @@ func (m *memoryStorage) GetAllStorageURL(cook string) []map[string]string {
 }
 
 // Get получить запись
-func (m *memoryStorage) Get(key string) (entity.URL, bool) {
+func (m *memoryStorage) Get(l logger.Interface, key string) (entity.URL, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
@@ -70,7 +73,7 @@ func (m *memoryStorage) Get(key string) (entity.URL, bool) {
 }
 
 // Insert вставить запись
-func (m *memoryStorage) Insert(key string, value string, cook string, deleted bool) (string, error) {
+func (m *memoryStorage) Insert(l logger.Interface, key string, value string, cook string, deleted bool) (string, error) {
 	//ErrAlreadyExists вывод ошибки существования
 	var ErrAlreadyExists = errors.New("this URL already exists")
 
@@ -88,6 +91,19 @@ func (m *memoryStorage) Insert(key string, value string, cook string, deleted bo
 		return "", nil
 	}
 	return v.ID, ErrAlreadyExists // если такого еще нет в мапе,то ничего не вернет. а если есть, то вернет shorturl.
+}
+
+// Stats
+func (m *memoryStorage) Stats(ctx context.Context, l logger.Interface) (int, int, error) {
+	mpUsers := make(map[string]int)
+	countUrls := 0
+
+	for _, x := range m.storage {
+		mpUsers[x.Cookies] += 1
+		countUrls += 1
+	}
+
+	return countUrls, len(mpUsers), nil
 }
 
 // New создание структуры для инмемори типа

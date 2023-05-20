@@ -5,12 +5,15 @@ import (
 	"github.com/22Fariz22/shorturl/internal/entity"
 	"github.com/22Fariz22/shorturl/internal/storage"
 	"github.com/22Fariz22/shorturl/internal/usecase"
+	"github.com/22Fariz22/shorturl/pkg/logger"
 	"reflect"
 	"testing"
 )
 
-//Test_inMemoryRepository_GetURL получить урл
+// Test_inMemoryRepository_GetURL получить урл
 func Test_inMemoryRepository_GetURL(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		memoryStorage storage.MemoryStorage
 	}
@@ -42,7 +45,7 @@ func Test_inMemoryRepository_GetURL(t *testing.T) {
 				memoryStorage: tt.fields.memoryStorage,
 			}
 
-			got, got1 := m.GetURL(tt.args.ctx, tt.args.shortID)
+			got, got1 := m.GetURL(tt.args.ctx, l, tt.args.shortID)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetURL() got = %v, want %v", got, tt.want)
 			}
@@ -53,8 +56,10 @@ func Test_inMemoryRepository_GetURL(t *testing.T) {
 	}
 }
 
-//Test_inMemoryRepository_SaveURL получить урлы
+// Test_inMemoryRepository_SaveURL получить урлы
 func Test_inMemoryRepository_SaveURL(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		memoryStorage storage.MemoryStorage
 	}
@@ -89,7 +94,7 @@ func Test_inMemoryRepository_SaveURL(t *testing.T) {
 			m := &inMemoryRepository{
 				memoryStorage: tt.fields.memoryStorage,
 			}
-			got, err := m.SaveURL(tt.args.ctx, tt.args.shortID, tt.args.longURL, tt.args.cook)
+			got, err := m.SaveURL(tt.args.ctx, l, tt.args.shortID, tt.args.longURL, tt.args.cook)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SaveURL() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -101,8 +106,10 @@ func Test_inMemoryRepository_SaveURL(t *testing.T) {
 	}
 }
 
-//Test_inMemoryRepository_GetAll получить все урлы
+// Test_inMemoryRepository_GetAll получить все урлы
 func Test_inMemoryRepository_GetAll(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		memoryStorage storage.MemoryStorage
 	}
@@ -133,7 +140,7 @@ func Test_inMemoryRepository_GetAll(t *testing.T) {
 			m := &inMemoryRepository{
 				memoryStorage: tt.fields.memoryStorage,
 			}
-			got, err := m.GetAll(tt.args.ctx, tt.args.cook)
+			got, err := m.GetAll(tt.args.ctx, l, tt.args.cook)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -145,9 +152,11 @@ func Test_inMemoryRepository_GetAll(t *testing.T) {
 	}
 }
 
-//Test_inMemoryRepository_RepoBatch
-//signature: RepoBatch(ctx context.Context, cook string, batchList []entity.PackReq) error
+// Test_inMemoryRepository_RepoBatch
+// signature: RepoBatch(ctx context.Context, cook string, batchList []entity.PackReq) error
 func Test_inMemoryRepository_RepoBatch(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		memoryStorage storage.MemoryStorage
 	}
@@ -189,15 +198,17 @@ func Test_inMemoryRepository_RepoBatch(t *testing.T) {
 				ShortURL:      "another_short_url",
 			})
 
-			if err := m.RepoBatch(tt.args.ctx, tt.args.cook, tt.args.batchList); (err != nil) != tt.wantErr {
+			if err := m.RepoBatch(tt.args.ctx, l, tt.args.cook, tt.args.batchList); (err != nil) != tt.wantErr {
 				t.Errorf("RepoBatch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-//Test_inMemoryRepository_Delete delete batch
+// Test_inMemoryRepository_Delete delete batch
 func Test_inMemoryRepository_Delete(t *testing.T) {
+	l := logger.New("debug")
+
 	type fields struct {
 		memoryStorage storage.MemoryStorage
 	}
@@ -225,14 +236,14 @@ func Test_inMemoryRepository_Delete(t *testing.T) {
 			m := &inMemoryRepository{
 				memoryStorage: tt.fields.memoryStorage,
 			}
-			if err := m.Delete(tt.args.list, tt.args.cookie); (err != nil) != tt.wantErr {
+			if err := m.Delete(l, tt.args.list, tt.args.cookie); (err != nil) != tt.wantErr {
 				t.Errorf("Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-//TestNew create New repo inmemory
+// TestNew create New repo inmemory
 func TestNew(t *testing.T) {
 	tests := []struct {
 		name string
