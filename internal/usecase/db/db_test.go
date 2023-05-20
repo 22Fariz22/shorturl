@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -121,7 +122,13 @@ func Test_inDBRepository_Ping(t *testing.T) {
 	dbMock.EXPECT().Ping(ctx, l).Return(nil)
 	hd.Ping(w, r)
 
+	// Read and discard the response body
+	_, _ = ioutil.ReadAll(w.Result().Body)
+
 	require.Equal(t, http.StatusOK, w.Result().StatusCode)
+
+	// Close the response body
+	w.Result().Body.Close()
 }
 
 func Test_inDBRepository_Delete(t *testing.T) {
