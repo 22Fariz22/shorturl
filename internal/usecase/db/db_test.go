@@ -96,6 +96,7 @@ func Test_inDBRepository_Stats(t *testing.T) {
 //}
 
 func Test_inDBRepository_Ping(t *testing.T) {
+
 	l := logger.New("debug")
 	ctx := context.Background()
 
@@ -117,15 +118,19 @@ func Test_inDBRepository_Ping(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", hd.Cfg.BaseURL+"/ping", nil)
-	defer r.Body.Close()
 
-	defer r.Response.Body.Close()
+	defer r.Body.Close()
 	defer w.Result().Body.Close()
 
 	dbMock.EXPECT().Ping(ctx, l).Return(nil)
 	hd.Ping(w, r)
 
 	require.Equal(t, http.StatusOK, w.Result().StatusCode)
+
+	// Close the response body
+	if w.Result().Body != nil {
+		_ = w.Result().Body.Close()
+	}
 }
 
 func Test_inDBRepository_Delete(t *testing.T) {
@@ -172,4 +177,5 @@ func Test_inDBRepository_Delete(t *testing.T) {
 	hd.Repository.Delete(l, query, cookies)
 
 	require.Equal(t, http.StatusAccepted, w.Result().StatusCode)
+	return
 }
